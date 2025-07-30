@@ -13,3 +13,4 @@
 **/Build/
 DerivedData/
 *.ipa
+*.xcuserstate
