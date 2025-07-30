@@ -54,12 +54,11 @@ final class MainViewController: UIViewController {
     // MARK: - Private Methods
     
     private func setupView() {
-        view.backgroundColor = .black
+        view.backgroundColor = .purple
         view.addSubviews([menuButton, transparentView, sideMenuView])
         sideMenuView.delegate = self
         transparentView.isHidden = true
         setMenuButtonAction()
-        navigationController?.navigationBar.isHidden = true
     }
     
     private func performLayout() {
@@ -79,6 +78,7 @@ extension MainViewController {
             origin: CGPoint(x: 16, y: menuButtonY),
             size: menuButtonSize
         )
+        navigationController?.navigationBar.isHidden = true
     }
     
     private func setMenuButtonAction() {
