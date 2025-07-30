@@ -17,11 +17,11 @@ final class AuthorizationViewController: UIViewController {
         fontSize: 13,
         textColor: .white
     )
-    
-    private let phoneTextField = PhoneNumberTextField(
-        placeholder: "000-000-00-00",
-        keyboardType: .numberPad
+    private let codePhoneLabel = Label(
+        text: "+7",
+        fontSize: 22
     )
+    private let phoneTextField = PhoneNumberTextField()
     
     // MARK: - Life Cycle
     
@@ -38,11 +38,9 @@ final class AuthorizationViewController: UIViewController {
     // MARK: - Private Methods
     
     private func setupView() {
-        view.backgroundColor = .black
         view.addSubview(scrollView)
-        scrollView.addSubviews([label, phoneTextField])
+        scrollView.addSubviews([label, codePhoneLabel, phoneTextField])
         scrollView.backgroundColor = .red
-        phoneTextField.backgroundColor = .darkGray
         view.addTapGestureClosure { [weak self] in
             self?.view.endEditing(true)
             print("+++ endEditing")
@@ -51,7 +49,7 @@ final class AuthorizationViewController: UIViewController {
     
     private func performLayout() {
         scrollView.pin
-            .all()
+            .all(view.pin.safeArea)
         
         label.pin
             .top()
@@ -59,12 +57,19 @@ final class AuthorizationViewController: UIViewController {
             .marginHorizontal(20)
             .sizeToFit(.width)
         
-        phoneTextField.pin
+        codePhoneLabel.pin
             .below(of: label)
-            .horizontally()
-            .marginTop(20)
-            .marginHorizontal(20)
-            .height(50)
+            .left()
+            .marginTop(40)
+            .marginLeft(30)
+            .sizeToFit()
         
+        phoneTextField.pin
+            .left(to: codePhoneLabel.edge.right)
+            .right()
+            .marginLeft(12)
+            .marginRight(20)
+            .vCenter(to: codePhoneLabel.edge.vCenter)
+            .height(50)
     }
 }

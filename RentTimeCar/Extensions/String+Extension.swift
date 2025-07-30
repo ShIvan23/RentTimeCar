@@ -28,4 +28,8 @@ extension String {
         }
         return result
     }
+    
+    func cancelPhoneNumberMask() -> String {
+        self.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+    }
 }
