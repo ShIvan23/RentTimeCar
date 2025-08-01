@@ -36,6 +36,21 @@ final class PhoneNumberTextField: UITextField {
          return bounds.insetBy(dx: .inset, dy: .inset)
      }
     
+    // MARK: - Internal Methods
+    
+    func validatePhone() -> Bool {
+        guard let text else { return false }
+        let cleanedPhone = text.replacingOccurrences(of: "\\D", with: "", options: .regularExpression)
+            
+            // Проверяем длину номера и префикс
+            guard cleanedPhone.count == 10 else { return false }
+            
+            // Проверяем начало номера (7 или 8) и следующую цифру (обычно 9 для мобильных)
+            guard let firstDigit = cleanedPhone.first else { return false }
+            
+            return (firstDigit == "9" || firstDigit == "8")
+    }
+    
     // MARK: - Private Methods
     
     private func setupTextField() {
@@ -68,12 +83,13 @@ extension PhoneNumberTextField: UITextFieldDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
         if textField.text == placeHolderText {
             textField.text = ""
+            setEditingColor()
         }
     }
     
     func textFieldDidEndEditing(_ textField: UITextField) {
         if textField.text == "" {
-            textField.text = placeHolderText
+            setPlaceholder()
         }
     }
     

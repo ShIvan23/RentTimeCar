@@ -23,6 +23,7 @@ final class MainViewController: UIViewController {
     
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
+    private var isShowSideMenu = false
     
     // MARK: Init
     
@@ -62,7 +63,7 @@ final class MainViewController: UIViewController {
     }
     
     private func performLayout() {
-        layoutSideMenu()
+        isShowSideMenu ? showLayoutSideMenu() : hiddenLayoutSideMenu()
         layoutMenuButton()
     }
 }
@@ -92,6 +93,7 @@ extension MainViewController {
 
 extension MainViewController {
     private func animateSideMenu(isHidden: Bool) {
+        isShowSideMenu = !isHidden
         let currentOrigin = CGPoint(
             x: isHidden ? -view.bounds.width : .zero,
             y: .zero
@@ -108,7 +110,7 @@ extension MainViewController {
         }
     }
     
-    private func layoutSideMenu() {
+    private func hiddenLayoutSideMenu() {
         sideMenuView.frame = CGRect(
             x: -view.bounds.width,
             y: .zero,
@@ -117,6 +119,10 @@ extension MainViewController {
         )
         
         transparentView.frame = view.bounds
+    }
+    
+    private func showLayoutSideMenu() {
+        sideMenuView.frame.origin = .zero
     }
 }
 
