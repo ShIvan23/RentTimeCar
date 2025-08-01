@@ -55,7 +55,7 @@ final class TaggedLabel: UILabel {
         )
         attributedText = formattedText
         textAlignment = .center
-        numberOfLines = 0
+        numberOfLines = .zero
         lineBreakMode = .byWordWrapping
         isUserInteractionEnabled = true
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(tapAction))

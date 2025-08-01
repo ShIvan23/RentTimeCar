@@ -159,8 +159,10 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
             
             let totalContentHeight = label.frame.height + codeLabelTopMargin + phoneTextField.frame.height + getCodeButtonTopMargin + getCodeButton.frame.height + taggedLabel.frame.height
             
-            scrollView.contentSize = CGSize(width: scrollView.bounds.width,
-                                            height: totalContentHeight)
+            scrollView.contentSize = CGSize(
+                width: scrollView.bounds.width,
+                height: totalContentHeight
+            )
         } else {
             taggedLabel.pin
                 .bottom(view.pin.safeArea)
@@ -176,8 +178,10 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
                 .marginHorizontal(20)
                 .height(50)
             
-            scrollView.contentSize = CGSize(width: scrollView.bounds.width,
-                                            height: contentHeight)
+            scrollView.contentSize = CGSize(
+                width: scrollView.bounds.width,
+                height: contentHeight
+            )
         }
     }
 }
