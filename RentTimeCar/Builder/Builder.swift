@@ -8,8 +8,9 @@
 import UIKit
 
 final class Builder {
+    
     static func makeMainViewController() -> UIViewController {
-        let coordinator = Coordinator()
+        let coordinator = Coordinator.shared
         let rentFacadeApi = RentApiFacade()
         let controller = MainViewController(
             coordinator: coordinator,
@@ -21,6 +22,10 @@ final class Builder {
     }
     
     static func makeAuthorizationViewController() -> UIViewController {
-        AuthorizationViewController()
+        AuthorizationViewController(coordinator: Coordinator.shared)
+    }
+    
+    static func makePDFViewController(pdfFile: PDFViewController.PDFFile) -> UIViewController {
+        PDFViewController(pdfFile: pdfFile)
     }
 }

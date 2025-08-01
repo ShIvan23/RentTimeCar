@@ -5,7 +5,7 @@
 //  Created by ivanshishkin on 30.07.2025.
 //
 
-import Foundation
+import UIKit
 
 extension String {
     func applyPhoneNumberMask() -> String {
@@ -27,5 +27,28 @@ extension String {
             }
         }
         return result
+    }
+    
+    func cancelPhoneNumberMask() -> String {
+        self.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+    }
+}
+
+// For Tagged Label
+extension String {
+    static func format(strings: [String],
+                    inString string: String,
+                    font: UIFont,
+                    color: UIColor) -> NSAttributedString {
+        let attributedString =
+            NSMutableAttributedString(string: string,
+                                    attributes: [
+                                        NSAttributedString.Key.font: font,
+                                        NSAttributedString.Key.foregroundColor: color])
+        for str in strings {
+            attributedString.addAttribute(NSAttributedString.Key.underlineStyle, value: NSUnderlineStyle.thick.rawValue, range: (string as NSString).range(of: str))
+            attributedString.addAttribute(NSAttributedString.Key.underlineColor, value: UIColor.white, range: (string as NSString).range(of: str))
+        }
+        return attributedString
     }
 }
