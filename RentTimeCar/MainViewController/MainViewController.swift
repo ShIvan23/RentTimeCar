@@ -22,7 +22,6 @@ final class MainViewController: UIViewController {
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 12
-        layout.scrollDirection = .vertical
         
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .black
@@ -108,7 +107,7 @@ extension MainViewController {
             origin: CGPoint(x: 16, y: menuButtonY),
             size: menuButtonSize
         )
-        navigationController?.navigationBar.isHidden = false
+        navigationController?.navigationBar.isHidden = true
     }
     
     private func setMenuButtonAction() {
@@ -152,8 +151,7 @@ extension MainViewController {
     private func layoutCarCollection() {
         collectionView.pin
             .top(view.safeAreaInsets.top)
-            .left()
-            .right()
+            .horizontally()
             .bottom()
     }
 }

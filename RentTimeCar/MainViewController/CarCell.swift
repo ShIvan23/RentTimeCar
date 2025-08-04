@@ -16,23 +16,8 @@ final class CarCell: UICollectionViewCell {
         return imageView
     }()
 
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 1
-        label.lineBreakMode = .byTruncatingTail
-        label.textColor = .white
-        label.font = UIFont.openSans()
-        return label
-    }()
-    
-    private let priceLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 1
-        label.lineBreakMode = .byTruncatingTail
-        label.textColor = .white
-        label.font = UIFont.openSans()
-        return label
-    }()
+    private let titleLabel = Label(text: "", numberOfLines: 1, fontSize: 16)
+    private let priceLabel = Label(text: "", numberOfLines: 1, fontSize: 16)
     
     private let gradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
