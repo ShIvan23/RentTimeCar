@@ -10,6 +10,7 @@ import Foundation
 protocol IRentApiFacade {
     func getClients(with phoneNumber: String, completion: @escaping (Result<ApiResult<Clients>, Error>) -> Void)
     func addClient(with phoneNumber: String, completion: @escaping (Result<ApiResult<Client>, Error>) -> Void)
+    func getAutos(completion: @escaping (Result<ApiResult<[Autos]>, Error>) -> Void)
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -25,4 +26,10 @@ final class RentApiFacade: IRentApiFacade {
         guard let request = requestManager.addClient(with: phoneNumber) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
+    
+    func getAutos(completion: @escaping (Result<ApiResult<[Autos]>, Error>) -> Void) {
+        guard let request = requestManager.getAutos() else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+    
 }

@@ -34,6 +34,24 @@ final class RequestManager {
         return request
     }
     
+    func getAutos() -> URLRequest? {
+        guard let baseURL else {
+            assertionFailure("Invalid baseURL")
+            return nil
+        }
+        var request = makeBaseUrl(url: baseURL)
+        let getAutos = GetAutos()
+        let apibody = ApiBody(
+            apiKey: apiKey,
+            apiVersion: "500",
+            method: "GetAutos",
+            parameters: getAutos
+        )
+        let data = try? encoder.encode(apibody)
+        request.httpBody = data
+        return request
+    }
+    
     func addClient(with phoneNumber: String) -> URLRequest? {
         guard let baseURL else {
             assertionFailure("Invalid baseURL")
