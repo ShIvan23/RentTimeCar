@@ -26,6 +26,9 @@ final class Label: UILabel {
     }
     
     override func sizeThatFits(_ size: CGSize) -> CGSize {
+        if size == .zero {
+            return intrinsicContentSize
+        }
         let rect = textRect(
             forBounds: CGRect(
                 origin: .zero,
@@ -34,6 +37,7 @@ final class Label: UILabel {
             limitedToNumberOfLines: numberOfLines
         )
         return rect.size
+        
     }
     
     private func setupLabel(
