@@ -9,16 +9,18 @@ import UIKit
 
 final class Label: UILabel {
     init(
-        text: String,
+        text: String = "",
         numberOfLines: Int = 0,
         fontSize: CGFloat = 16,
-        textColor: UIColor = .white
+        textColor: UIColor = .whiteTextColor,
+        textAlignment: NSTextAlignment = .center
     ) {
         super.init(frame: .zero)
         setupLabel(with: text,
                    numberOfLines: numberOfLines,
                    fontSize: fontSize,
-                   textColor: textColor)
+                   textColor: textColor,
+                   textAlignment: textAlignment)
     }
     
     required init?(coder: NSCoder) {
@@ -44,12 +46,13 @@ final class Label: UILabel {
         with text: String,
         numberOfLines: Int,
         fontSize: CGFloat,
-        textColor: UIColor
+        textColor: UIColor,
+        textAlignment: NSTextAlignment
     ) {
         self.text = text
         font = UIFont.openSans(fontSize: fontSize)
         self.textColor = textColor
-        textAlignment = .center
+        self.textAlignment = textAlignment
         self.numberOfLines = numberOfLines
     }
 }

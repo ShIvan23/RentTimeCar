@@ -9,10 +9,7 @@ import UIKit
 
 final class ToastView: UIView {
     
-    private let textLabel = Label(
-        text: "",
-        textColor: .white
-    )
+    private let textLabel = Label()
     
     init(text: String) {
         super.init(frame: .zero)
