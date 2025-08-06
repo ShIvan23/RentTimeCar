@@ -7,13 +7,6 @@
 
 import UIKit
 
-extension UIView {
-    //Return class name for use it in Register cells
-    static var identifier: String {
-        return String(describing: self)
-    }
-}
-
 //CollectionView Extensions
 extension UICollectionView {
     func register<T: UICollectionViewCell>(cell: T.Type) {

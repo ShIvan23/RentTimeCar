@@ -18,6 +18,18 @@ final class MainViewController: UIViewController {
     )
     private let transparentView = UIView()
     private let menuButton = IconButton(image: .menu)
+    private var autos: [Autos] = []
+    private lazy var collectionView: UICollectionView = {
+        let layout = UICollectionViewFlowLayout()
+        layout.minimumLineSpacing = 12
+        
+        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
+        collectionView.backgroundColor = .black
+        collectionView.dataSource = self
+        collectionView.delegate = self
+        collectionView.register(CarCell.self, forCellWithReuseIdentifier: CarCell.identifier)
+        return collectionView
+    }()
     
     // MARK: - Private Properties
     
@@ -45,6 +57,7 @@ final class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
+        fetchAutos()
         getUserInfo()
     }
     
@@ -57,7 +70,7 @@ final class MainViewController: UIViewController {
     
     private func setupView() {
         view.backgroundColor = .purple
-        view.addSubviews([menuButton, transparentView, sideMenuView])
+        view.addSubviews([menuButton, transparentView, collectionView, sideMenuView])
         sideMenuView.delegate = self
         transparentView.isHidden = true
         setMenuButtonAction()
@@ -72,7 +85,23 @@ final class MainViewController: UIViewController {
     private func performLayout() {
         isShowSideMenu ? showLayoutSideMenu() : hiddenLayoutSideMenu()
         layoutMenuButton()
+        layoutCarCollection()
     }
+    
+    private func fetchAutos() {
+        rentApiFacade.getAutos { [weak self] result in
+            switch result {
+            case .success(let model):
+                DispatchQueue.main.async {
+                    self?.autos = model.result ?? []
+                    self?.collectionView.reloadData()
+                }
+            case .failure(let error):
+                print("Ошибка: \(error.localizedDescription)")
+            }
+        }
+    }
+
 }
 
 // MARK: - MenuButton
@@ -131,6 +160,13 @@ extension MainViewController {
     private func showLayoutSideMenu() {
         sideMenuView.frame.origin = .zero
     }
+
+    private func layoutCarCollection() {
+        collectionView.pin
+            .top(view.safeAreaInsets.top)
+            .horizontally()
+            .bottom()
+    }
 }
 
 // MARK: - SideMenuViewDelegate
@@ -145,6 +181,34 @@ extension MainViewController: SideMenuViewDelegate {
         animateSideMenu(isHidden: true)
     }
 }
+
+extension MainViewController: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return autos.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                        cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard
+            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CarCell.identifier, for: indexPath) as? CarCell
+        else {
+            return  UICollectionViewCell()
+        }
+        let auto = autos[indexPath.item]
+        cell.configure(model: auto)
+        return cell
+    }
+}
+
+extension MainViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let cellWidth = collectionView.bounds.width
+        return CGSize(width: cellWidth, height: cellWidth * 0.75 )
+    }
+}
+
 
 // MARK: - TimeInterval
 
