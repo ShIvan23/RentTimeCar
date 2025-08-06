@@ -51,7 +51,7 @@ final class TaggedLabel: UILabel {
             strings: [.second, .fourth, .sixth],
             inString: .allText,
             font: UIFont.openSans(fontSize: 14)!,
-            color: .white
+            color: .whiteTextColor
         )
         attributedText = formattedText
         textAlignment = .center

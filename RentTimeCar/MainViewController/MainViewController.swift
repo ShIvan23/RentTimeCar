@@ -58,6 +58,7 @@ final class MainViewController: UIViewController {
         super.viewDidLoad()
         setupView()
         fetchAutos()
+        getUserInfo()
     }
     
     override func viewDidLayoutSubviews() {
@@ -69,10 +70,16 @@ final class MainViewController: UIViewController {
     
     private func setupView() {
         view.backgroundColor = .purple
-        view.addSubviews([menuButton, transparentView, sideMenuView, collectionView])
+        view.addSubviews([menuButton, transparentView, collectionView, sideMenuView])
         sideMenuView.delegate = self
         transparentView.isHidden = true
         setMenuButtonAction()
+    }
+    
+    private func getUserInfo() {
+//        rentApiFacade.getClients(with: <#T##String#>, completion: <#T##(Result<ApiResult<Clients>, any Error>) -> Void#>)
+        
+        // надо где-то прихранивать номер телефона пользователя
     }
     
     private func performLayout() {
@@ -167,6 +174,10 @@ extension MainViewController {
 extension MainViewController: SideMenuViewDelegate {
     func didTapToEmptySpace() {
         guard sideMenuView.frame.origin.x == .zero else { return }
+        animateSideMenu(isHidden: true)
+    }
+    
+    func sideMenuDidHide() {
         animateSideMenu(isHidden: true)
     }
 }

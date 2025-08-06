@@ -20,8 +20,7 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
     private let scrollView = UIScrollView()
     private let label = Label(
         text: "Введите номер вашего телефона, чтобы мы выслали вам код доступа",
-        fontSize: 14,
-        textColor: .white
+        fontSize: 14
     )
     private let codePhoneLabel = Label(
         text: "+7",
@@ -90,8 +89,8 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
     }
     
     private func setupBorderViews() {
-        codePhoneBorderView.backgroundColor = .systemGray4
-        phoneTextFieldBorderView.backgroundColor = .systemGray4
+        codePhoneBorderView.backgroundColor = .secondaryTextColor
+        phoneTextFieldBorderView.backgroundColor = .secondaryTextColor
     }
     
     private func addTapGesture() {

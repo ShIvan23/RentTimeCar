@@ -57,17 +57,17 @@ final class PhoneNumberTextField: UITextField {
         self.keyboardType = .numberPad
         font = UIFont.openSans(fontSize: 21)
         addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
-        textColor = .white
+        textColor = .whiteTextColor
         setPlaceholder()
     }
     
     private func setPlaceholder() {
         text = placeHolderText
-        textColor = .lightGray
+        textColor = .secondaryTextColor
     }
     
     private func setEditingColor() {
-        textColor = .white
+        textColor = .whiteTextColor
     }
     
     @objc

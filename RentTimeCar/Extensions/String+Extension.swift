@@ -47,7 +47,7 @@ extension String {
                                         NSAttributedString.Key.foregroundColor: color])
         for str in strings {
             attributedString.addAttribute(NSAttributedString.Key.underlineStyle, value: NSUnderlineStyle.thick.rawValue, range: (string as NSString).range(of: str))
-            attributedString.addAttribute(NSAttributedString.Key.underlineColor, value: UIColor.white, range: (string as NSString).range(of: str))
+            attributedString.addAttribute(NSAttributedString.Key.underlineColor, value: UIColor.whiteTextColor, range: (string as NSString).range(of: str))
         }
         return attributedString
     }
