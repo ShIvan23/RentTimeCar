@@ -4,11 +4,13 @@
 //
 //  Created by Ekaterina Volobueva on 31.07.2025.
 //
+
 import PinLayout
 import UIKit
 
 final class CarCell: UICollectionViewCell {
-
+    // MARK: - UI
+    
     private let imageView: UIImageView = {
         let imageView = UIImageView()
         imageView.contentMode = .scaleAspectFill
@@ -16,8 +18,8 @@ final class CarCell: UICollectionViewCell {
         return imageView
     }()
 
-    private let titleLabel = Label(text: "", numberOfLines: 1, fontSize: 16)
-    private let priceLabel = Label(text: "", numberOfLines: 1, fontSize: 16)
+    private let titleLabel = Label()
+    private let priceLabel = Label()
     
     private let gradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
@@ -29,19 +31,19 @@ final class CarCell: UICollectionViewCell {
         return layer
     }()
     
-    convenience init() {
-        self.init(frame: .zero)
-    }
+    // MARK: - Init
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupViews()
+        setupView()
     }
     
     @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
+    
+    // MARK: - Layout
     
     override public func sizeThatFits(_ size: CGSize) -> CGSize {
         autoSizeThatFits(size, layoutClosure: performLayout)
@@ -52,6 +54,8 @@ final class CarCell: UICollectionViewCell {
         performLayout()
     }
     
+    // MARK: - Override
+    
     override func prepareForReuse() {
         super.prepareForReuse()
         imageView.image = nil
@@ -59,7 +63,9 @@ final class CarCell: UICollectionViewCell {
         priceLabel.text = ""
     }
 
-    func configure(model: Autos) {
+    // MARK: - Internal Methods
+    
+    func configure(model: Auto) {
         titleLabel.text = model.title
         priceLabel.text = "\(model.defaultPriceWithDiscountSt) ₽/сутки"
 
@@ -78,10 +84,11 @@ final class CarCell: UICollectionViewCell {
     }
 }
 
+// MARK: - Private Methods
+
 private extension CarCell {
-    
-    func setupViews() {
-        backgroundColor = .black
+    func setupView() {
+        contentView.backgroundColor = .mainBackground
         contentView.addSubview(imageView)
         imageView.layer.addSublayer(gradientLayer)
         imageView.addSubviews([titleLabel, priceLabel])
@@ -100,5 +107,4 @@ private extension CarCell {
             .horizontally(10)
             .sizeToFit(.width)
     }
-
 }

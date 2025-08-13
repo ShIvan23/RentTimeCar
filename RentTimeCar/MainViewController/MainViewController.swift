@@ -17,25 +17,31 @@ final class MainViewController: UIViewController {
         rentApiFacade: rentApiFacade
     )
     private let transparentView = UIView()
-    private let menuButton = IconButton(image: .menu)
-    private var autos: [Autos] = []
+    private let navBarView = NavBarView()
+    private lazy var filterView = FilterView(coordinator: coordinator)
+    
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
-        layout.minimumLineSpacing = 12
+        layout.minimumLineSpacing = 8
         
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .black
+        collectionView.backgroundColor = .mainBackground
         collectionView.dataSource = self
         collectionView.delegate = self
-        collectionView.register(CarCell.self, forCellWithReuseIdentifier: CarCell.identifier)
+        collectionView.register(cell: ButtonCell.self)
+        collectionView.register(cell: CarCell.self)
+        collectionView.register(cell: EmptyCell.self)
         return collectionView
     }()
     
     // MARK: - Private Properties
     
+    private var cells: [CellType] = []
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
     private var isShowSideMenu = false
+    private var collectionViewContentYOffset: CGFloat = .zero
+    private var filterViewIsHidden = false
     
     // MARK: Init
     
@@ -48,6 +54,7 @@ final class MainViewController: UIViewController {
         super.init(nibName: nil, bundle: nil)
     }
     
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -58,7 +65,6 @@ final class MainViewController: UIViewController {
         super.viewDidLoad()
         setupView()
         fetchAutos()
-        getUserInfo()
     }
     
     override func viewDidLayoutSubviews() {
@@ -69,23 +75,29 @@ final class MainViewController: UIViewController {
     // MARK: - Private Methods
     
     private func setupView() {
-        view.backgroundColor = .purple
-        view.addSubviews([menuButton, transparentView, collectionView, sideMenuView])
+        view.backgroundColor = .mainBackground
+        view.addSubviews([collectionView, filterView, navBarView, transparentView, sideMenuView])
         sideMenuView.delegate = self
+        navBarView.delegate = self
         transparentView.isHidden = true
-        setMenuButtonAction()
-    }
-    
-    private func getUserInfo() {
-//        rentApiFacade.getClients(with: <#T##String#>, completion: <#T##(Result<ApiResult<Clients>, any Error>) -> Void#>)
-        
-        // надо где-то прихранивать номер телефона пользователя
     }
     
     private func performLayout() {
         isShowSideMenu ? showLayoutSideMenu() : hiddenLayoutSideMenu()
-        layoutMenuButton()
+        layoutNavBarView()
         layoutCarCollection()
+        layoutFilterView()
+    }
+}
+
+// MARK: - CollectionView
+
+extension MainViewController {
+    private func layoutCarCollection() {
+        collectionView.pin
+            .below(of: navBarView)
+            .horizontally()
+            .bottom()
     }
     
     private func fetchAutos() {
@@ -93,8 +105,9 @@ final class MainViewController: UIViewController {
             switch result {
             case .success(let model):
                 DispatchQueue.main.async {
-                    self?.autos = model.result ?? []
-                    self?.collectionView.reloadData()
+                    guard let self else { return }
+                    self.cells = self.mapAutos(with: model.result ?? [])
+                    self.collectionView.reloadData()
                 }
             case .failure(let error):
                 print("Ошибка: \(error.localizedDescription)")
@@ -102,26 +115,47 @@ final class MainViewController: UIViewController {
         }
     }
 
+    private func mapAutos(with model: [Auto]) -> [CellType] {
+        var result = [CellType]()
+        guard !model.isEmpty else { return result }
+        result = model.map {
+            .car($0)
+        }
+        result.insert(.empty(.emptyCellHeight), at: .zero)
+        // TODO: - Тут нужна логика на авторизованного пользователя
+        result.insert(.button, at: 2)
+        return result
+    }
 }
 
-// MARK: - MenuButton
+// MARK: - Filter View
 
 extension MainViewController {
-    private func layoutMenuButton() {
-        let navigationBarFrame = navigationController?.navigationBar.frame ?? .zero
-        let menuButtonSize = CGSize(square: 24)
-        let menuButtonY = navigationBarFrame.minY + (navigationBarFrame.height - menuButtonSize.height) / 2
-        menuButton.frame = CGRect(
-            origin: CGPoint(x: 16, y: menuButtonY),
-            size: menuButtonSize
-        )
-        navigationController?.navigationBar.isHidden = true
-    }
-    
-    private func setMenuButtonAction() {
-        menuButton.action = { [weak self] in
-            self?.animateSideMenu(isHidden: false)
+    private func layoutFilterView() {
+        if filterViewIsHidden {
+            filterView.pin
+                .top(view.safeAreaInsets.top)
+                .horizontally()
+                .height(.emptyCellHeight)
+        } else {
+            filterView.pin
+                .below(of: navBarView)
+                .horizontally()
+                .height(.emptyCellHeight)
         }
+    }
+}
+
+// MARK: - NavBarView
+
+extension MainViewController {
+    private func layoutNavBarView() {
+        navigationController?.isNavigationBarHidden = true
+        let navigationBarFrame = navigationController?.navigationBar.frame ?? .zero
+        navBarView.pin
+            .top(view.safeAreaInsets.top)
+            .horizontally()
+            .height(navigationBarFrame.height)
     }
 }
 
@@ -160,13 +194,6 @@ extension MainViewController {
     private func showLayoutSideMenu() {
         sideMenuView.frame.origin = .zero
     }
-
-    private func layoutCarCollection() {
-        collectionView.pin
-            .top(view.safeAreaInsets.top)
-            .horizontally()
-            .bottom()
-    }
 }
 
 // MARK: - SideMenuViewDelegate
@@ -182,36 +209,100 @@ extension MainViewController: SideMenuViewDelegate {
     }
 }
 
+// MARK: - NavBarViewDelegate
+
+extension MainViewController: NavBarViewDelegate {
+    func menuButtonTupped() {
+        animateSideMenu(isHidden: false)
+    }
+}
+
+// MARK: - UICollectionViewDataSource
+
 extension MainViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return autos.count
+        return cells.count
     }
     
     func collectionView(_ collectionView: UICollectionView,
                         cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        guard
-            let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CarCell.identifier, for: indexPath) as? CarCell
-        else {
-            return  UICollectionViewCell()
+        let cell = cells[indexPath.item]
+        switch cell {
+        case .empty:
+            let cell: EmptyCell = collectionView.dequeueCell(for: indexPath)
+            return cell
+        case .button:
+            let cell: ButtonCell = collectionView.dequeueCell(for: indexPath)
+            return cell
+        case let .car(autoModel):
+            let cell: CarCell = collectionView.dequeueCell(for: indexPath)
+            cell.configure(model: autoModel)
+            return cell
         }
-        let auto = autos[indexPath.item]
-        cell.configure(model: auto)
-        return cell
     }
 }
+
+// MARK: - UICollectionViewDelegateFlowLayout
 
 extension MainViewController: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView,
-                        layout collectionViewLayout: UICollectionViewLayout,
-                        sizeForItemAt indexPath: IndexPath) -> CGSize {
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         let cellWidth = collectionView.bounds.width
-        return CGSize(width: cellWidth, height: cellWidth * 0.75 )
+        let cell = cells[indexPath.item]
+        switch cell {
+        case let .empty(height):
+            return CGSize(width: cellWidth, height: height)
+        case .button:
+            return CGSize(width: cellWidth, height: 58)
+        case .car:
+            return CGSize(width: cellWidth, height: cellWidth * 0.75 )
+        }
+    }
+    
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard scrollView.contentOffset.y > scrollView.contentInset.top else {
+            // bouncing on top
+            filterViewIsHidden = false
+            return
+        }
+        
+        guard scrollView.contentOffset.y < (scrollView.contentSize.height - scrollView.bounds.size.height) else {
+            // bouncing on bottom
+            filterViewIsHidden = false
+            return
+        }
+        
+        if collectionViewContentYOffset > scrollView.contentOffset.y {
+            filterViewIsHidden = false
+        } else {
+            filterViewIsHidden = true
+        }
+        
+        UIView.animate(withDuration: 0.5) {
+            self.view.setNeedsLayout()
+            self.view.layoutIfNeeded()
+        }
+        collectionViewContentYOffset = scrollView.contentOffset.y
     }
 }
-
 
 // MARK: - TimeInterval
 
 private extension TimeInterval {
     static let animationTime: TimeInterval = 0.5
+}
+
+// MARK: - TimeInterval
+
+extension CGFloat {
+    static let emptyCellHeight: CGFloat = 50
+}
+
+// MARK: - CellType
+
+extension MainViewController {
+    enum CellType {
+        case car(Auto)
+        case empty(_ height: CGFloat)
+        case button
+    }
 }

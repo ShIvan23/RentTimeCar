@@ -7,7 +7,7 @@
 
 import Foundation
 
-struct Autos: Decodable {
+struct Auto: Decodable {
     let title: String
     let files: [File]
     let defaultPriceWithDiscountSt: Int
