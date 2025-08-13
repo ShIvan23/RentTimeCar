@@ -5,6 +5,9 @@
 //  Created by Ekaterina Volobueva on 31.07.2025.
 //
 
+import Nuke
+import NukeExtensions
+import NukeUI
 import PinLayout
 import UIKit
 
@@ -18,13 +21,13 @@ final class CarCell: UICollectionViewCell {
         return imageView
     }()
 
-    private let titleLabel = Label()
-    private let priceLabel = Label()
+    private let titleLabel = Label(textAlignment: .left)
+    private let priceLabel = Label(textAlignment: .left)
     
     private let gradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()
         layer.colors = [
-            UIColor.black.withAlphaComponent(0.6).cgColor,
+            UIColor.black.withAlphaComponent(0.8).cgColor,
             UIColor.clear.cgColor
         ]
         layer.locations = [0, 1]
@@ -74,13 +77,9 @@ final class CarCell: UICollectionViewCell {
         else {
             return
         }
-
-        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
-            guard let data = data, let image = UIImage(data: data) else { return }
-            DispatchQueue.main.async {
-                self?.imageView.image = image
-            }
-        }.resume()
+        
+        let options = ImageLoadingOptions(placeholder: .carPlaceholder, transition: .fadeIn(duration: 0.3))
+        NukeExtensions.loadImage(with: url, options: options, into: imageView)
     }
 }
 
@@ -96,11 +95,17 @@ private extension CarCell {
 
     func performLayout() {
         imageView.pin.all()
-        gradientLayer.frame = imageView.bounds
+        
+        gradientLayer.pin
+            .top()
+            .horizontally()
+            .height(bounds.height * 0.2)
+        
         titleLabel.pin
-            .top(30)
+            .top(4)
             .horizontally(10)
             .sizeToFit(.width)
+        
         priceLabel.pin
             .below(of: titleLabel, aligned: .left)
             .marginTop(4)

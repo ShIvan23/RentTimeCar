@@ -5,6 +5,7 @@
 //  Created by ivanshishkin on 28.07.2025.
 //
 
+import Nuke
 import PinLayout
 import UIKit
 
@@ -28,6 +29,7 @@ final class MainViewController: UIViewController {
         collectionView.backgroundColor = .mainBackground
         collectionView.dataSource = self
         collectionView.delegate = self
+        collectionView.prefetchDataSource = self
         collectionView.register(cell: ButtonCell.self)
         collectionView.register(cell: CarCell.self)
         collectionView.register(cell: EmptyCell.self)
@@ -39,9 +41,19 @@ final class MainViewController: UIViewController {
     private var cells: [CellType] = []
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
+    private lazy var imagePrefetcher = ImagePrefetcher(pipeline: ImagePipeline.shared)
     private var isShowSideMenu = false
     private var collectionViewContentYOffset: CGFloat = .zero
-    private var filterViewIsHidden = false
+    private var filterViewIsHidden = false {
+        didSet {
+            if oldValue != filterViewIsHidden {
+                UIView.animate(withDuration: 0.5) {
+                    self.view.setNeedsLayout()
+                    self.view.layoutIfNeeded()
+                }
+            }
+        }
+    }
     
     // MARK: Init
     
@@ -242,6 +254,24 @@ extension MainViewController: UICollectionViewDataSource {
     }
 }
 
+// MARK: - UICollectionViewDataSourcePrefetching
+
+extension MainViewController: UICollectionViewDataSourcePrefetching {
+    func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
+        let urlsForPrefetch: [URL] = indexPaths.compactMap {
+            switch cells[$0.item] {
+            case let .car(autoModel):
+                guard let urlString = autoModel.files.first?.url,
+                      let url = URL(string: urlString) else { return nil }
+                return url
+            default:
+                return nil
+            }
+        }
+        imagePrefetcher.startPrefetching(with: urlsForPrefetch)
+    }
+}
+
 // MARK: - UICollectionViewDelegateFlowLayout
 
 extension MainViewController: UICollectionViewDelegateFlowLayout {
@@ -277,10 +307,6 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
             filterViewIsHidden = true
         }
         
-        UIView.animate(withDuration: 0.5) {
-            self.view.setNeedsLayout()
-            self.view.layoutIfNeeded()
-        }
         collectionViewContentYOffset = scrollView.contentOffset.y
     }
 }
