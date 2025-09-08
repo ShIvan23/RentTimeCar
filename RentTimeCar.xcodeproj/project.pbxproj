@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7138F0E82E54DFC80004F013 /* SnapKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7138F0E72E54DFC80004F013 /* SnapKit */; };
 		718972612E4CF33D00B359C3 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 718972602E4CF33D00B359C3 /* Nuke */; };
 		718972632E4CF33D00B359C3 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 718972622E4CF33D00B359C3 /* NukeExtensions */; };
 		718972652E4CF33D00B359C3 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 718972642E4CF33D00B359C3 /* NukeUI */; };
@@ -47,6 +48,7 @@
 				718972612E4CF33D00B359C3 /* Nuke in Frameworks */,
 				718972632E4CF33D00B359C3 /* NukeExtensions in Frameworks */,
 				718972652E4CF33D00B359C3 /* NukeUI in Frameworks */,
+				7138F0E82E54DFC80004F013 /* SnapKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -93,6 +95,7 @@
 				718972602E4CF33D00B359C3 /* Nuke */,
 				718972622E4CF33D00B359C3 /* NukeExtensions */,
 				718972642E4CF33D00B359C3 /* NukeUI */,
+				7138F0E72E54DFC80004F013 /* SnapKit */,
 			);
 			productName = RentTimeCar;
 			productReference = 71B2CBBC2E3811A700BB3E58 /* RentTimeCar.app */;
@@ -125,6 +128,7 @@
 			packageReferences = (
 				71C52A592E394CF900544682 /* XCRemoteSwiftPackageReference "PinLayout" */,
 				7189725F2E4CF33D00B359C3 /* XCRemoteSwiftPackageReference "Nuke" */,
+				7138F0E62E54DFC80004F013 /* XCRemoteSwiftPackageReference "SnapKit" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 71B2CBBD2E3811A700BB3E58 /* Products */;
@@ -356,6 +360,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		7138F0E62E54DFC80004F013 /* XCRemoteSwiftPackageReference "SnapKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/SnapKit/SnapKit.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.7.1;
+			};
+		};
 		7189725F2E4CF33D00B359C3 /* XCRemoteSwiftPackageReference "Nuke" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/kean/Nuke.git";
@@ -375,6 +387,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		7138F0E72E54DFC80004F013 /* SnapKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7138F0E62E54DFC80004F013 /* XCRemoteSwiftPackageReference "SnapKit" */;
+			productName = SnapKit;
+		};
 		718972602E4CF33D00B359C3 /* Nuke */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 7189725F2E4CF33D00B359C3 /* XCRemoteSwiftPackageReference "Nuke" */;
