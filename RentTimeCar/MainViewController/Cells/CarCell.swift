@@ -21,8 +21,8 @@ final class CarCell: UICollectionViewCell {
         return imageView
     }()
 
-    private let titleLabel = Label(textAlignment: .left)
-    private let priceLabel = Label(textAlignment: .left)
+    private let titleLabel = Label(numberOfLines: 1 ,textAlignment: .left)
+    private let priceLabel = Label(numberOfLines: 1, textAlignment: .left)
     
     private let gradientLayer: CAGradientLayer = {
         let layer = CAGradientLayer()

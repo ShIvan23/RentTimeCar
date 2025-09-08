@@ -184,6 +184,7 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
         }
     }
 }
+
 // MARK: - Notification Center
 
 extension AuthorizationViewController {

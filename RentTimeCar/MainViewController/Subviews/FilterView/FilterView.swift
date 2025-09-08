@@ -105,7 +105,7 @@ extension FilterView: UICollectionViewDelegateFlowLayout {
         let filterItem = filterModel[indexPath.item]
         switch filterItem.type {
         case .filter:
-            ()
+            coordinator.openFilterViewController()
         case .date:
             ()
         case .autoType:

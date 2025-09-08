@@ -120,6 +120,7 @@ extension MainViewController {
                     guard let self else { return }
                     self.cells = self.mapAutos(with: model.result ?? [])
                     self.collectionView.reloadData()
+                    FilterService.shared.setModel(model.result ?? [])
                 }
             case .failure(let error):
                 print("Ошибка: \(error.localizedDescription)")

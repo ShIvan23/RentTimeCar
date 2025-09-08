@@ -11,6 +11,7 @@ protocol ICoordinator {
     var navigationController: UINavigationController? { get set }
     func openAuthorization()
     func openPDFViewController(pdfFile: PDFViewController.PDFFile)
+    func openFilterViewController()
 }
 
 final class Coordinator: ICoordinator {
@@ -29,5 +30,10 @@ final class Coordinator: ICoordinator {
         let pdfViewController = Builder.makePDFViewController(pdfFile: pdfFile)
         navigationController?.pushViewController(pdfViewController, animated: true)
         pdfViewController.navigationController?.navigationBar.isHidden = false
+    }
+    
+    func openFilterViewController() {
+        let filterViewController = Builder.makeFilterViewController()
+        navigationController?.pushViewController(filterViewController, animated: true)
     }
 }
