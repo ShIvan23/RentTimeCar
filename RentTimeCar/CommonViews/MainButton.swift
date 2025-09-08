@@ -10,7 +10,7 @@ import UIKit
 final class MainButton: UIButton {
     var action: (() -> Void)?
     
-    init(title: String) {
+    init(title: String = "") {
         super.init(frame: .zero)
         setupButton(title: title)
     }
