@@ -8,12 +8,13 @@
 import UIKit
 
 final class Builder {
+    
     static func makeMainViewController() -> UIViewController {
-        let coordinator = Coordinator()
-        let rentFacadeApi = RentApiFacade()
+        let coordinator = Coordinator.shared
+        let rentApiFacade = RentApiFacade()
         let controller = MainViewController(
             coordinator: coordinator,
-            rentApiFacade: rentFacadeApi
+            rentApiFacade: rentApiFacade
         )
         let navigationController = UINavigationController(rootViewController: controller)
         coordinator.navigationController = navigationController
@@ -21,6 +22,19 @@ final class Builder {
     }
     
     static func makeAuthorizationViewController() -> UIViewController {
-        AuthorizationViewController()
+        AuthorizationViewController(coordinator: Coordinator.shared)
+    }
+    
+    static func makePDFViewController(pdfFile: PDFViewController.PDFFile) -> UIViewController {
+        PDFViewController(pdfFile: pdfFile)
+    }
+    
+    static func makeFilterViewController() -> UIViewController {
+        let rentApiFacade = RentApiFacade()
+        let filterViewController = FilterViewController(
+            coordinator: Coordinator.shared,
+            rentApiFacade: rentApiFacade
+        )
+        return filterViewController
     }
 }

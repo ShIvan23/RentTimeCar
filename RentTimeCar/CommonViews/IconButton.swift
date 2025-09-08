@@ -22,7 +22,7 @@ final class IconButton: UIButton {
     private func setupButton(image: UIImage?) {
         let renderedImage = image?.withRenderingMode(.alwaysTemplate)
         setImage(renderedImage, for: .normal)
-        tintColor = .white
+        tintColor = .whiteTextColor
         addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
     }
     

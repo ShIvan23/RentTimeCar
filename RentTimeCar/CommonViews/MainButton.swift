@@ -10,7 +10,7 @@ import UIKit
 final class MainButton: UIButton {
     var action: (() -> Void)?
     
-    init(title: String) {
+    init(title: String = "") {
         super.init(frame: .zero)
         setupButton(title: title)
     }
@@ -23,9 +23,9 @@ final class MainButton: UIButton {
         setTitle(title, for: .normal)
         layer.cornerRadius = 12
         layer.borderWidth = 4
-        layer.borderColor = UIColor.white.cgColor
+        layer.borderColor = UIColor.whiteTextColor.cgColor
         backgroundColor = .black
-        tintColor = .white
+        tintColor = .whiteTextColor
         titleLabel?.font = UIFont.openSans()
         addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
     }
