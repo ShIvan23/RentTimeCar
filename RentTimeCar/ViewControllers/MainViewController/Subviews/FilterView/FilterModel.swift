@@ -12,6 +12,7 @@ struct FilterModel {
     let image: UIImage
     let text: String?
     var selectedTextFilter: String?
+    var isSelected = false
 }
 
 enum FilterType {

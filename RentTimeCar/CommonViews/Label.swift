@@ -28,18 +28,10 @@ final class Label: UILabel {
     }
     
     override func sizeThatFits(_ size: CGSize) -> CGSize {
-        if size == .zero {
-            return intrinsicContentSize
-        }
-        let rect = textRect(
-            forBounds: CGRect(
-                origin: .zero,
-                size: size
-            ),
-            limitedToNumberOfLines: numberOfLines
-        )
-        return rect.size
-        
+        guard let text else { return .zero }
+        let size = (text as NSString).size(withAttributes: [.font: font])
+//        print("+++ text = \(text), size = \(size)")
+        return size
     }
     
     private func setupLabel(

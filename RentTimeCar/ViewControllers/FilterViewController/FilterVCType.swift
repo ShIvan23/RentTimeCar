@@ -8,7 +8,7 @@
 import UIKit
 
 enum FilterVCType {
-    case date
+    case date([Date])
     case brandAuto(FilterBrandAuto)
     case price(FilterValueModel)
     case motorPower(FilterValueModel)
@@ -51,7 +51,7 @@ extension FilterVCType {
             .classAuto($0)
         }
         var result: [FilterVCType] = [
-            .date,
+            .date([]),
             .separator,
             .title("Марка")
         ]

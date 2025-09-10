@@ -16,12 +16,18 @@ final class FilterService {
     private(set) var price: (min: Int, max: Int) = (.zero, .zero)
     private(set) var motorPower: (min: Int, max: Int) = (.zero, .zero)
     private(set) var classesAuto = [FilterClassAuto]()
+    private(set) var selectedDates = [Date]()
     
     func setModel(_ model: [Auto]) {
         makeBrands(with: model)
         makePrices(with: model)
         makeMotorPower(with: model)
         makeClassesAuto(with: model)
+    }
+    
+    func setSelectedDates(_ selectedDates: [Date]) {
+        self.selectedDates = selectedDates
+        NotificationCenter.default.post(name: .selectedDatesUpdated, object: nil)
     }
     
     private func makeBrands(with model: [Auto]) {
@@ -69,4 +75,8 @@ final class FilterService {
             }
         }
     }
+}
+
+extension Notification.Name {
+    static let selectedDatesUpdated = Notification.Name("selectedDatesUpdated")
 }
