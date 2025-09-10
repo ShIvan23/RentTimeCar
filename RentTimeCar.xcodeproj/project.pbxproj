@@ -11,6 +11,7 @@
 		718972612E4CF33D00B359C3 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 718972602E4CF33D00B359C3 /* Nuke */; };
 		718972632E4CF33D00B359C3 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 718972622E4CF33D00B359C3 /* NukeExtensions */; };
 		718972652E4CF33D00B359C3 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 718972642E4CF33D00B359C3 /* NukeUI */; };
+		7199D2E22E705E3500405617 /* FSCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = 7199D2E12E705E3500405617 /* FSCalendar */; };
 		71C52A5B2E394CF900544682 /* PinLayout in Frameworks */ = {isa = PBXBuildFile; productRef = 71C52A5A2E394CF900544682 /* PinLayout */; };
 /* End PBXBuildFile section */
 
@@ -45,6 +46,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				71C52A5B2E394CF900544682 /* PinLayout in Frameworks */,
+				7199D2E22E705E3500405617 /* FSCalendar in Frameworks */,
 				718972612E4CF33D00B359C3 /* Nuke in Frameworks */,
 				718972632E4CF33D00B359C3 /* NukeExtensions in Frameworks */,
 				718972652E4CF33D00B359C3 /* NukeUI in Frameworks */,
@@ -96,6 +98,7 @@
 				718972622E4CF33D00B359C3 /* NukeExtensions */,
 				718972642E4CF33D00B359C3 /* NukeUI */,
 				7138F0E72E54DFC80004F013 /* SnapKit */,
+				7199D2E12E705E3500405617 /* FSCalendar */,
 			);
 			productName = RentTimeCar;
 			productReference = 71B2CBBC2E3811A700BB3E58 /* RentTimeCar.app */;
@@ -129,6 +132,7 @@
 				71C52A592E394CF900544682 /* XCRemoteSwiftPackageReference "PinLayout" */,
 				7189725F2E4CF33D00B359C3 /* XCRemoteSwiftPackageReference "Nuke" */,
 				7138F0E62E54DFC80004F013 /* XCRemoteSwiftPackageReference "SnapKit" */,
+				7199D2E02E705E3500405617 /* XCRemoteSwiftPackageReference "FSCalendar" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 71B2CBBD2E3811A700BB3E58 /* Products */;
@@ -376,6 +380,14 @@
 				minimumVersion = 12.8.0;
 			};
 		};
+		7199D2E02E705E3500405617 /* XCRemoteSwiftPackageReference "FSCalendar" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/WenchaoD/FSCalendar.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.4;
+			};
+		};
 		71C52A592E394CF900544682 /* XCRemoteSwiftPackageReference "PinLayout" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/layoutBox/PinLayout.git";
@@ -406,6 +418,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7189725F2E4CF33D00B359C3 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
+		};
+		7199D2E12E705E3500405617 /* FSCalendar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7199D2E02E705E3500405617 /* XCRemoteSwiftPackageReference "FSCalendar" */;
+			productName = FSCalendar;
 		};
 		71C52A5A2E394CF900544682 /* PinLayout */ = {
 			isa = XCSwiftPackageProductDependency;
