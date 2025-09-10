@@ -37,4 +37,9 @@ final class Builder {
         )
         return filterViewController
     }
+    
+    static func makeCalendarViewController() -> UIViewController {
+        let calendarViewController = CalendarViewController()
+        return calendarViewController
+    }
 }

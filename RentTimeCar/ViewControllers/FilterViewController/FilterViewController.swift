@@ -62,22 +62,18 @@ final class FilterViewController: UIViewController {
         super.viewDidLoad()
         setupView()
         addTapGesture()
+        addObservers()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.isNavigationBarHidden = false
-        addKeyboardObservers()
+        addObservers()
     }
     
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         performLayout()
-    }
-    
-    override func viewDidDisappear(_ animated: Bool) {
-        super.viewDidDisappear(animated)
-        removeKeyboardObservers()
     }
     
     // MARK: - Private Methods
@@ -138,8 +134,9 @@ extension FilterViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cellType = model[indexPath.item]
         switch cellType {
-        case .date:
+        case let .date(selectedDates):
             let cell: FilterDateCell = collectionView.dequeueCell(for: indexPath)
+            cell.configure(selectedDates: selectedDates)
             return cell
         case .separator:
             let cell: SeparatorCell = collectionView.dequeueCell(for: indexPath)
@@ -213,7 +210,7 @@ extension FilterViewController: UICollectionViewDelegateFlowLayout {
         let cellType = model[indexPath.item]
         switch cellType {
         case .date:
-            print("open calendar")
+            coordinator.openCalendarViewController()
         case .separator, .title, .motorPower, .price:
             break
         case let .brandAuto(brandAutoModel):
@@ -275,14 +272,10 @@ extension FilterViewController: FilterValueCellDelegate {
 // MARK: - Notification Center
 
 extension FilterViewController {
-    private func addKeyboardObservers() {
+    private func addObservers() {
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardShow), name: UIResponder.keyboardWillShowNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardHide), name: UIResponder.keyboardWillHideNotification, object: nil)
-    }
-    
-    private func removeKeyboardObservers() {
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
-        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(selectedDatesUpdate), name: .selectedDatesUpdated, object: nil)
     }
     
     @objc
@@ -299,5 +292,22 @@ extension FilterViewController {
     private func keyboardHide() {
         collectionView.contentInset.bottom = .zero
         collectionView.verticalScrollIndicatorInsets = .zero
+    }
+    
+    @objc
+    private func selectedDatesUpdate() {
+        let selectedDates = FilterService.shared.selectedDates
+        let dateCellIndex = model.firstIndex {
+            switch $0 {
+            case .date:
+                true
+            default:
+                false
+            }
+        }
+        guard let dateCellIndex,
+              model[safe: dateCellIndex] != nil else { return }
+        model[dateCellIndex] = .date(selectedDates)
+        collectionView.reloadData()
     }
 }
