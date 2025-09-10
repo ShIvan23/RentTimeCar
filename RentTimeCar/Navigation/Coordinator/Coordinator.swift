@@ -12,6 +12,7 @@ protocol ICoordinator {
     func openAuthorization()
     func openPDFViewController(pdfFile: PDFViewController.PDFFile)
     func openFilterViewController()
+    func openCalendarViewController()
 }
 
 final class Coordinator: ICoordinator {
@@ -35,5 +36,10 @@ final class Coordinator: ICoordinator {
     func openFilterViewController() {
         let filterViewController = Builder.makeFilterViewController()
         navigationController?.pushViewController(filterViewController, animated: true)
+    }
+    
+    func openCalendarViewController() {
+        let calendarViewController = Builder.makeCalendarViewController()
+        navigationController?.pushViewController(calendarViewController, animated: true)
     }
 }

@@ -27,6 +27,15 @@ final class FilterDateCell: UICollectionViewCell {
     )
     private let containerImageView = UIImageView()
     
+    // MARK: - Private Properties
+    
+    private lazy var dateFormatter: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd MMMM"
+        dateFormatter.locale = Locale(identifier: "ru_RU")
+        return dateFormatter
+    }()
+    
     // MARK: - Init
     
     override init(frame: CGRect) {
@@ -52,8 +61,16 @@ final class FilterDateCell: UICollectionViewCell {
     
     // MARK: - Internal Methods
     
-    func configure() {
-       
+    func configure(selectedDates: [Date]) {
+        if selectedDates.isEmpty {
+            containerLabel.text = .defaultContainerLabelText
+        } else {
+            guard let firstDate = selectedDates.first,
+                  let lastDate = selectedDates.last else { return }
+            let firstDateString = dateFormatter.string(from: firstDate)
+            let lastDateString = dateFormatter.string(from: lastDate)
+            containerLabel.text = "C \(firstDateString) по \(lastDateString)"
+        }
     }
     
     // MARK: - Private Methods

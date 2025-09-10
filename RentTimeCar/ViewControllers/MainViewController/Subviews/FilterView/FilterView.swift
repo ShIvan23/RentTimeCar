@@ -60,11 +60,43 @@ final class FilterView: UIView {
         backgroundColor = .mainBackground
         addSubview(collectionView)
         filterModel = FilterModel.makeFilterModel()
+        subscribeNotifications()
     }
     
     private func performLayout() {
         collectionView.pin.all()
             .marginVertical(4)
+    }
+    
+    private func subscribeNotifications() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(selectedDatesUpdate),
+            name: .selectedDatesUpdated,
+            object: nil
+        )
+    }
+    
+    @objc
+    private func selectedDatesUpdate() {
+        let selectedDates = FilterService.shared.selectedDates
+        let dateFilterIndex = filterModel.firstIndex {
+            switch $0.type {
+            case .date:
+                true
+            default:
+                false
+            }
+        }
+        guard let dateFilterIndex,
+              let oldModel = filterModel[safe: dateFilterIndex] else { return }
+        filterModel[dateFilterIndex] = FilterModel(
+            type: oldModel.type,
+            image: oldModel.image,
+            text: oldModel.text,
+            isSelected: !selectedDates.isEmpty
+        )
+        collectionView.reloadData()
     }
 }
 
@@ -93,7 +125,10 @@ extension FilterView: UICollectionViewDelegateFlowLayout {
             let size = (text as NSString).size(withAttributes: [.font: UIFont.openSans() ?? .systemFont(ofSize: 14)])
             textWidth = size.width + .filterCellMargin
         }
-        let totalWidth = imageWidth + textWidth
+        var totalWidth = imageWidth + textWidth
+        if filterModel[indexPath.item].isSelected {
+            totalWidth += .filterCellMargin * 2 + CGSize.filterCellIconSize.width * 2
+        }
         return CGSize(width: totalWidth, height: .emptyCellHeight - .filterCellMargin * 2)
     }
     
@@ -107,7 +142,7 @@ extension FilterView: UICollectionViewDelegateFlowLayout {
         case .filter:
             coordinator.openFilterViewController()
         case .date:
-            ()
+            coordinator.openCalendarViewController()
         case .autoType:
             ()
         case .sort:
