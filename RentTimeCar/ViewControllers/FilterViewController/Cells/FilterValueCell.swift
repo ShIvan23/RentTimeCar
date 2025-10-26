@@ -31,7 +31,12 @@ final class FilterValueCell: UICollectionViewCell {
     // MARK: - Private Properties
     
     private var cellType: CellType = .price
-    private var model: FilterValueModel = .init(minValue: .zero, maxValue: .zero)
+    private var model: FilterValueModel = FilterValueModel(
+        minValue: .zero,
+        maxValue: .zero,
+        minValueNow: .zero,
+        maxValueNow: .zero
+    )
     
     // MARK: - Init
     

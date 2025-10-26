@@ -42,4 +42,10 @@ final class Builder {
         let calendarViewController = CalendarViewController()
         return calendarViewController
     }
+    
+    static func makeDetailViewController(with model: Auto) -> UIViewController {
+        let coordinator = Coordinator.shared
+        let detailViewController = DetailAutoViewController(autoModel: model, coordinator: coordinator)
+        return detailViewController
+    }
 }

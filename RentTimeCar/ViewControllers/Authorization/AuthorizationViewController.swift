@@ -75,6 +75,7 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
         setupBorderViews()
         getCodeButtonAction()
         addTapGesture()
+        navigationController?.isNavigationBarHidden = false
     }
     
     private func getCodeButtonAction() {

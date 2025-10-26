@@ -14,6 +14,8 @@ struct Auto: Decodable {
     let marka: String
     let motorPower: Int
     let classAuto: String
+    let mileageLimit: Int
+    let fuelType: String
     
     enum CodingKeys: String, CodingKey {
         case files = "Files"
@@ -22,9 +24,70 @@ struct Auto: Decodable {
         case marka = "Marka"
         case motorPower = "ModInfoPowerLSValue"
         case classAuto = "AutoClassTitle"
+        case mileageLimit = "MileageLimit"
+        case fuelType = "FuelType"
+    }
+    
+    init(
+        title: String,
+        files: [File],
+        defaultPriceWithDiscountSt: Int,
+        marka: String,
+        motorPower: Int,
+        classAuto: String,
+        mileageLimit: Int,
+        fuelType: String
+    ) {
+        self.title = title
+        self.files = files
+        self.defaultPriceWithDiscountSt = defaultPriceWithDiscountSt
+        self.marka = marka
+        self.motorPower = motorPower
+        self.classAuto = classAuto
+        self.mileageLimit = mileageLimit
+        self.fuelType = fuelType
+    }
+    
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.files = try container.decode([File].self, forKey: .files)
+        self.title = try container.decode(String.self, forKey: .title)
+        self.defaultPriceWithDiscountSt = try container.decode(Int.self, forKey: .defaultPriceWithDiscountSt)
+        self.marka = try container.decode(String.self, forKey: .marka)
+        self.motorPower = try container.decode(Int.self, forKey: .motorPower)
+        self.classAuto = try container.decode(String.self, forKey: .classAuto)
+        self.mileageLimit = try container.decode(Int.self, forKey: .mileageLimit)
+        self.fuelType = try container.decode(String.self, forKey: .fuelType)
     }
 }
 
 struct File: Decodable {
     let url: String?
+    let folder: String
+    
+    private enum CodingKeys: String, CodingKey {
+        case url = "url"
+        case folder
+    }
+    
+    init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let folder = try container.decode(String.self, forKey: .folder)
+        let url = try container.decodeIfPresent(String.self, forKey: .url)
+        if folder == .folderImageValue {
+            self.url = url
+            self.folder = folder
+        } else if folder == .folderBrandValue {
+            self.url = url
+            self.folder = folder
+        } else {
+            self.url = nil
+            self.folder = folder
+        }
+    }
+}
+
+extension String {
+    static let folderImageValue = "brandImage"
+    static let folderBrandValue = "folder"
 }

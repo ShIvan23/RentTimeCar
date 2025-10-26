@@ -19,7 +19,7 @@ enum FilterVCType {
 
 struct FilterBrandAuto {
     let name: String
-    let image: UIImage?
+    let image: String?
     var isSelected = false
 }
 
@@ -29,11 +29,11 @@ struct FilterValueModel {
     var minValueNow: Int
     var maxValueNow: Int
     
-    init(minValue: Int, maxValue: Int) {
+    init(minValue: Int, maxValue: Int, minValueNow: Int, maxValueNow: Int) {
         self.minValue = minValue
         self.maxValue = maxValue
-        minValueNow = minValue
-        maxValueNow = maxValue
+        self.minValueNow = minValueNow
+        self.maxValueNow = maxValueNow
     }
 }
 
@@ -45,13 +45,19 @@ struct FilterClassAuto {
 extension FilterVCType {
     static func makeDefaultModel() -> [FilterVCType] {
         let brands: [FilterVCType] = FilterService.shared.brands.map {
-            .brandAuto($0)
+            .brandAuto(
+                FilterBrandAuto(
+                    name: $0.name,
+                    image: $0.image,
+                    isSelected: FilterService.shared.selectedBrands.contains($0.name)
+                )
+            )
         }
         let classesAuto: [FilterVCType] = FilterService.shared.classesAuto.map {
             .classAuto($0)
         }
         var result: [FilterVCType] = [
-            .date([]),
+            .date(FilterService.shared.selectedDates),
             .separator,
             .title("Марка")
         ]
@@ -60,12 +66,34 @@ extension FilterVCType {
         result.append(.title("Цена за сутки ₽"))
         let minPrice = FilterService.shared.price.min
         let maxPrice = FilterService.shared.price.max
-        result.append(.price(FilterValueModel(minValue: minPrice, maxValue: maxPrice)))
+        let minPriceNow = FilterService.shared.selectedPrice.min
+        let maxPriceNow = FilterService.shared.selectedPrice.max
+        result.append(
+            .price(
+                FilterValueModel(
+                    minValue: minPrice,
+                    maxValue: maxPrice,
+                    minValueNow: minPriceNow,
+                    maxValueNow: maxPriceNow
+                )
+            )
+        )
         result.append(.separator)
         result.append(.title("Мощность л.с."))
         let minMotorPower = FilterService.shared.motorPower.min
         let maxMotorPower = FilterService.shared.motorPower.max
-        result.append(.motorPower(FilterValueModel(minValue: minMotorPower, maxValue: maxMotorPower)))
+        result
+            .append(
+                .motorPower(
+                    FilterValueModel(
+                        minValue: minMotorPower,
+                        maxValue: maxMotorPower,
+                        // тут надо заменить на актуальные значения
+                        minValueNow: minMotorPower,
+                        maxValueNow: maxMotorPower
+                    )
+                )
+            )
         result.append(.separator)
         result.append(.title("Класс"))
         result.append(contentsOf: classesAuto)

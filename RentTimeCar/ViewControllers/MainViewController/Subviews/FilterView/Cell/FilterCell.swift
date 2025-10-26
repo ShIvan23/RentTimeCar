@@ -75,7 +75,7 @@ final class FilterCell: UICollectionViewCell {
         guard let filterType else { return }
         switch filterType {
         case .filter:
-            ()
+            FilterService.shared.resetAllFilters()
         case .date:
             FilterService.shared.setSelectedDates([])
         case .sort:

@@ -5,11 +5,15 @@
 //  Created by ivanshishkin on 14.08.2025.
 //
 
+import Nuke
+import NukeExtensions
 import PinLayout
 import UIKit
 
 final class BrandAutoCell: UICollectionViewCell {
     // MARK: - UI
+    
+    private let imageView = UIImageView()
     
     private let label = Label(
         numberOfLines: 1,
@@ -45,16 +49,26 @@ final class BrandAutoCell: UICollectionViewCell {
         isSelectedCell = model.isSelected
         label.text = model.name
         updateSelectionCell()
+        
+        guard let urlString = model.image,
+              let url = URL(string: urlString) else {
+            imageView.image = nil
+            return
+        }
+        NukeExtensions.loadImage(with: url, into: imageView)
     }
     
     // MARK: - Private Methods
     
     private func setupView() {
-        contentView.addSubview(label)
+        contentView.addSubviews([imageView, label])
         contentView.backgroundColor = .mainBackground
         contentView.layer.cornerRadius = 14
         contentView.layer.borderColor = UIColor.lightGray.cgColor
         contentView.layer.borderWidth = 2
+        
+        imageView.contentMode = .scaleAspectFit
+        
     }
     
     private func updateSelectionCell() {
@@ -62,6 +76,14 @@ final class BrandAutoCell: UICollectionViewCell {
     }
     
     private func performLayout() {
-        label.pin.all()
+        imageView.pin
+            .top()
+            .hCenter()
+            .size(CGSize(square: 60))
+        
+        label.pin
+            .below(of: imageView)
+            .horizontally()
+            .sizeToFit(.width)
     }
 }

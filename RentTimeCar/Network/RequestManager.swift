@@ -70,6 +70,41 @@ final class RequestManager {
         return request
     }
     
+    func searchAuto(with: SearchAutoInput) -> URLRequest? {
+        guard let baseURL else {
+            assertionFailure("Invalid baseURL")
+            return nil
+        }
+        var request = makeBaseUrl(url: baseURL)
+        let apiBody = ApiBody(
+            apiKey: apiKey,
+            apiVersion: "500",
+            method: "SearchAutosWithFullAutoData",
+            parameters: with
+        )
+        let data = try? encoder.encode(apiBody)
+        request.httpBody = data
+        return request
+    }
+    
+    func getFiltersParams() -> URLRequest? {
+        guard let baseURL else {
+            assertionFailure("Invalid baseURL")
+            return nil
+        }
+        var request = makeBaseUrl(url: baseURL)
+        let emptyModel = EmptyModel()
+        let apiBody = ApiBody(
+            apiKey: apiKey,
+            apiVersion: "500",
+            method: "GetFilterParams",
+            parameters: emptyModel
+        )
+        let data = try? encoder.encode(apiBody)
+        request.httpBody = data
+        return request
+    }
+    
     private func makeBaseUrl(url: URL) -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = Method.post.rawValue

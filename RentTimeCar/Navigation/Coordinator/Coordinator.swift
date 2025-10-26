@@ -13,6 +13,8 @@ protocol ICoordinator {
     func openPDFViewController(pdfFile: PDFViewController.PDFFile)
     func openFilterViewController()
     func openCalendarViewController()
+    func openDetailAutoCar(model: Auto)
+    func popViewController()
 }
 
 final class Coordinator: ICoordinator {
@@ -41,5 +43,14 @@ final class Coordinator: ICoordinator {
     func openCalendarViewController() {
         let calendarViewController = Builder.makeCalendarViewController()
         navigationController?.pushViewController(calendarViewController, animated: true)
+    }
+    
+    func openDetailAutoCar(model: Auto) {
+        let  detailViewController = Builder.makeDetailViewController(with: model)
+        navigationController?.pushViewController(detailViewController, animated: true)
+    }
+    
+    func popViewController() {
+        navigationController?.popViewController(animated: true)
     }
 }

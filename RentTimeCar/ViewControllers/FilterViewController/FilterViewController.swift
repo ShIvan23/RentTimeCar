@@ -11,7 +11,7 @@ import UIKit
 final class FilterViewController: UIViewController {
     // MARK: - UI
     
-    private let confirmButton = MainButton(title: "Показать")
+    private let confirmButton = MainButton()
     private let buttonContainerView = UIView()
     
     private lazy var collectionView: UICollectionView = {
@@ -39,6 +39,7 @@ final class FilterViewController: UIViewController {
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
     private var model = [FilterVCType]()
+    private let filterService = FilterService.shared
     
     // MARK: Init
     
@@ -84,6 +85,16 @@ final class FilterViewController: UIViewController {
         buttonContainerView.addSubview(confirmButton)
         buttonContainerView.backgroundColor = .secondaryBackground
         model = FilterVCType.makeDefaultModel()
+        if filterService.hasFilters {
+            updateConfirmButtonTitle(autoCount: filterService.filteredAutos.count)
+        } else {
+            updateConfirmButtonTitle(autoCount: model.count)
+        }
+        
+        confirmButton.action = { [weak self] in
+            guard let self else { return }
+            coordinator.popViewController()
+        }
     }
     
     private func performLayout() {
@@ -103,6 +114,10 @@ final class FilterViewController: UIViewController {
             .top(view.safeAreaInsets)
             .horizontally()
             .bottom(to: buttonContainerView.edge.top)
+    }
+    
+    private func updateConfirmButtonTitle(autoCount: Int) {
+        confirmButton.setTitle("Показать \(autoCount) предложений", for: .normal)
     }
     
     private func addTapGesture() {
@@ -186,7 +201,7 @@ extension FilterViewController: UICollectionViewDelegateFlowLayout {
         case .separator:
             return CGSize(width: availableWidth, height: 1)
         case .brandAuto:
-            let availableWidth = availableWidth - .collectionViewInterItemSpacing * 2
+            let availableWidth = availableWidth - .collectionViewInterItemSpacing * 2 - .collectionViewHorizontalInset * 2
             let cellWidth = availableWidth / 3
             return CGSize(square: cellWidth)
         case let .title(text):
@@ -211,6 +226,7 @@ extension FilterViewController: UICollectionViewDelegateFlowLayout {
         switch cellType {
         case .date:
             coordinator.openCalendarViewController()
+            return
         case .separator, .title, .motorPower, .price:
             break
         case let .brandAuto(brandAutoModel):
@@ -229,6 +245,7 @@ extension FilterViewController: UICollectionViewDelegateFlowLayout {
             model[indexPath.item] = .classAuto(filterClassModel)
             collectionView.reloadData()
         }
+        updateConfirmButton()
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
@@ -253,6 +270,7 @@ extension FilterViewController: FilterValueCellDelegate {
             guard let priceCellIndex,
                   model[safe: priceCellIndex] != nil else { return }
             model[priceCellIndex] = .price(newModel)
+            filterService.setSelectedPrice(min: newModel.minValueNow, max: newModel.maxValueNow)
         case .motorPower:
             let priceCellIndex = model.firstIndex { cellType in
                 switch cellType {
@@ -309,5 +327,55 @@ extension FilterViewController {
               model[safe: dateCellIndex] != nil else { return }
         model[dateCellIndex] = .date(selectedDates)
         collectionView.reloadData()
+        updateConfirmButton()
     }
+}
+
+// MARK: - Filter Operations
+
+private extension FilterViewController {
+    func filterSelectedBrands() -> [String] {
+        var selectedBrands: [String] = []
+        model.forEach {
+            switch $0 {
+            case let .brandAuto(brandModel):
+                if brandModel.isSelected {
+                    selectedBrands.append(brandModel.name)
+                }
+            default:
+                break
+            }
+        }
+        filterService.setSelectedBrands(selectedBrands)
+        return selectedBrands
+    }
+    
+    func updateConfirmButton() {
+        let selectedBrands = filterSelectedBrands()
+        let selectedDates = filterService.selectedDates
+        let input = SearchAutoInput(
+            dateFrom: selectedDates.first?.convertDateToString() ?? .defaultDate,
+            dateTo: selectedDates.last?.convertDateToString() ?? .defaultDate,
+            brands: selectedBrands,
+            defaultPriceFrom: filterService.selectedPrice.min,
+            defaultPriceTo: filterService.selectedPrice.max
+        )
+        rentApiFacade.searchAuto(with: input) { [weak self] result in
+            DispatchQueue.main.async {
+                switch result {
+                case let .success(model):
+                    self?.updateConfirmButtonTitle(autoCount: model.result?.count ?? .zero)
+                    // тут слабая ссылка, если уйти с экрана, то не отработает
+                    self?.filterService.setFilteredAutos(model.result ?? [])
+                    NotificationCenter.default.post(name: .filteredAutosUpdated, object: nil)
+                case let .failure(error):
+                    print("+++ error = \(error)")
+                }
+            }
+        }
+    }
+}
+
+private extension String {
+    static let defaultDate = "1900.01.01 00:00:00"
 }

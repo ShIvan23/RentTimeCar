@@ -26,10 +26,15 @@ final class PDFViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
+    // MARK: - Life Cycle
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .black
+        navigationController?.isNavigationBarHidden = false
     }
+    
+    // MARK: - Private Methods
     
     private func setupView() {
         let pdfView = PDFView(frame: view.bounds)

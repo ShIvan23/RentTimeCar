@@ -23,10 +23,10 @@ final class MainButton: UIButton {
         setTitle(title, for: .normal)
         layer.cornerRadius = 12
         layer.borderWidth = 4
-        layer.borderColor = UIColor.whiteTextColor.cgColor
+        layer.borderColor = UIColor.red.cgColor
         backgroundColor = .black
         tintColor = .whiteTextColor
-        titleLabel?.font = UIFont.openSans()
+        titleLabel?.font = UIFont.openSans(fontSize: 18)
         addTarget(self, action: #selector(buttonAction), for: .touchUpInside)
     }
     

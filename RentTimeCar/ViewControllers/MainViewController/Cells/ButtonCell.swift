@@ -41,6 +41,7 @@ final class ButtonCell: UICollectionViewCell {
     private func setupView() {
         contentView.addSubview(button)
         contentView.backgroundColor = .mainBackground
+        button.isUserInteractionEnabled = false
     }
     
     private func performLayout() {

@@ -11,6 +11,8 @@ protocol IRentApiFacade {
     func getClients(with phoneNumber: String, completion: @escaping (Result<ApiResult<Clients>, Error>) -> Void)
     func addClient(with phoneNumber: String, completion: @escaping (Result<ApiResult<Client>, Error>) -> Void)
     func getAutos(completion: @escaping (Result<ApiResult<[Auto]>, Error>) -> Void)
+    func searchAuto(with: SearchAutoInput, completion: @escaping (Result<ApiResult<[Auto]>, Error>) -> Void)
+    func getFilterPrams(completion: @escaping (Result<ApiResult<GetFilterParams>, Error>) -> Void)
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -32,4 +34,13 @@ final class RentApiFacade: IRentApiFacade {
         networkManager.fetch(request: request, completion: completion)
     }
     
+    func searchAuto(with: SearchAutoInput, completion: @escaping (Result<ApiResult<[Auto]>, Error>) -> Void) {
+        guard let request = requestManager.searchAuto(with: with) else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+    
+    func getFilterPrams(completion: @escaping (Result<ApiResult<GetFilterParams>, Error>) -> Void) {
+        guard let request = requestManager.getFiltersParams() else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
 }

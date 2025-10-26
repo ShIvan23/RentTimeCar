@@ -9,6 +9,8 @@ import Nuke
 import PinLayout
 import UIKit
 
+import NukeExtensions
+
 // Главный контроллер
 final class MainViewController: UIViewController {
     // MARK: - UI
@@ -92,6 +94,7 @@ final class MainViewController: UIViewController {
         sideMenuView.delegate = self
         navBarView.delegate = self
         transparentView.isHidden = true
+        subscribeToNotification()
     }
     
     private func performLayout() {
@@ -99,6 +102,20 @@ final class MainViewController: UIViewController {
         layoutNavBarView()
         layoutCarCollection()
         layoutFilterView()
+    }
+    
+    private func subscribeToNotification() {
+        NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .filteredAutosUpdated, object: nil)
+    }
+    
+    @objc private func filteredAutosUpdated() {
+        let model = FilterService.shared.filteredAutos
+        if model.isEmpty {
+            cells = mapAutos(with: FilterService.shared.allAutos)
+        } else {
+            cells = mapAutos(with: model)
+        }
+        collectionView.reloadData()
     }
 }
 
@@ -286,6 +303,17 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
             return CGSize(width: cellWidth, height: 58)
         case .car:
             return CGSize(width: cellWidth, height: cellWidth * 0.75 )
+        }
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        switch cells[indexPath.item] {
+        case let .car(autoModel):
+            coordinator.openDetailAutoCar(model: autoModel)
+        case .button:
+            coordinator.openAuthorization()
+        case .empty:
+            break
         }
     }
     

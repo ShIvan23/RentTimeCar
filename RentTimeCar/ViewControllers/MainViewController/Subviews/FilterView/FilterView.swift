@@ -75,6 +75,13 @@ final class FilterView: UIView {
             name: .selectedDatesUpdated,
             object: nil
         )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(filteredAutosUpdated),
+            name: .filteredAutosUpdated,
+            object: nil
+        )
     }
     
     @objc
@@ -95,6 +102,28 @@ final class FilterView: UIView {
             image: oldModel.image,
             text: oldModel.text,
             isSelected: !selectedDates.isEmpty
+        )
+        collectionView.reloadData()
+    }
+    
+    @objc
+    private func filteredAutosUpdated() {
+        let filtersIndex = filterModel.firstIndex {
+            switch $0.type {
+            case .filter:
+                true
+            default:
+                false
+            }
+        }
+        
+        guard let filtersIndex,
+              let oldModel = filterModel[safe: filtersIndex] else { return }
+        filterModel[filtersIndex] = FilterModel(
+            type: oldModel.type,
+            image: oldModel.image,
+            text: oldModel.text,
+            isSelected: FilterService.shared.hasFilters
         )
         collectionView.reloadData()
     }
