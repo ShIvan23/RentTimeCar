@@ -14,14 +14,16 @@ protocol ICoordinator {
     func openFilterViewController()
     func openCalendarViewController()
     func openDetailAutoCar(model: Auto)
+    func openFullImageViewController(with image: String)
     func popViewController()
 }
 
-final class Coordinator: ICoordinator {
+final class Coordinator: NSObject, ICoordinator {
     var navigationController: UINavigationController?
+    private lazy var transition = ImageTransition()
     
     static let shared = Coordinator()
-    private init() {}
+    private override init() {}
     
     func openAuthorization() {
         let authorizationViewController = Builder.makeAuthorizationViewController()
@@ -46,11 +48,30 @@ final class Coordinator: ICoordinator {
     }
     
     func openDetailAutoCar(model: Auto) {
-        let  detailViewController = Builder.makeDetailViewController(with: model)
+        let detailViewController = Builder.makeDetailViewController(with: model)
         navigationController?.pushViewController(detailViewController, animated: true)
+    }
+    
+    func openFullImageViewController(with image: String) {
+        let fullImageViewController = Builder.makeFullImageViewController(with: image)
+        fullImageViewController.modalPresentationStyle = .custom
+        fullImageViewController.transitioningDelegate = self
+        navigationController?.present(fullImageViewController, animated: true)
     }
     
     func popViewController() {
         navigationController?.popViewController(animated: true)
+    }
+}
+
+extension Coordinator: UIViewControllerTransitioningDelegate {
+    func animationController(forPresented presented: UIViewController, presenting: UIViewController, source: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        transition.presenting = true
+        return transition
+    }
+    
+    func animationController(forDismissed dismissed: UIViewController) -> UIViewControllerAnimatedTransitioning? {
+        transition.presenting = false
+        return transition
     }
 }

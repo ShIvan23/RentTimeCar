@@ -48,4 +48,8 @@ final class Builder {
         let detailViewController = DetailAutoViewController(autoModel: model, coordinator: coordinator)
         return detailViewController
     }
+    
+    static func makeFullImageViewController(with image: String) -> UIViewController {
+        FullImageViewController(image: image)
+    }
 }

@@ -238,6 +238,11 @@ extension DetailAutoViewController: UICollectionViewDelegateFlowLayout {
             imagesCollectionView.scrollToItem(at: indexPath, at: .left, animated: true)
         }
     }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard let autoImage = autoModel.files[safe: indexPath.item]?.url else { return }
+        coordinator.openFullImageViewController(with: autoImage)
+    }
 }
 
 private extension CGFloat {
