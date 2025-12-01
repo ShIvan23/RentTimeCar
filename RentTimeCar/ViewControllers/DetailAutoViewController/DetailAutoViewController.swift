@@ -45,6 +45,8 @@ final class DetailAutoViewController: UIViewController {
     private let insuranceView = InsuranceView()
     
     private let selectedDateView = SelectDateView()
+    private let continueButton = MainButton(title: "Продолжить")
+    private let buttonContainerView = UIView()
     
     // MARK: - Init
     
@@ -88,11 +90,16 @@ final class DetailAutoViewController: UIViewController {
     
     private func setupView() {
         view.backgroundColor = .mainBackground
-        view.addSubviews([imagesCollectionView, stackView, discountView, insuranceView, selectedDateView])
+        view.addSubviews([imagesCollectionView, stackView, discountView, insuranceView, selectedDateView, buttonContainerView])
+        buttonContainerView.addSubview(continueButton)
+        buttonContainerView.backgroundColor = .secondaryBackground
         navigationController?.isNavigationBarHidden = false
         configureStackView()
         selectedDateView.addTapGestureClosure { [weak self] in
             self?.coordinator.openCalendarViewController()
+        }
+        continueButton.action = { [weak self]  in
+            self?.coordinator.openYandexMapController()
         }
     }
     
@@ -126,6 +133,18 @@ final class DetailAutoViewController: UIViewController {
             .horizontally()
             .marginHorizontal(.stackViewHorizontalInset)
             .sizeToFit(.width)
+        
+        buttonContainerView.pin
+            .bottom()
+            .horizontally()
+            .height(view.safeAreaInsets.bottom + .buttonHeight + .buttonVerticalMargin * 2)
+        
+        continueButton.pin
+            .top()
+            .horizontally()
+            .marginVertical(.buttonVerticalMargin)
+            .marginHorizontal(16)
+            .height(.buttonHeight)
     }
     
     private func configureStackView() {
@@ -249,4 +268,6 @@ private extension CGFloat {
     static let stackViewHorizontalInset: CGFloat = 16
     static let stackViewSpacing: CGFloat = 10
     static let stackViewHeight: CGFloat = 60
+    static let buttonHeight: CGFloat = 50
+    static let buttonVerticalMargin: CGFloat = 8
 }

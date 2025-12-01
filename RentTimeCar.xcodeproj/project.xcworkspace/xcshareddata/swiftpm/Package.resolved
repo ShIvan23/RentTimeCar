@@ -1,5 +1,5 @@
 {
-  "originHash" : "74939f06fefc3669be57cf8ed9b664ba8556bb5529f9a72d5afb01a2443c42e9",
+  "originHash" : "e6ff6575e68833114ff948905b2d9b5396530e2356c619be9c9b78ae6ee30fbe",
   "pins" : [
     {
       "identity" : "fscalendar",
@@ -8,6 +8,15 @@
       "state" : {
         "revision" : "0fbdec5172fccb90f707472eeaea4ffe095278f6",
         "version" : "2.8.4"
+      }
+    },
+    {
+      "identity" : "mapkit-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/yandex/mapkit-ios.git",
+      "state" : {
+        "revision" : "de832c7988711e02e6487080c0a90264f3edabfc",
+        "version" : "4.25.0"
       }
     },
     {

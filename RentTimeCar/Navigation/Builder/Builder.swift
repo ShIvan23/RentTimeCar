@@ -52,4 +52,13 @@ final class Builder {
     static func makeFullImageViewController(with image: String) -> UIViewController {
         FullImageViewController(image: image)
     }
+    
+    static func makeYandexMapViewController() -> UIViewController {
+        let coordinator = Coordinator.shared
+        return YandexMapViewController(coordinator: coordinator)
+    }
+    
+    static func makeSearchAddressViewController() -> UIViewController {
+        SearchAddressViewController()
+    }
 }

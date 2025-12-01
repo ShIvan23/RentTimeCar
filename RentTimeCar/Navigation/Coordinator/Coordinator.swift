@@ -15,6 +15,8 @@ protocol ICoordinator {
     func openCalendarViewController()
     func openDetailAutoCar(model: Auto)
     func openFullImageViewController(with image: String)
+    func openYandexMapController()
+    func presentSearchAddressViewController()
     func popViewController()
 }
 
@@ -57,6 +59,16 @@ final class Coordinator: NSObject, ICoordinator {
         fullImageViewController.modalPresentationStyle = .custom
         fullImageViewController.transitioningDelegate = self
         navigationController?.present(fullImageViewController, animated: true)
+    }
+    
+    func openYandexMapController() {
+        let yandexMapController = Builder.makeYandexMapViewController()
+        navigationController?.pushViewController(yandexMapController, animated: true)
+    }
+    
+    func presentSearchAddressViewController() {
+        let searchAddressViewController = Builder.makeSearchAddressViewController()
+        navigationController?.present(searchAddressViewController, animated: true)
     }
     
     func popViewController() {

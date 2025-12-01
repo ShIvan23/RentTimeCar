@@ -29,9 +29,19 @@ final class Label: UILabel {
     
     override func sizeThatFits(_ size: CGSize) -> CGSize {
         guard let text else { return .zero }
-        let size = (text as NSString).size(withAttributes: [.font: font])
-//        print("+++ text = \(text), size = \(size)")
-        return size
+        let textSize = (text as NSString).size(withAttributes: [.font: font])
+        guard size != .zero else { return textSize }
+        
+        if textSize.width < size.width {
+            return textSize
+        } else {
+            let numberOfLines = (textSize.width / size.width).rounded(.up)
+            let result = CGSize(
+                width: size.width,
+                height: textSize.height * numberOfLines
+            )
+            return result
+        }
     }
     
     private func setupLabel(
