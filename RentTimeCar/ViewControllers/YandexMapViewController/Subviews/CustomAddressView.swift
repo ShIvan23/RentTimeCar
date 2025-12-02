@@ -17,10 +17,10 @@ final class CustomAddressView: UIView {
         fontSize: 13,
         textAlignment: .center
     )
-    private let crossButton = IconButton(image: .redCross)
+    private let arrowImageView = UIImageView()
     private let containerView = UIView()
     private let containerLabel = Label(
-        text: "Введите адрес",
+        text: .defaultText,
         numberOfLines: 1,
         fontSize: 14,
         textAlignment: .left
@@ -55,15 +55,21 @@ final class CustomAddressView: UIView {
         containerLabel.text = address
     }
     
+    func resetText() {
+        containerLabel.text = .defaultText
+    }
+    
     // MARK: - Private Methods
     
     private func setupView() {
         addSubviews([containerView, label])
-        containerView.addSubviews([containerLabel, crossButton])
+        containerView.addSubviews([containerLabel, arrowImageView])
         containerView.layer.cornerRadius = 14
         containerView.layer.borderColor = UIColor.lightGray.cgColor
         containerView.layer.borderWidth = 2
         label.backgroundColor = .mainBackground
+        arrowImageView.image = .arrow.withRenderingMode(.alwaysTemplate)
+        arrowImageView.tintColor = .whiteTextColor
     }
     
     private func performLayout() {
@@ -82,17 +88,21 @@ final class CustomAddressView: UIView {
                 width: labelContentSize.width + 12,
                 height: labelContentSize.height))
         
-        crossButton.pin
+        arrowImageView.pin
             .right()
             .vCenter()
             .marginRight(12)
-            .size(CGSize(square: 24))
+            .size(CGSize(square: 16))
         
         containerLabel.pin
             .left()
-            .right(to: crossButton.edge.left)
+            .right(to: arrowImageView.edge.left)
             .marginHorizontal(10)
             .vCenter()
             .sizeToFit(.width)
     }
+}
+
+private extension String {
+    static let defaultText = "Введите адрес"
 }

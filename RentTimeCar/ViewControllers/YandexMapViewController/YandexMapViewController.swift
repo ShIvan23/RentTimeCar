@@ -135,6 +135,7 @@ final class YandexMapViewController: UIViewController {
         case 0:
             showOffice()
             showAddressOfficeView()
+            customAddressView.resetText()
         case 1:
             showCustomPlaceMark()
             showCustomAddressView()
