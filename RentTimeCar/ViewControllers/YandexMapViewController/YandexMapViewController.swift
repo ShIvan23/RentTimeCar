@@ -109,7 +109,8 @@ final class YandexMapViewController: UIViewController {
         segmentControl.addTarget(self, action: #selector(segmentControlAction), for: .valueChanged)
         customAddressView.isHidden = true
         customAddressView.addTapGestureClosure { [weak self] in
-            self?.coordinator.presentSearchAddressViewController()
+            guard let self else { return }
+            coordinator.openSearchAddressViewController(delegate: self)
         }
     }
     
@@ -176,6 +177,8 @@ final class YandexMapViewController: UIViewController {
     }
 }
 
+// MARK: - YMKMapCameraListener
+
 extension YandexMapViewController: YMKMapCameraListener {
     func onCameraPositionChanged(with map: YMKMap, cameraPosition: YMKCameraPosition, cameraUpdateReason: YMKCameraUpdateReason, finished: Bool) {
         guard !placeMarkImageView.isHidden,
@@ -201,7 +204,32 @@ extension YandexMapViewController: YMKMapCameraListener {
     }
 }
 
+// MARK: - SearchAddressViewControllerDelegate
+
+extension YandexMapViewController: SearchAddressViewControllerDelegate {
+    func search(uri: String?) {
+        guard let uri else { return }
+        searchSession?.cancel()
+        searchSession = searchManager.searchByURI(
+            withUri: uri,
+            searchOptions: YMKSearchOptions(),
+            responseHandler: { [weak self] response, error in
+                guard let self,
+                let response,
+                    let point = response.collection.children.first?.obj?.geometry.first?.point else { return }
+                mapView.mapWindow.map.move(with: YMKCameraPosition(target: point, zoom: 15.5, azimuth: 0, tilt: 0))
+            })
+    }
+}
+
 private extension String {
     static let office = "Забрать из офиса"
     static let delivery = "Доставить по адресу"
+}
+
+private extension YandexMapViewController {
+    struct SearchResponseItem {
+        let point: YMKPoint
+        let geoObject: YMKGeoObject?
+    }
 }

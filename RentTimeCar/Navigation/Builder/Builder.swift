@@ -58,7 +58,11 @@ final class Builder {
         return YandexMapViewController(coordinator: coordinator)
     }
     
-    static func makeSearchAddressViewController() -> UIViewController {
-        SearchAddressViewController()
+    static func makeSearchAddressViewController(delegate: SearchAddressViewControllerDelegate) -> UIViewController {
+        let coordinator = Coordinator.shared
+        return SearchAddressViewController(
+            coordinator: coordinator,
+            delegate: delegate
+        )
     }
 }

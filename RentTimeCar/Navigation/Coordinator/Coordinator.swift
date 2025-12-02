@@ -16,7 +16,7 @@ protocol ICoordinator {
     func openDetailAutoCar(model: Auto)
     func openFullImageViewController(with image: String)
     func openYandexMapController()
-    func presentSearchAddressViewController()
+    func openSearchAddressViewController(delegate: SearchAddressViewControllerDelegate)
     func popViewController()
 }
 
@@ -66,9 +66,9 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.pushViewController(yandexMapController, animated: true)
     }
     
-    func presentSearchAddressViewController() {
-        let searchAddressViewController = Builder.makeSearchAddressViewController()
-        navigationController?.present(searchAddressViewController, animated: true)
+    func openSearchAddressViewController(delegate: SearchAddressViewControllerDelegate) {
+        let searchAddressViewController = Builder.makeSearchAddressViewController(delegate: delegate)
+        navigationController?.pushViewController(searchAddressViewController, animated: true)
     }
     
     func popViewController() {
