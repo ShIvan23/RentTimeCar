@@ -65,4 +65,19 @@ final class Builder {
             delegate: delegate
         )
     }
+    
+    static func makeBottomSheetViewController(type: BottomSheetType) -> UIViewController {
+        let coordinator = Coordinator.shared
+        let bottomSheetFilterView = BottomSheetFilterViewController(
+            type: type,
+            coordinator: coordinator
+        )
+
+        if let sheet = bottomSheetFilterView.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+        return bottomSheetFilterView
+    }
 }

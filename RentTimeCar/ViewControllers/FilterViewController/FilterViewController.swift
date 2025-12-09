@@ -238,12 +238,13 @@ extension FilterViewController: UICollectionViewDelegateFlowLayout {
             model[indexPath.item] = .brandAuto(brandAutoModel)
             collectionView.reloadData()
         case let .classAuto(classAutoModel):
-            let filterClassModel = FilterClassAuto(
+            let filterClassModel = FilterInfoAuto(
                 name: classAutoModel.name,
                 isSelected: !classAutoModel.isSelected
             )
             model[indexPath.item] = .classAuto(filterClassModel)
             collectionView.reloadData()
+            filterService.updateFilterInfo(for: .autoType, item: filterClassModel)
         }
         updateConfirmButton()
     }
@@ -271,6 +272,7 @@ extension FilterViewController: FilterValueCellDelegate {
                   model[safe: priceCellIndex] != nil else { return }
             model[priceCellIndex] = .price(newModel)
             filterService.setSelectedPrice(min: newModel.minValueNow, max: newModel.maxValueNow)
+            updateConfirmButton()
         case .motorPower:
             let priceCellIndex = model.firstIndex { cellType in
                 switch cellType {
@@ -283,6 +285,8 @@ extension FilterViewController: FilterValueCellDelegate {
             guard let priceCellIndex,
                   model[safe: priceCellIndex] != nil else { return }
             model[priceCellIndex] = .motorPower(newModel)
+            filterService.setSelectedMotorPower(min: newModel.minValueNow, max: newModel.maxValueNow)
+            updateConfirmButton()
         }
     }
 }
@@ -349,16 +353,25 @@ private extension FilterViewController {
         filterService.setSelectedBrands(selectedBrands)
         return selectedBrands
     }
-    
+
+    func getSelectedAutoClasses() -> [String] {
+        filterService.classesAuto.compactMap { $0.isSelected ? $0.name : nil }
+    }
+
     func updateConfirmButton() {
         let selectedBrands = filterSelectedBrands()
         let selectedDates = filterService.selectedDates
+        let selectedAutoClasses = getSelectedAutoClasses()
+// тут проблема на стороне API, что не работает сортировка по выбранным брендам и по мощности двигателя
         let input = SearchAutoInput(
             dateFrom: selectedDates.first?.convertDateToString() ?? .defaultDate,
             dateTo: selectedDates.last?.convertDateToString() ?? .defaultDate,
             brands: selectedBrands,
             defaultPriceFrom: filterService.selectedPrice.min,
-            defaultPriceTo: filterService.selectedPrice.max
+            defaultPriceTo: filterService.selectedPrice.max,
+            autoClasses: selectedAutoClasses,
+            powerMin: filterService.selectedMotorPower.min,
+            powerMax: filterService.selectedMotorPower.max
         )
         rentApiFacade.searchAuto(with: input) { [weak self] result in
             DispatchQueue.main.async {

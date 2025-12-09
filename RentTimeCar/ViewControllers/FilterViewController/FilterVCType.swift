@@ -12,7 +12,7 @@ enum FilterVCType {
     case brandAuto(FilterBrandAuto)
     case price(FilterValueModel)
     case motorPower(FilterValueModel)
-    case classAuto(FilterClassAuto)
+    case classAuto(FilterInfoAuto)
     case separator
     case title(String)
 }
@@ -37,9 +37,14 @@ struct FilterValueModel {
     }
 }
 
-struct FilterClassAuto {
+struct FilterInfoAuto {
     let name: String
     var isSelected = false
+
+    init(name: String, isSelected: Bool = false) {
+        self.name = name
+        self.isSelected = isSelected
+    }
 }
 
 extension FilterVCType {

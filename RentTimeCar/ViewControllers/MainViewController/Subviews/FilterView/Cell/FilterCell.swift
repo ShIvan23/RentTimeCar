@@ -12,7 +12,10 @@ final class FilterCell: UICollectionViewCell {
     // MARK: - UI
     
     private let imageView = UIImageView()
-    private let label = Label(fontSize: 14)
+    private let label = Label(
+        numberOfLines: 1,
+        fontSize: 14
+    )
     private let isSelectedImageView = UIImageView()
     private let removeFiltersButton = UIButton()
     
@@ -94,10 +97,12 @@ final class FilterCell: UICollectionViewCell {
             .size(.filterCellIconSize)
             .vCenter()
         
+        let textWidth = label.sizeThatFits(bounds.size).width
         label.pin
+            .vertically()
             .after(of: imageView, aligned: .center)
             .marginLeft(.filterCellMargin)
-            .sizeToFit()
+            .width(textWidth)
         
         if !isSelectedImageView.isHidden {
             isSelectedImageView.pin

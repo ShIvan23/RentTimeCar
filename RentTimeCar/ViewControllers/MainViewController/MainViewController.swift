@@ -22,7 +22,8 @@ final class MainViewController: UIViewController {
     private let transparentView = UIView()
     private let navBarView = NavBarView()
     private lazy var filterView = FilterView(coordinator: coordinator)
-    
+    private let filterService = FilterService.shared
+
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 8
@@ -106,16 +107,35 @@ final class MainViewController: UIViewController {
     
     private func subscribeToNotification() {
         NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .filteredAutosUpdated, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(sortingAutoUpdated), name: .sortingAutoUpdated, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(classAutoUpdated), name: .classAutoUpdated, object: nil)
     }
     
-    @objc private func filteredAutosUpdated() {
-        let model = FilterService.shared.filteredAutos
+    @objc
+    private func filteredAutosUpdated() {
+        let model = filterService.filteredAutos
         if model.isEmpty {
-            cells = mapAutos(with: FilterService.shared.allAutos)
+            cells = mapAutos(with: filterService.allAutos)
         } else {
             cells = mapAutos(with: model)
         }
         collectionView.reloadData()
+    }
+
+    @objc
+    private func sortingAutoUpdated() {
+        let firstSelectedIndex = filterService.sortingAuto.firstIndex(where: { $0.isSelected })
+        guard let firstSelectedIndex else {
+            cells = mapAutos(with: filterService.allAutos)
+            collectionView.reloadData()
+            return
+        }
+        // это наверное надо сортировать локально. без api
+    }
+
+    @objc
+    private func classAutoUpdated() {
+        // в api не работает сортировка
     }
 }
 
@@ -137,7 +157,7 @@ extension MainViewController {
                     guard let self else { return }
                     self.cells = self.mapAutos(with: model.result ?? [])
                     self.collectionView.reloadData()
-                    FilterService.shared.setModel(model.result ?? [])
+                    self.filterService.setModel(model.result ?? [])
                 }
             case .failure(let error):
                 print("Ошибка: \(error.localizedDescription)")

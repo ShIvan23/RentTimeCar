@@ -10,16 +10,24 @@ import Foundation
 final class FilterService {
     static let shared = FilterService()
     
-    private init () {}
+    private init () {
+        sortingAuto = [
+            FilterInfoAuto(name: "По классу"),
+            FilterInfoAuto(name: "По марке"),
+            FilterInfoAuto(name: "По цене (по возрастанию)"),
+        ]
+    }
     
     private(set) var allAutos: [Auto] = []
     private(set) var brands = [FilterBrandAuto]()
     private(set) var price: (min: Int, max: Int) = (.zero, .zero)
     private(set) var motorPower: (min: Int, max: Int) = (.zero, .zero)
-    private(set) var classesAuto = [FilterClassAuto]()
+    private(set) var classesAuto = [FilterInfoAuto]()
+    private(set) var sortingAuto: [FilterInfoAuto]
 
     private(set) var selectedDates = [Date]()
     private(set) var selectedPrice: (min: Int, max: Int) = (.zero, .zero)
+    private(set) var selectedMotorPower: (min: Int, max: Int) = (.zero, .zero)
     private(set) var filteredAutos: [Auto] = []
     private(set) var selectedBrands: [String] = []
     // нужна проперти на фильтр по мощности
@@ -53,7 +61,25 @@ final class FilterService {
         selectedPrice.min = min
         selectedPrice.max = max
     }
-    
+
+    func setSelectedMotorPower(min: Int, max: Int) {
+        selectedMotorPower.min = min
+        selectedMotorPower.max = max
+    }
+
+    func updateFilterInfo(for type: BottomSheetType, item: FilterInfoAuto) {
+        switch type {
+        case .sorting:
+            guard let index = sortingAuto.firstIndex(where: { $0.name == item.name }) else { return }
+            sortingAuto[index] = item
+            NotificationCenter.default.post(name: .sortingAutoUpdated, object: nil)
+        case .autoType:
+            guard let index = classesAuto.firstIndex(where: { $0.name == item.name }) else { return }
+            classesAuto[index] = item
+            NotificationCenter.default.post(name: .classAutoUpdated, object: nil)
+        }
+    }
+
     func resetAllFilters() {
         selectedDates = []
         selectedPrice.min = price.min
@@ -111,7 +137,7 @@ final class FilterService {
                 setOfClasses.insert($0.classAuto)
             }
             self.classesAuto = setOfClasses.map {
-                FilterClassAuto(name: $0)
+                FilterInfoAuto(name: $0)
             }
         }
     }
@@ -120,4 +146,6 @@ final class FilterService {
 extension Notification.Name {
     static let selectedDatesUpdated = Notification.Name("selectedDatesUpdated")
     static let filteredAutosUpdated = Notification.Name("filteredAutosUpdated")
+    static let sortingAutoUpdated = Notification.Name("sortingAutoUpdated")
+    static let classAutoUpdated = Notification.Name("classAutoUpdated")
 }

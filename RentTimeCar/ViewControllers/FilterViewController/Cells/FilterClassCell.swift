@@ -38,7 +38,7 @@ final class FilterClassCell: UICollectionViewCell {
     
     // MARK: - Internal Methods
     
-    func configure(with model: FilterClassAuto) {
+    func configure(with model: FilterInfoAuto) {
         label.text = model.name
         isSelectedCell = model.isSelected
         updateSelectionCell() 

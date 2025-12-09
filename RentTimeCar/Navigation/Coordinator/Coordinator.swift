@@ -17,7 +17,9 @@ protocol ICoordinator {
     func openFullImageViewController(with image: String)
     func openYandexMapController()
     func openSearchAddressViewController(delegate: SearchAddressViewControllerDelegate)
+    func openBottomSheet(type: BottomSheetType)
     func popViewController()
+    func dismissViewController()
 }
 
 final class Coordinator: NSObject, ICoordinator {
@@ -71,8 +73,17 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.pushViewController(searchAddressViewController, animated: true)
     }
     
+    func openBottomSheet(type: BottomSheetType) {
+        let bottomSheetViewController = Builder.makeBottomSheetViewController(type: type)
+        navigationController?.present(bottomSheetViewController, animated: true)
+    }
+    
     func popViewController() {
         navigationController?.popViewController(animated: true)
+    }
+
+    func dismissViewController() {
+        navigationController?.topViewController?.dismiss(animated: true)
     }
 }
 

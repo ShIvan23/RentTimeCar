@@ -173,9 +173,9 @@ extension FilterView: UICollectionViewDelegateFlowLayout {
         case .date:
             coordinator.openCalendarViewController()
         case .autoType:
-            ()
+            coordinator.openBottomSheet(type: .autoType)
         case .sort:
-            ()
+            coordinator.openBottomSheet(type: .sorting)
         case .delete:
             ()
         }
