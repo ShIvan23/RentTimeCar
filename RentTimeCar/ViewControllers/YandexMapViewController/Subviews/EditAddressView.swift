@@ -12,11 +12,16 @@ struct EditAddressModel {
     let address: String
 }
 
+protocol EditAddressViewDelegate: AnyObject {
+    func didTapOnStep(_ step: YandexMapStep)
+}
+
 final class EditAddressView: UIView {
 
     // MARK: - Private Properties
 
     private var model: [EditAddressModel] = []
+    private weak var delegate: EditAddressViewDelegate?
 
     // MARK: - UI
 
@@ -24,7 +29,8 @@ final class EditAddressView: UIView {
 
     // MARK: - Init
 
-    init() {
+    init(delegate: EditAddressViewDelegate) {
+        self.delegate = delegate
         super.init(frame: .zero)
         setupView()
     }
@@ -88,7 +94,10 @@ extension EditAddressView: UITableViewDataSource {
 
 extension EditAddressView: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print("+++ didSelectRowAt = \(model[indexPath.row])")
+        tableView.deselectRow(at: indexPath, animated: true)
+        let title = model[indexPath.row].title
+        guard let currentMapStep = YandexMapStep(rawValue: title) else { return }
+        delegate?.didTapOnStep(currentMapStep)
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {

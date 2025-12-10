@@ -13,6 +13,7 @@ enum YandexMapStep: String {
     case first = "Доставка"
     case second = "Возврат"
     case edit = "Получение и возврат"
+    case end
 }
 
 final class YandexMapViewController: UIViewController {
@@ -23,8 +24,9 @@ final class YandexMapViewController: UIViewController {
     private let segmentControl = UISegmentedControl(items: [String.office, String.delivery])
     private let addressOfficeView = AddressOfficeView()
     private let customAddressView = CustomAddressView()
+    private let buttonContainerView = UIView()
     private let confirmButton = MainButton(title: "Продолжить")
-    private let editAddressView = EditAddressView()
+    private lazy var editAddressView = EditAddressView(delegate: self)
 
     // MARK: - Private Properties
     
@@ -38,6 +40,7 @@ final class YandexMapViewController: UIViewController {
         return mapView.mapWindow.map.mapObjects
     }
     private var step = YandexMapStep.first
+    private var editStep: YandexMapStep?
     private var firstStepAddress = ""
     private var secondStepAddress = ""
 
@@ -82,13 +85,15 @@ final class YandexMapViewController: UIViewController {
             .marginBottom(placeMarkSize / 2)
         
         let horizontalMargin: CGFloat = 16
-        
-        segmentControl.pin
-            .below(of: mapView)
-            .horizontally()
-            .marginTop(20)
-            .marginHorizontal(horizontalMargin)
-            .height(40)
+
+        if !segmentControl.isHidden {
+            segmentControl.pin
+                .below(of: mapView)
+                .horizontally()
+                .marginTop(20)
+                .marginHorizontal(horizontalMargin)
+                .height(40)
+        }
         
         let deliveryTopMargin: CGFloat = 20
         
@@ -119,16 +124,23 @@ final class YandexMapViewController: UIViewController {
                 .sizeToFit(.width)
         }
 
-        confirmButton.pin
-            .below(of: visible([addressOfficeView, customAddressView, editAddressView]))
+        buttonContainerView.pin
+            .bottom()
             .horizontally()
-            .marginTop(20)
-            .marginHorizontal(horizontalMargin)
-            .height(50)
+            .height(view.safeAreaInsets.bottom + .buttonHeight + .buttonVerticalMargin * 2)
+
+        confirmButton.pin
+            .top()
+            .horizontally()
+            .marginVertical(.buttonVerticalMargin)
+            .marginHorizontal(16)
+            .height(.buttonHeight)
     }
     
     private func setupView() {
-        view.addSubviews([mapView, segmentControl, addressOfficeView, customAddressView, confirmButton, editAddressView])
+        view.addSubviews([mapView, segmentControl, addressOfficeView, customAddressView, buttonContainerView, editAddressView])
+        buttonContainerView.addSubview(confirmButton)
+        buttonContainerView.backgroundColor = .secondaryBackground
         mapView.addSubview(placeMarkImageView)
         view.backgroundColor = .mainBackground
         placeMarkImageView.image = .location
@@ -149,7 +161,7 @@ final class YandexMapViewController: UIViewController {
                 title = step.rawValue
                 firstStepAddress = segmentControl.selectedSegmentIndex == 0 ? addressOfficeView.getAddress() : (customAddressView.getAddress() ?? addressOfficeView.getAddress())
             case .second:
-                step = .edit
+                step = .end
                 title = step.rawValue
                 secondStepAddress = segmentControl.selectedSegmentIndex == 0 ? addressOfficeView.getAddress() : (customAddressView.getAddress() ?? addressOfficeView.getAddress())
                 let editModel = [
@@ -164,11 +176,39 @@ final class YandexMapViewController: UIViewController {
                 ]
                 addressOfficeView.isHidden = true
                 customAddressView.isHidden = true
+                segmentControl.isHidden = true
                 editAddressView.isHidden = false
                 editAddressView.configure(with: editModel)
                 view.setNeedsLayout()
             case .edit:
-                print("Навигаровать дальше")
+                step = .end
+                guard let editStep else { return }
+                switch editStep {
+                case .first:
+                    firstStepAddress = segmentControl.selectedSegmentIndex == 0 ? addressOfficeView.getAddress() : (customAddressView.getAddress() ?? addressOfficeView.getAddress())
+                case .second:
+                    secondStepAddress = segmentControl.selectedSegmentIndex == 0 ? addressOfficeView.getAddress() : (customAddressView.getAddress() ?? addressOfficeView.getAddress())
+                default:
+                    break
+                }
+                let editModel = [
+                    EditAddressModel(
+                        title: YandexMapStep.first.rawValue,
+                        address: firstStepAddress
+                    ),
+                    EditAddressModel(
+                        title: YandexMapStep.second.rawValue,
+                        address: secondStepAddress
+                    ),
+                ]
+                addressOfficeView.isHidden = true
+                customAddressView.isHidden = true
+                segmentControl.isHidden = true
+                editAddressView.isHidden = false
+                editAddressView.configure(with: editModel)
+                view.setNeedsLayout()
+            case .end:
+                print("Навигировать дальше")
             }
         }
         title = step.rawValue
@@ -231,6 +271,7 @@ final class YandexMapViewController: UIViewController {
     private func showAddressOfficeView() {
         addressOfficeView.isHidden = false
         customAddressView.isHidden = true
+        segmentControl.selectedSegmentIndex = .zero
     }
     
     private func showCustomAddressView() {
@@ -284,6 +325,21 @@ extension YandexMapViewController: SearchAddressViewControllerDelegate {
     }
 }
 
+// MARK: - EditAddressViewDelegate
+
+extension YandexMapViewController: EditAddressViewDelegate {
+    func didTapOnStep(_ step: YandexMapStep) {
+        self.step = .edit
+        editStep = step
+        segmentControl.isHidden = false
+        editAddressView.isHidden = true
+        showOffice()
+        showAddressOfficeView()
+        customAddressView.resetText()
+        title = step.rawValue
+    }
+}
+
 private extension String {
     static let office = "Забрать из офиса"
     static let delivery = "Доставить по адресу"
@@ -294,4 +350,9 @@ private extension YandexMapViewController {
         let point: YMKPoint
         let geoObject: YMKGeoObject?
     }
+}
+
+private extension CGFloat {
+    static let buttonHeight: CGFloat = 50
+    static let buttonVerticalMargin: CGFloat = 8
 }
