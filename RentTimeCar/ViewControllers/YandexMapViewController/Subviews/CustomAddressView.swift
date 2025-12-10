@@ -58,7 +58,13 @@ final class CustomAddressView: UIView {
     func resetText() {
         containerLabel.text = .defaultText
     }
-    
+
+    func getAddress() -> String? {
+        guard let address = containerLabel.text,
+              address != .defaultText else { return nil }
+        return address
+    }
+
     // MARK: - Private Methods
     
     private func setupView() {

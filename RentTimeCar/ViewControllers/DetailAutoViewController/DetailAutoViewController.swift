@@ -125,7 +125,7 @@ final class DetailAutoViewController: UIViewController {
         insuranceView.pin
             .below(of: discountView)
             .horizontally()
-            .height(44)
+            .height(54)
         
         selectedDateView.pin
             .below(of: insuranceView)

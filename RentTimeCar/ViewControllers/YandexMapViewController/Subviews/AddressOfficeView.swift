@@ -44,7 +44,14 @@ final class AddressOfficeView: UIView {
         super.layoutSubviews()
         performLayout()
     }
-    
+
+    // MARK: - Internal Methods
+
+    func getAddress() -> String {
+        guard let address = title.text else { return "" }
+        return address
+    }
+
     // MARK: - Private Methods
     
     private func setupView() {
