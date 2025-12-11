@@ -12,8 +12,8 @@ import UIKit
 enum YandexMapStep: String {
     case first = "Доставка"
     case second = "Возврат"
-    case edit = "Получение и возврат"
-    case end
+    case edit
+    case end = "Получение и возврат"
 }
 
 final class YandexMapViewController: UIViewController {
@@ -182,6 +182,7 @@ final class YandexMapViewController: UIViewController {
                 view.setNeedsLayout()
             case .edit:
                 step = .end
+                title = step.rawValue
                 guard let editStep else { return }
                 switch editStep {
                 case .first:
@@ -208,7 +209,7 @@ final class YandexMapViewController: UIViewController {
                 editAddressView.configure(with: editModel)
                 view.setNeedsLayout()
             case .end:
-                print("Навигировать дальше")
+                coordinator.openDetailOrderOptionsViewController()
             }
         }
         title = step.rawValue

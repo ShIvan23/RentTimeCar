@@ -18,6 +18,8 @@ protocol ICoordinator {
     func openYandexMapController()
     func openSearchAddressViewController(delegate: SearchAddressViewControllerDelegate)
     func openBottomSheet(type: BottomSheetType)
+    func openDetailOrderOptionsViewController()
+    func openDetailOrderInfoBottomSheetViewController(type: DetailOrderOptionModel.CellType)
     func popViewController()
     func dismissViewController()
 }
@@ -77,7 +79,18 @@ final class Coordinator: NSObject, ICoordinator {
         let bottomSheetViewController = Builder.makeBottomSheetViewController(type: type)
         navigationController?.present(bottomSheetViewController, animated: true)
     }
-    
+
+    func openDetailOrderOptionsViewController() {
+        let detailOrderOptionsViewController = Builder.makeDetailOrderOptionsViewController()
+        detailOrderOptionsViewController.title = "Дополнительные опции"
+        navigationController?.pushViewController(detailOrderOptionsViewController, animated: true)
+    }
+
+    func openDetailOrderInfoBottomSheetViewController(type: DetailOrderOptionModel.CellType) {
+        let detailOrderInfoBottomSheetViewController = Builder.makeDetailOrderInfoBottomSheetViewController(type: type)
+        navigationController?.present(detailOrderInfoBottomSheetViewController, animated: true)
+    }
+
     func popViewController() {
         navigationController?.popViewController(animated: true)
     }

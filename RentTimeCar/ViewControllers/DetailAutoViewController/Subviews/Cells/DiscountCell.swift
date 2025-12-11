@@ -51,7 +51,9 @@ final class DiscountCell: UICollectionViewCell {
         daysCountLabel.text = "\(daysCount) сутки"
         priceLabel.text = "\(priceByDay * daysCount) ₽/сутки"
     }
-    
+
+    // MARK: - Private Methods
+
     private func setupView() {
         contentView.addSubviews([daysCountLabel, priceLabel])
         contentView.backgroundColor = .black

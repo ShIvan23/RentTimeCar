@@ -30,7 +30,8 @@ final class BottomSheetFilterViewController: UITableViewController {
         super.init(nibName: nil, bundle: nil)
         tableView.allowsMultipleSelection = type == .autoType
     }
-    
+
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }

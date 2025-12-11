@@ -80,4 +80,24 @@ final class Builder {
         }
         return bottomSheetFilterView
     }
+
+    static func makeDetailOrderOptionsViewController() -> UIViewController {
+        let coordinator = Coordinator.shared
+        let detailOrderOptionsViewController = DetailOrderOptionsViewController(coordinator: coordinator)
+        return detailOrderOptionsViewController
+    }
+
+    static func makeDetailOrderInfoBottomSheetViewController(type: DetailOrderOptionModel.CellType) -> UIViewController {
+        let coordinator = Coordinator.shared
+        let detailOrderInfoBottomSheetViewController = DetailOrderInfoBottomSheetViewController(
+            type: type,
+        coordinator: coordinator
+        )
+        if let sheet = detailOrderInfoBottomSheetViewController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+        return detailOrderInfoBottomSheetViewController
+    }
 }
