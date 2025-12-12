@@ -22,7 +22,11 @@ final class Builder {
     }
     
     static func makeAuthorizationViewController() -> UIViewController {
-        AuthorizationViewController(coordinator: Coordinator.shared)
+        let rentApiFacade = RentApiFacade()
+        return AuthorizationViewController(
+            coordinator: Coordinator.shared,
+            rentApiFacade: rentApiFacade
+        )
     }
     
     static func makePDFViewController(pdfFile: PDFViewController.PDFFile) -> UIViewController {

@@ -93,17 +93,16 @@ final class FilterCell: UICollectionViewCell {
     private func performLayout() {
         imageView.pin
             .left()
+            .vCenter()
             .marginLeft(.filterCellMargin)
             .size(.filterCellIconSize)
-            .vCenter()
-        
-        let textWidth = label.sizeThatFits(bounds.size).width
+
+        let textSize = label.sizeThatFits(bounds.size)
         label.pin
-            .vertically()
             .after(of: imageView, aligned: .center)
             .marginLeft(.filterCellMargin)
-            .width(textWidth)
-        
+            .size(textSize)
+
         if !isSelectedImageView.isHidden {
             isSelectedImageView.pin
                 .after(of: label, aligned: .center)

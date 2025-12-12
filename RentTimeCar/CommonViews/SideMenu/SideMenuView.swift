@@ -23,7 +23,7 @@ final class SideMenuView: UIView {
     
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
-    private let isUserLogin = true
+    private let isUserLogin = false
     
     // MARK: - UI
     

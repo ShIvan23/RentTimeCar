@@ -14,6 +14,11 @@ final class RequestManager {
     private let baseURL = URL(string: "http://xl4.xlombard.ru/684a/handlers/IntegrationApi/JsonRpc.ashx")
     private let apiKey = "fUOyeGf77Nl4ErEmFCKhQiJTwlVSgplH"
     private let baseHeader = ["content-type": "application/json"]
+    private let smsApiId = "A892BBA5-9651-0963-8073-F1435E65499F"
+    private let baseSmsPath = "https://sms.ru/sms/send?api_id=A892BBA5-9651-0963-8073-F1435E65499F&to="
+    private let smsQueryMessage = "&msg="
+    // после теста убрать &test=1
+    private let smsQueryTest = "&json=1&test=1"
     private let encoder = JSONEncoder()
     
     func getClients(with phoneNumber: String) -> URLRequest? {
@@ -104,7 +109,15 @@ final class RequestManager {
         request.httpBody = data
         return request
     }
-    
+
+    func getSmsRequest(for number: String, code: String) -> URLRequest? {
+        guard let baseSmsURL = URL(string: baseSmsPath + number + smsQueryMessage + code + smsQueryTest) else {
+            assertionFailure("Invalid baseSmsURL")
+            return nil
+        }
+        return URLRequest(url: baseSmsURL)
+    }
+
     private func makeBaseUrl(url: URL) -> URLRequest {
         var request = URLRequest(url: url)
         request.httpMethod = Method.post.rawValue

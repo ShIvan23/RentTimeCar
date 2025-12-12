@@ -13,6 +13,7 @@ protocol IRentApiFacade {
     func getAutos(completion: @escaping (Result<ApiResult<[Auto]>, Error>) -> Void)
     func searchAuto(with: SearchAutoInput, completion: @escaping (Result<ApiResult<[Auto]>, Error>) -> Void)
     func getFilterPrams(completion: @escaping (Result<ApiResult<GetFilterParams>, Error>) -> Void)
+    func getSmsCode(with phoneNumber: String, code: String, completion: @escaping (Result<SmsModel, Error>) -> Void)
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -41,6 +42,11 @@ final class RentApiFacade: IRentApiFacade {
     
     func getFilterPrams(completion: @escaping (Result<ApiResult<GetFilterParams>, Error>) -> Void) {
         guard let request = requestManager.getFiltersParams() else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+
+    func getSmsCode(with phoneNumber: String, code: String, completion: @escaping (Result<SmsModel, Error>) -> Void) {
+        guard let request = requestManager.getSmsRequest(for: phoneNumber, code: code) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
 }

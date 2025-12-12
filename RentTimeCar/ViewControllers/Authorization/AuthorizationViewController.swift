@@ -17,6 +17,7 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
     // MARK: - UI
     
     private var isKeyboardShow = false
+    private var smsRetryCount = 3
     private let scrollView = UIScrollView()
     private let label = Label(
         text: "Введите номер вашего телефона, чтобы мы выслали вам код доступа",
@@ -35,11 +36,16 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
     // MARK: - Private Properties
     
     private let coordinator: ICoordinator
-    
+    private let rentApiFacade: IRentApiFacade
+
     // MARK: - Init
     
-    init(coordinator: ICoordinator) {
+    init(
+        coordinator: ICoordinator,
+        rentApiFacade: IRentApiFacade
+    ) {
         self.coordinator = coordinator
+        self.rentApiFacade = rentApiFacade
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -81,14 +87,36 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
     private func getCodeButtonAction() {
         getCodeButton.action = { [weak self] in
             guard let self,
+                  let phoneNumber = phoneTextField.text,
                   phoneTextField.validatePhone() else {
                 self?.showToast(with: "Номер телефона введен не верно")
                 return
             }
-            print("+++ отправить запрос на получение кода")
+            let code = makeRandomCode()
+            print("Code to send = \(code)")
+            rentApiFacade.getSmsCode(
+                with: phoneNumber,
+                code: code
+            ) { [weak self] result in
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    switch result {
+                    case .success:
+                        self.showToast(with: "Отправили Вам код в смс")
+                        // надо сделать навигацию на следующий экран
+                    case .failure:
+                        guard self.smsRetryCount != .zero else {
+                            self.showToast(with: "Количество попыток закончилось. Обратитесь в поддержку")
+                            return
+                        }
+                        self.showToast(with: "Ошибка. Попробуйте снова")
+                        self.smsRetryCount -= 1
+                    }
+                }
+            }
         }
     }
-    
+
     private func setupBorderViews() {
         codePhoneBorderView.backgroundColor = .secondaryTextColor
         phoneTextFieldBorderView.backgroundColor = .secondaryTextColor
@@ -99,7 +127,15 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
             self?.view.endEditing(true)
         }
     }
-    
+
+    private func makeRandomCode() -> String {
+        var result = ""
+        for _ in 1...5 {
+            result += String(Int.random(in: 1...9))
+        }
+        return result
+    }
+
     private func performLayout() {
         scrollView.pin
             .all(view.pin.safeArea)
