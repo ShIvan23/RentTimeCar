@@ -93,7 +93,7 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
                 return
             }
             let code = makeRandomCode()
-            print("Code to send = \(code)")
+            print("+++ Code to send = \(code)")
             rentApiFacade.getSmsCode(
                 with: phoneNumber,
                 code: code
@@ -102,8 +102,10 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
                     guard let self else { return }
                     switch result {
                     case .success:
-                        self.showToast(with: "Отправили Вам код в смс")
-                        // надо сделать навигацию на следующий экран
+                        self.coordinator.openEnterSmsCodeViewController(
+                            phoneNumber: phoneNumber,
+                            checkCode: code
+                        )
                     case .failure:
                         guard self.smsRetryCount != .zero else {
                             self.showToast(with: "Количество попыток закончилось. Обратитесь в поддержку")

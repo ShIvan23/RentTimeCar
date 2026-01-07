@@ -20,8 +20,10 @@ protocol ICoordinator {
     func openBottomSheet(type: BottomSheetType)
     func openDetailOrderOptionsViewController()
     func openDetailOrderInfoBottomSheetViewController(type: DetailOrderOptionModel.CellType)
+    func openEnterSmsCodeViewController(phoneNumber: String, checkCode: String)
     func popViewController()
     func dismissViewController()
+    func popToRootViewController()
 }
 
 final class Coordinator: NSObject, ICoordinator {
@@ -91,12 +93,24 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.present(detailOrderInfoBottomSheetViewController, animated: true)
     }
 
+    func openEnterSmsCodeViewController(phoneNumber: String, checkCode: String) {
+        let enterSmsCodeViewController = Builder.makeEnterSmsCodeViewController(
+            phoneNumber: phoneNumber,
+            checkCode: checkCode
+        )
+        navigationController?.pushViewController(enterSmsCodeViewController, animated: true)
+    }
+
     func popViewController() {
         navigationController?.popViewController(animated: true)
     }
 
     func dismissViewController() {
         navigationController?.topViewController?.dismiss(animated: true)
+    }
+
+    func popToRootViewController() {
+        navigationController?.popToRootViewController(animated: true)
     }
 }
 

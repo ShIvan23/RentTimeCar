@@ -109,6 +109,7 @@ final class MainViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .filteredAutosUpdated, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(sortingAutoUpdated), name: .sortingAutoUpdated, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(classAutoUpdated), name: .classAutoUpdated, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(authorizationDidEnd), name: .authorizationDidEnd, object: nil)
     }
     
     @objc
@@ -136,6 +137,13 @@ final class MainViewController: UIViewController {
     @objc
     private func classAutoUpdated() {
         // в api не работает сортировка
+    }
+
+    @objc
+    private func authorizationDidEnd() {
+        animateSideMenu(isHidden: true) { [weak self] in
+            self?.coordinator.popToRootViewController()
+        }
     }
 }
 
@@ -212,7 +220,7 @@ extension MainViewController {
 // MARK: - SideMenuView
 
 extension MainViewController {
-    private func animateSideMenu(isHidden: Bool) {
+    private func animateSideMenu(isHidden: Bool, completion: (() -> Void)? = nil) {
         isShowSideMenu = !isHidden
         let currentOrigin = CGPoint(
             x: isHidden ? -view.bounds.width : .zero,
@@ -227,6 +235,7 @@ extension MainViewController {
             self.transparentView.backgroundColor = .black.withAlphaComponent(isHidden ? .zero : 0.6)
         } completion: { _ in
             self.transparentView.isHidden = isHidden
+            completion?()
         }
     }
     

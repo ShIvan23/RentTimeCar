@@ -104,4 +104,11 @@ final class Builder {
         }
         return detailOrderInfoBottomSheetViewController
     }
+
+    static func makeEnterSmsCodeViewController(phoneNumber: String, checkCode: String) -> UIViewController {
+        EnterSmsCodeViewController(
+            phoneNumber: phoneNumber,
+            checkCode: checkCode
+        )
+    }
 }
