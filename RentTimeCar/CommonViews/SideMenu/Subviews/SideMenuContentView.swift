@@ -124,7 +124,7 @@ extension SideMenuContentView: UITableViewDelegate {
         case .catalog:
             delegate?.hideSideMenuView()
         case .support:
-            print("+++ показать штору с контактами")
+            coordinator.openContactsViewController()
         }
     }
 }

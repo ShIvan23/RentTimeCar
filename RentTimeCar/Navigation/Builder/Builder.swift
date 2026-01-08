@@ -111,4 +111,17 @@ final class Builder {
             checkCode: checkCode
         )
     }
+
+    static func makeContactsBottomSheetViewController() -> UIViewController {
+        let coordinator = Coordinator.shared
+        let contactsBottomSheetViewController = ContactsViewController(
+            coordinator: coordinator
+        )
+        if let sheet = contactsBottomSheetViewController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+        return contactsBottomSheetViewController
+    }
 }

@@ -21,9 +21,11 @@ protocol ICoordinator {
     func openDetailOrderOptionsViewController()
     func openDetailOrderInfoBottomSheetViewController(type: DetailOrderOptionModel.CellType)
     func openEnterSmsCodeViewController(phoneNumber: String, checkCode: String)
+    func openContactsViewController()
     func popViewController()
     func dismissViewController()
     func popToRootViewController()
+    func openAnotherApplication(url: URL)
 }
 
 final class Coordinator: NSObject, ICoordinator {
@@ -101,6 +103,11 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.pushViewController(enterSmsCodeViewController, animated: true)
     }
 
+    func openContactsViewController() {
+        let contactsViewController = Builder.makeContactsBottomSheetViewController()
+        navigationController?.present(contactsViewController, animated: true)
+    }
+
     func popViewController() {
         navigationController?.popViewController(animated: true)
     }
@@ -111,6 +118,12 @@ final class Coordinator: NSObject, ICoordinator {
 
     func popToRootViewController() {
         navigationController?.popToRootViewController(animated: true)
+    }
+
+    func openAnotherApplication(url: URL) {
+        if UIApplication.shared.canOpenURL(url) {
+            UIApplication.shared.open(url, options: [:], completionHandler: nil)
+        }
     }
 }
 
