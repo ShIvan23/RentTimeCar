@@ -38,23 +38,23 @@ final class Coordinator: NSObject, ICoordinator {
     func openAuthorization() {
         let authorizationViewController = Builder.makeAuthorizationViewController()
         navigationController?.pushViewController(authorizationViewController, animated: true)
-        authorizationViewController.navigationController?.navigationBar.isHidden = false
     }
     
     func openPDFViewController(pdfFile: PDFViewController.PDFFile) {
         let pdfViewController = Builder.makePDFViewController(pdfFile: pdfFile)
         navigationController?.pushViewController(pdfViewController, animated: true)
-        pdfViewController.navigationController?.navigationBar.isHidden = false
     }
     
     func openFilterViewController() {
         let filterViewController = Builder.makeFilterViewController()
         navigationController?.pushViewController(filterViewController, animated: true)
+        navigationController?.isNavigationBarHidden = false
     }
     
     func openCalendarViewController() {
         let calendarViewController = Builder.makeCalendarViewController()
         navigationController?.pushViewController(calendarViewController, animated: true)
+        navigationController?.isNavigationBarHidden = false
     }
     
     func openDetailAutoCar(model: Auto) {

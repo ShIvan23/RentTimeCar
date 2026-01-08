@@ -5,9 +5,15 @@
 //  Created by ivanshishkin on 02.12.2025.
 //
 
+import PinLayout
 import UIKit
 
-final class BottomSheetFilterViewController: UITableViewController {
+final class BottomSheetFilterViewController: UIViewController {
+
+    // MARK: - UI
+
+    private let tableView = UITableView()
+    private lazy var confirmButton = MainButton(title: "Выбрать")
 
     // MARK: - Private Properties
 
@@ -40,18 +46,57 @@ final class BottomSheetFilterViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        setupView()
+    }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        performLayout()
+    }
+
+    // MARK: - Private Methods
+
+    private func setupView() {
+        setupTableView()
+        view.addSubviews([tableView, confirmButton])
+        confirmButton.action = { [weak self] in
+            self?.coordinator.dismissViewController()
+        }
+        confirmButton.isHidden = type == .sorting
+    }
+
+    private func setupTableView() {
+        tableView.separatorStyle = .none
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
         tableView.contentInset = .init(top: 20)
+        tableView.dataSource = self
+        tableView.delegate = self
+        view.addSubview(tableView)
     }
-    
-    // MARK: - Table view data source
-    
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+
+    private func performLayout() {
+        if !confirmButton.isHidden {
+            confirmButton.pin
+                .bottom()
+                .horizontally()
+                .marginHorizontal(20)
+                .marginBottom(view.safeAreaInsets.bottom)
+                .height(50)
+        }
+
+        tableView.pin
+            .all()
+    }
+}
+
+// MARK: - UITableViewDataSource
+
+extension BottomSheetFilterViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return items.count
     }
-    
-    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         let item = items[indexPath.row].name
 
@@ -63,13 +108,15 @@ final class BottomSheetFilterViewController: UITableViewController {
         } else {
             cell.accessoryType = .none
         }
-        
+
         return cell
     }
-    
-    // MARK: - Table view delegate
-    
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+}
+
+// MARK: - UITableViewDelegate
+
+extension BottomSheetFilterViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedItem = items[indexPath.row]
 
         if !selectedItems.contains(selectedItem.name) {
@@ -79,17 +126,28 @@ final class BottomSheetFilterViewController: UITableViewController {
                 isSelected: true
             )
             filterService.updateFilterInfo(for: type, item: newItem)
+            if let cell = tableView.cellForRow(at: indexPath) {
+                cell.accessoryType = .checkmark
+            }
+        } else {
+            guard let index = selectedItems.firstIndex(of: selectedItem.name) else { return }
+            selectedItems.remove(at: index)
+            let newItem = FilterInfoAuto(
+                name: selectedItem.name,
+                isSelected: false
+            )
+            filterService.updateFilterInfo(for: type, item: newItem)
+            if let cell = tableView.cellForRow(at: indexPath) {
+                cell.accessoryType = .none
+            }
         }
-        
-        if let cell = tableView.cellForRow(at: indexPath) {
-            cell.accessoryType = .checkmark
-        }
+
         if !tableView.allowsMultipleSelection {
             coordinator.dismissViewController()
         }
     }
-    
-    override func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+
+    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
         let deselectedItem = items[indexPath.row]
 
         if let index = selectedItems.firstIndex(of: deselectedItem.name) {
@@ -99,10 +157,9 @@ final class BottomSheetFilterViewController: UITableViewController {
                 isSelected: false
             )
             filterService.updateFilterInfo(for: type, item: newItem)
-        }
-        
-        if let cell = tableView.cellForRow(at: indexPath) {
-            cell.accessoryType = .none
+            if let cell = tableView.cellForRow(at: indexPath) {
+                cell.accessoryType = .none
+            }
         }
     }
 }
