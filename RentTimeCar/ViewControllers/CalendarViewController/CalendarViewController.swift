@@ -19,7 +19,8 @@ final class CalendarViewController: UIViewController {
     private var firstDate: Date?
     private var lastDate: Date?
     private var datesRange = [Date]()
-    
+    private let filterService = FilterService.shared
+
     // MARK: Life Cycle
     
     override func viewDidLoad() {
@@ -35,6 +36,13 @@ final class CalendarViewController: UIViewController {
     // MARK: - Private Methods
     
     private func setupView() {
+        setupCalendar()
+        view.addSubviews([calendar, selectButton])
+        view.backgroundColor = .mainBackground
+        setupButtonAction()
+    }
+
+    private func setupCalendar() {
         calendar.delegate = self
         calendar.allowsMultipleSelection = true
         calendar.firstWeekday = 2
@@ -43,11 +51,14 @@ final class CalendarViewController: UIViewController {
         calendar.appearance.titleDefaultColor = .whiteTextColor
         calendar.appearance.headerTitleColor = .whiteTextColor
         calendar.appearance.weekdayTextColor = .whiteTextColor
-        view.addSubviews([calendar, selectButton])
-        view.backgroundColor = .mainBackground
-        setupButtonAction()
+        filterService.selectedDates.forEach {
+            calendar.select($0)
+        }
+        datesRange = filterService.selectedDates
+        firstDate = filterService.selectedDates.first
+        lastDate = filterService.selectedDates.last
     }
-    
+
     private func setupButtonAction() {
         selectButton.action = { [weak self] in
             guard let self else { return }

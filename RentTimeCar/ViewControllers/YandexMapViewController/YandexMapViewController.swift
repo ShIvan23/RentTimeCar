@@ -21,7 +21,7 @@ final class YandexMapViewController: UIViewController {
     
     private let mapView = YMKMapView()
     private let placeMarkImageView = UIImageView()
-    private let segmentControl = UISegmentedControl(items: [String.office, String.delivery])
+    private let segmentControl = UISegmentedControl(items: [String.getOffice, String.getDelivery])
     private let addressOfficeView = AddressOfficeView()
     private let customAddressView = CustomAddressView()
     private let buttonContainerView = UIView()
@@ -136,7 +136,20 @@ final class YandexMapViewController: UIViewController {
             .marginHorizontal(16)
             .height(.buttonHeight)
     }
-    
+
+    private func configureSegmentControl(with step: YandexMapStep) {
+        switch step {
+        case .first:
+            segmentControl.setTitle(.getOffice, forSegmentAt: .zero)
+            segmentControl.setTitle(.getDelivery, forSegmentAt: 1)
+        case .second:
+            segmentControl.setTitle(.returnOffice, forSegmentAt: .zero)
+            segmentControl.setTitle(.returnDelivery, forSegmentAt: 1)
+        default:
+            break
+        }
+    }
+
     private func setupView() {
         view.addSubviews([mapView, segmentControl, addressOfficeView, customAddressView, buttonContainerView, editAddressView])
         buttonContainerView.addSubview(confirmButton)
@@ -160,6 +173,7 @@ final class YandexMapViewController: UIViewController {
                 step = .second
                 title = step.rawValue
                 firstStepAddress = segmentControl.selectedSegmentIndex == 0 ? addressOfficeView.getAddress() : (customAddressView.getAddress() ?? addressOfficeView.getAddress())
+                configureSegmentControl(with: .second)
             case .second:
                 step = .end
                 title = step.rawValue
@@ -338,12 +352,15 @@ extension YandexMapViewController: EditAddressViewDelegate {
         showAddressOfficeView()
         customAddressView.resetText()
         title = step.rawValue
+        configureSegmentControl(with: step)
     }
 }
 
 private extension String {
-    static let office = "Забрать из офиса"
-    static let delivery = "Доставить по адресу"
+    static let getOffice = "Забрать из офиса"
+    static let getDelivery = "Доставить по адресу"
+    static let returnOffice = "Вернуть в офис"
+    static let returnDelivery = "Вернуть по адресу"
 }
 
 private extension YandexMapViewController {

@@ -34,7 +34,9 @@ final class SelectDateView: UIView {
         dateFormatter.locale = Locale(identifier: "ru_RU")
         return dateFormatter
     }()
-    
+
+    private let filterService = FilterService.shared
+
     // MARK: - Init
     
     override init(frame: CGRect) {
@@ -81,6 +83,7 @@ final class SelectDateView: UIView {
         containerView.layer.borderWidth = 2
         containerView.addSubviews([containerLabel, containerImageView])
         containerImageView.image = .calendar
+        configure(selectedDates: filterService.selectedDates)
     }
     
     private func performLayout() {
