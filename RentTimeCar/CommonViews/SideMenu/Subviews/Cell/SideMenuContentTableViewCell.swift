@@ -50,7 +50,7 @@ final class SideMenuContentTableViewCell: UITableViewCell {
                 self.image.tintColor = nil
             }
         }
-        textsContainer.configure(title: model.title,
+        textsContainer.configure(title: model.title.rawValue,
                                  subtitle: model.subtitle)
         arrowImageView.isHidden = !model.hasArrow
         containerView.backgroundColor = model.backgroundColor

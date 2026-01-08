@@ -7,6 +7,11 @@
 
 import UIKit
 
+protocol SideMenuContentViewProtocol: AnyObject {
+    func hideSideMenuView()
+}
+
+// Вьюха в боковом меню, когда пользователь залогинен
 final class SideMenuContentView: UIView {
     // MARK: - UI
     
@@ -15,10 +20,17 @@ final class SideMenuContentView: UIView {
     // MARK: - Private Properties
     
     private var model = [[SideMenuModel]]()
-    
+    private let coordinator: ICoordinator
+    private weak var delegate: SideMenuContentViewProtocol?
+
     // MARK: - Init
     
-    init() {
+    init(
+        delegate: SideMenuContentViewProtocol,
+        coordinator: ICoordinator
+    ) {
+        self.delegate = delegate
+        self.coordinator = coordinator
         super.init(frame: .zero)
         setupView()
     }
@@ -37,12 +49,19 @@ final class SideMenuContentView: UIView {
         super.layoutSubviews()
         performLayout()
     }
-    
+
+    // MARK: - Internal Methods
+
+    func updateTableView(isUserLogin: Bool) {
+        model = SideMenuModel.makeModels(isAuthorized: isUserLogin)
+        tableView.reloadData()
+    }
+
     // MARK: - Private Methods
     
     private func setupView() {
         setupTableView()
-        model = SideMenuModel.makeModels()
+        model = SideMenuModel.makeModels(isAuthorized: AuthService.shared.isAuthorized)
         tableView.reloadData()
         backgroundColor = .mainBackground
     }
@@ -53,6 +72,7 @@ final class SideMenuContentView: UIView {
         tableView.delegate = self
         tableView.register(cell: SideMenuContentTableViewCell.self)
         tableView.backgroundColor = .clear
+        tableView.separatorStyle = .none
     }
     
     private func performLayout() {
@@ -82,11 +102,29 @@ extension SideMenuContentView: UITableViewDataSource {
 
 extension SideMenuContentView: UITableViewDelegate {
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        switch indexPath.section {
-        case 0:
+        guard let section = model[safe: indexPath.section],
+              let item = section[safe: indexPath.row] else { return .zero }
+        switch item.cellType {
+        case .small:
             return 70
-        default:
+        case .big:
             return 100
+        }
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard let item = model[safe: indexPath.section]?[safe: indexPath.row] else { return }
+        switch item.title {
+        case .myRents:
+            print("+++ открыть экран со списком аренд")
+        case .myFines:
+            print("+++ открыть экран со списком штрафов")
+        case .mySettings:
+            print("+++ открыть экран с настройками")
+        case .catalog:
+            delegate?.hideSideMenuView()
+        case .support:
+            print("+++ показать штору с контактами")
         }
     }
 }

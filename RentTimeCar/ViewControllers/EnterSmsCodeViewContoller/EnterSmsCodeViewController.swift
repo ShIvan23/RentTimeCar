@@ -158,7 +158,7 @@ final class EnterSmsCodeViewController: UIViewController, ToastViewShowable {
 extension EnterSmsCodeViewController: EnterCodeViewDelegate {
     func validateCode(_ code: String) {
         guard checkCode == code else { return showToast(with: "Код из смс введен не верно")}
-        NotificationCenter.default.post(name: .authorizationDidEnd, object: nil)
+        AuthService.shared.saveState(isAuthorized: true)
     }
 }
 

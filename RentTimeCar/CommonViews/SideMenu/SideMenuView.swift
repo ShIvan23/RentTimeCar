@@ -9,7 +9,7 @@ import PinLayout
 import UIKit
 
 protocol SideMenuViewDelegate: AnyObject {
-    func didTapToEmptySpace()
+    func needHideSideMenuView()
     func sideMenuDidHide()
 }
 
@@ -23,15 +23,17 @@ final class SideMenuView: UIView {
     
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
-    private let isUserLogin = false
-    
+
     // MARK: - UI
     
     private let contentView = UIView()
     private let rightActionView = UIView()
     private let needSignUpView = NeedSignUpView()
-    private let sideMenuContentView = SideMenuContentView()
-    
+    private lazy var sideMenuContentView = SideMenuContentView(
+        delegate: self,
+        coordinator: coordinator
+    )
+
     init(
         coordinator: ICoordinator,
         rentApiFacade: IRentApiFacade
@@ -55,20 +57,27 @@ final class SideMenuView: UIView {
         contentView.backgroundColor = .mainBackground
         addSubviews([contentView, rightActionView])
         contentView.addSubviews([needSignUpView, sideMenuContentView])
-        configureVisibleView()
+        subscribeToAuthService()
+        configureVisibleView(isUserLogin: AuthService.shared.isAuthorized)
         setupPanGesture()
         needSignUpView.delegate = self
         rightActionView.addTapGestureClosure { [weak self] in
-            self?.delegate?.didTapToEmptySpace()
+            self?.delegate?.needHideSideMenuView()
         }
     }
-    
-    private func configureVisibleView() {
+
+    private func subscribeToAuthService() {
+        AuthService.shared.addObserver(self)
+    }
+
+    private func configureVisibleView(isUserLogin: Bool) {
         if isUserLogin {
             needSignUpView.isHidden = true
         } else {
-            sideMenuContentView.isHidden = true
+            needSignUpView.isHidden = false
         }
+        sideMenuContentView.updateTableView(isUserLogin: isUserLogin)
+        setNeedsLayout()
     }
     
     private func setupPanGesture() {
@@ -77,6 +86,7 @@ final class SideMenuView: UIView {
     }
     
     private func performLayout() {
+        let isUserLogin = AuthService.shared.isAuthorized
         contentView.pin
             .all()
             .marginRight(bounds.width * 0.13)
@@ -92,8 +102,15 @@ final class SideMenuView: UIView {
         } else {
             needSignUpView.pin
                 .horizontally()
-                .vCenter()
+                .bottom()
+                .marginBottom(safeAreaInsets.bottom)
                 .sizeToFit(.width)
+
+            sideMenuContentView.pin
+                .top()
+                .horizontally()
+                .marginTop(safeAreaInsets.top)
+                .bottom(to: needSignUpView.edge.top)
         }
     }
     
@@ -126,8 +143,26 @@ final class SideMenuView: UIView {
     }
 }
 
+// MARK: - NeedSignUpViewDelegate
+
 extension SideMenuView: NeedSignUpViewDelegate {
     func signUpButtonTapped() {
         coordinator.openAuthorization()
+    }
+}
+
+// MARK: - NeedSignUpViewDelegate
+
+extension SideMenuView: SideMenuContentViewProtocol {
+    func hideSideMenuView() {
+        delegate?.needHideSideMenuView()
+    }
+}
+
+// MARK: - NeedSignUpViewDelegate
+
+extension SideMenuView: AuthServiceObserver {
+    func post(isAuthorized: Bool) {
+        configureVisibleView(isUserLogin: isAuthorized)
     }
 }

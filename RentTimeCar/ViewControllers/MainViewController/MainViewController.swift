@@ -23,6 +23,7 @@ final class MainViewController: UIViewController {
     private let navBarView = NavBarView()
     private lazy var filterView = FilterView(coordinator: coordinator)
     private let filterService = FilterService.shared
+    private let authService = AuthService.shared
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -109,7 +110,7 @@ final class MainViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .filteredAutosUpdated, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(sortingAutoUpdated), name: .sortingAutoUpdated, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(classAutoUpdated), name: .classAutoUpdated, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(authorizationDidEnd), name: .authorizationDidEnd, object: nil)
+        AuthService.shared.addObserver(self)
     }
     
     @objc
@@ -137,13 +138,6 @@ final class MainViewController: UIViewController {
     @objc
     private func classAutoUpdated() {
         // в api не работает сортировка
-    }
-
-    @objc
-    private func authorizationDidEnd() {
-        animateSideMenu(isHidden: true) { [weak self] in
-            self?.coordinator.popToRootViewController()
-        }
     }
 }
 
@@ -180,8 +174,9 @@ extension MainViewController {
             .car($0)
         }
         result.insert(.empty(.emptyCellHeight), at: .zero)
-        // TODO: - Тут нужна логика на авторизованного пользователя
-        result.insert(.button, at: 2)
+        if !authService.isAuthorized {
+            result.insert(.button, at: 2)
+        }
         return result
     }
 }
@@ -258,7 +253,7 @@ extension MainViewController {
 // MARK: - SideMenuViewDelegate
 
 extension MainViewController: SideMenuViewDelegate {
-    func didTapToEmptySpace() {
+    func needHideSideMenuView() {
         guard sideMenuView.frame.origin.x == .zero else { return }
         animateSideMenu(isHidden: true)
     }
@@ -366,6 +361,33 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
         }
         
         collectionViewContentYOffset = scrollView.contentOffset.y
+    }
+}
+
+// MARK: - AuthServiceObserver
+
+extension MainViewController: AuthServiceObserver {
+    func post(isAuthorized: Bool) {
+        updateCellsAfterAuthorization(isAuthorized: isAuthorized)
+        animateSideMenu(isHidden: true) { [weak self] in
+            self?.coordinator.popToRootViewController()
+        }
+    }
+
+    private func updateCellsAfterAuthorization(isAuthorized: Bool) {
+        if isAuthorized {
+            guard let firstButtonCellIndex = cells.firstIndex(where: {
+                if case .button = $0 {
+                    return true
+                } else {
+                    return false
+                }
+            }) else { return }
+            cells.remove(at: firstButtonCellIndex)
+        } else {
+            cells.insert(.button, at: 2)
+        }
+        collectionView.reloadData()
     }
 }
 
