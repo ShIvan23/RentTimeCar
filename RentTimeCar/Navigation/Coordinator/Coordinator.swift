@@ -22,6 +22,7 @@ protocol ICoordinator {
     func openDetailOrderInfoBottomSheetViewController(type: DetailOrderOptionModel.CellType)
     func openEnterSmsCodeViewController(phoneNumber: String, checkCode: String)
     func openContactsViewController()
+    func openOrderConfirmViewController()
     func popViewController()
     func dismissViewController()
     func popToRootViewController()
@@ -106,6 +107,11 @@ final class Coordinator: NSObject, ICoordinator {
     func openContactsViewController() {
         let contactsViewController = Builder.makeContactsBottomSheetViewController()
         navigationController?.present(contactsViewController, animated: true)
+    }
+
+    func openOrderConfirmViewController() {
+        let orderConfirmViewController = Builder.makeOrderConfirmViewController()
+        navigationController?.pushViewController(orderConfirmViewController, animated: true)
     }
 
     func popViewController() {

@@ -16,7 +16,8 @@ final class DetailAutoViewController: UIViewController {
     private lazy var imagePrefetcher = ImagePrefetcher(pipeline: ImagePipeline.shared)
     private var indexOfCellBeforeDragging = 0
     private let coordinator: ICoordinator
-    
+    private let filterService = FilterService.shared
+
     // MARK: - UI
     
     private lazy var imagesCollectionView: UICollectionView = {
@@ -45,7 +46,7 @@ final class DetailAutoViewController: UIViewController {
     private let insuranceView = InsuranceView()
     
     private let selectedDateView = SelectDateView()
-    private let continueButton = MainButton(title: "Продолжить")
+    private let continueButton = MainButton()
     private let buttonContainerView = UIView()
     
     // MARK: - Init
@@ -99,11 +100,46 @@ final class DetailAutoViewController: UIViewController {
         selectedDateView.addTapGestureClosure { [weak self] in
             self?.coordinator.openCalendarViewController()
         }
+        setupContinueButton()
+        subscribeToNotifications()
+    }
+
+    private func setupContinueButton() {
+        filterService.selectedDates.isEmpty ? disableContinueButton() : enableContinueButton()
         continueButton.action = { [weak self]  in
             self?.coordinator.openYandexMapController()
+            self?.saveChangesInOrderConfirmService()
         }
     }
-    
+
+    private func saveChangesInOrderConfirmService() {
+        let orderConfirmService = OrderConfirmService.shared
+        orderConfirmService.setSelectedDates(filterService.selectedDates)
+        guard let firstImageUrl = autoModel.files.first?.url else { return }
+        orderConfirmService.setImageUrl(firstImageUrl)
+    }
+
+    private func enableContinueButton() {
+        continueButton.enable()
+        continueButton.setTitle("Продолжить", for: .normal)
+    }
+
+    private func disableContinueButton() {
+        continueButton.disable()
+        continueButton.setTitle("Выбирите даты", for: .disabled)
+    }
+
+    private func subscribeToNotifications() {
+        NotificationCenter.default.addObserver(self, selector: #selector(selectedDatesUpdated), name: .selectedDatesUpdated, object: nil)
+    }
+
+    @objc
+    private func selectedDatesUpdated() {
+        let selectedDates = filterService.selectedDates
+        selectedDates.isEmpty ? disableContinueButton() : enableContinueButton()
+        selectedDateView.configure(selectedDates: selectedDates)
+    }
+
     private func performLayout() {
         imagesCollectionView.pin
             .top()

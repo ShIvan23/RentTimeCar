@@ -50,6 +50,7 @@ final class DetailOrderOptionsViewController: UIViewController {
 
     private let coordinator: ICoordinator
     private let model = DetailOrderOptionModel.makeModel()
+    private var selectedOptions = [String]()
 
     // MARK: - UI
 
@@ -101,8 +102,14 @@ final class DetailOrderOptionsViewController: UIViewController {
         view.addSubviews([collectionView, buttonContainerView])
         buttonContainerView.addSubview(continueButton)
         continueButton.action = { [weak self] in
-            print("navigate")
+            self?.saveChangesInOrderConfirmService()
+            self?.coordinator.openOrderConfirmViewController()
         }
+    }
+
+    private func saveChangesInOrderConfirmService() {
+        let orderConfirmService = OrderConfirmService.shared
+        orderConfirmService.setSelectedOptions(selectedOptions)
     }
 
     private func performLayout() {
@@ -136,7 +143,8 @@ extension DetailOrderOptionsViewController: UICollectionViewDataSource {
         let cell: DetailOrderOptionCell = collectionView.dequeueCell(for: indexPath)
         cell.configure(
             with: model[indexPath.row],
-            delegate: self
+            titleSubtitleViewDelegate: self,
+            detailOrderOptionCellDelegate: self
         )
         return cell
     }
@@ -157,9 +165,24 @@ extension DetailOrderOptionsViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
+// MARK: - TitleSubtitleViewDelegate
+
 extension DetailOrderOptionsViewController: TitleSubtitleViewDelegate {
     func didTapInfo(for cellType: DetailOrderOptionModel.CellType) {
         coordinator.openDetailOrderInfoBottomSheetViewController(type: cellType)
+    }
+}
+
+// MARK: - DetailOrderOptionCellDelegate
+
+extension DetailOrderOptionsViewController: DetailOrderOptionCellDelegate {
+    func switcherValueDidChange(_ value: Bool, text: String) {
+        let isSelected = value
+        if isSelected {
+            selectedOptions.append(text)
+        } else {
+            selectedOptions.removeAll(where: { $0 == text })
+        }
     }
 }
 

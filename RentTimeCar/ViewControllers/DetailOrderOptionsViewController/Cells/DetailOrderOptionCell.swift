@@ -7,12 +7,20 @@
 
 import UIKit
 
+protocol DetailOrderOptionCellDelegate: AnyObject {
+    func switcherValueDidChange(_ value: Bool, text: String)
+}
+
 final class DetailOrderOptionCell: UICollectionViewCell {
     // MARK: - UI
 
     private let imageView = UIImageView()
     private let titleSubtitleView = TitleSubtitleView()
     private let switcher = UISwitch()
+
+    // MARK: - Private Properties
+
+    private weak var delegate: DetailOrderOptionCellDelegate?
 
     // MARK: - Init
 
@@ -39,14 +47,19 @@ final class DetailOrderOptionCell: UICollectionViewCell {
 
     // MARK: - Internal Methods
 
-    func configure(with model: DetailOrderOptionModel, delegate: TitleSubtitleViewDelegate) {
+    func configure(
+        with model: DetailOrderOptionModel,
+        titleSubtitleViewDelegate: TitleSubtitleViewDelegate,
+        detailOrderOptionCellDelegate: DetailOrderOptionCellDelegate
+    ) {
         titleSubtitleView.configure(
             title: model.title,
             subtitle: model.subtitle,
             cellType: model.type,
-            delegate: delegate
+            delegate: titleSubtitleViewDelegate
         )
         imageView.image = model.image.withRenderingMode(.alwaysTemplate)
+        delegate = detailOrderOptionCellDelegate
     }
 
     // MARK: - Private Methods
@@ -58,6 +71,7 @@ final class DetailOrderOptionCell: UICollectionViewCell {
         imageView.tintColor = .whiteTextColor
         imageView.backgroundColor = .secondaryBackground
         switcher.onTintColor = .red
+        switcher.addTarget(self, action: #selector(switcherValueDidChange), for: .valueChanged)
     }
 
     private func performLayout() {
@@ -78,5 +92,10 @@ final class DetailOrderOptionCell: UICollectionViewCell {
             .vCenter()
             .marginHorizontal(12)
             .sizeToFit(.width)
+    }
+
+    @objc
+    private func switcherValueDidChange(switcher: UISwitch) {
+        delegate?.switcherValueDidChange(switcher.isOn, text: titleSubtitleView.getTitle())
     }
 }

@@ -70,6 +70,10 @@ final class TitleSubtitleView: UIView {
         self.delegate = delegate
     }
 
+    func getTitle() -> String {
+        title.text ?? ""
+    }
+
     // MARK: - Private Methods
 
     private func setupView() {

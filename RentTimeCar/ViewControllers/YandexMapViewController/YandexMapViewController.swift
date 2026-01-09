@@ -137,6 +137,14 @@ final class YandexMapViewController: UIViewController {
             .height(.buttonHeight)
     }
 
+    private func saveChangesInOrderConfirmService() {
+        let orderConfirmService = OrderConfirmService.shared
+        orderConfirmService.setAddresses(
+            deliveryAddress: firstStepAddress,
+            returnAddress: secondStepAddress
+        )
+    }
+
     private func configureSegmentControl(with step: YandexMapStep) {
         switch step {
         case .first:
@@ -224,6 +232,7 @@ final class YandexMapViewController: UIViewController {
                 view.setNeedsLayout()
             case .end:
                 coordinator.openDetailOrderOptionsViewController()
+                saveChangesInOrderConfirmService()
             }
         }
         title = step.rawValue

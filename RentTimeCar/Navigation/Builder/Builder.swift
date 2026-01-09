@@ -124,4 +124,10 @@ final class Builder {
         }
         return contactsBottomSheetViewController
     }
+
+    static func makeOrderConfirmViewController() -> UIViewController {
+        let coordinator = Coordinator.shared
+        let orderConfirmViewController = OrderConfirmViewController(coordinator: coordinator)
+        return orderConfirmViewController
+    }
 }
