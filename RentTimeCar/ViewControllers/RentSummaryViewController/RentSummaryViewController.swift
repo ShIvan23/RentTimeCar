@@ -104,18 +104,24 @@ final class RentSummaryViewController: UIViewController {
     }
     
     private func layout() {
+        let HorizontalInset: CGFloat = 32
+        let continueButtonHeight: CGFloat = 50
+        let stackViewHeight: CGFloat = 40
+        let stackViewBottomMargin: CGFloat = 16
         
         continueButton.pin
-            .horizontally(32)
+            .horizontally(HorizontalInset)
             .bottom(view.pin.safeArea.bottom)
-            .height(50)
-        
+            .height(continueButtonHeight)
+
         stackView.pin
+            .width(continueButton.frame.width)
             .above(of: continueButton)
-            .marginBottom(16)
-            .horizontally(16)
-            .height(40)
-        
+            .marginBottom(stackViewBottomMargin)
+            .left(HorizontalInset)
+            .right(HorizontalInset)
+            .height(stackViewHeight)
+
         collectionView.pin
             .top(view.pin.safeArea.top)
             .horizontally()
