@@ -65,7 +65,7 @@ final class OrderConfirmViewController: UIViewController {
         view.backgroundColor = .black
         buttonContainerView.addSubview(continueButton)
         continueButton.action = { [weak self] in
-            print("+++ navigate")
+            self?.coordinator.openRentSummaryViewController()
         }
     }
 
