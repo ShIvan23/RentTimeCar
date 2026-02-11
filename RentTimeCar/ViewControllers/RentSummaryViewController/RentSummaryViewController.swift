@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import PinLayout
 
 final class RentSummaryViewController: UIViewController {
     
@@ -33,10 +34,7 @@ final class RentSummaryViewController: UIViewController {
         textAlignment: .left
     )
     
-    private let infoButton = IconButton(
-        image: .info
-        
-    )
+    private let infoButton = IconButton(image: .info)
     
     private let prepayValueLabel = Label(
         text: "5000 ₽",
@@ -46,9 +44,11 @@ final class RentSummaryViewController: UIViewController {
         textAlignment: .right
     )
     
-    private let continueButton = MainButton(title: "Подтвердить и оплатить 5000 ₽")
+    private let continueButton = MainButton(
+        title: "Подтвердить и оплатить 5000 ₽"
+    )
     
-    init (coordinator: ICoordinator) {
+    init(coordinator: ICoordinator) {
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
@@ -61,57 +61,65 @@ final class RentSummaryViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         setupViews()
+        setupActions()
         loadData()
     }
     
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        layout()
+    }
+    
     private func setupViews() {
-        [collectionView, stackView, continueButton].forEach {
-            view.addSubview($0)
-            $0.translatesAutoresizingMaskIntoConstraints = false
-        }
-        
-        NSLayoutConstraint.activate([
-            collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            collectionView.bottomAnchor.constraint(equalTo: stackView.topAnchor),
-            
-            stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            stackView.bottomAnchor.constraint(equalTo: continueButton.topAnchor, constant: -16),
-            stackView.heightAnchor.constraint(equalToConstant: 40),
-            
-            continueButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 32),
-            continueButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -32),
-            continueButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            continueButton.heightAnchor.constraint(equalToConstant: 50)
-        ])
+        view.addSubviews([collectionView, stackView, continueButton])
         configureStackView()
-        setupActions()
     }
     
     private func configureStackView() {
         stackView.axis = .horizontal
         stackView.alignment = .center
         stackView.spacing = 8
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        
         stackView.addArrangedSubview(prepayTitleLabel)
         stackView.addArrangedSubview(infoButton)
         stackView.addArrangedSubview(prepayValueLabel)
-        
         stackView.setCustomSize(CGSize(width: 20, height: 20), for: infoButton)
+    }
+    
+    private func setupActions() {
+        continueButton.action = { [weak self] in
+            self?.proceedToPayment()
+        }
+        
+        infoButton.action = { [weak self] in
+            self?.tapInfoButton()
+        }
     }
     
     private func loadData() {
         let selectedOptions = OrderConfirmService.shared.selectedOptions
-        items = RentSummaryService.shared.getRentSummaryItems(selectedOptions: selectedOptions)
+        items = RentSummaryService.shared.getRentSummaryItems(
+            selectedOptions: selectedOptions
+        )
         collectionView.reloadData()
     }
     
-    private func setupActions() {
-        continueButton.action = { [weak self] in self?.proceedToPayment() }
-        infoButton.action = { [weak self] in self?.tapInfoButton() }
+    private func layout() {
+        
+        continueButton.pin
+            .horizontally(32)
+            .bottom(view.pin.safeArea.bottom)
+            .height(50)
+        
+        stackView.pin
+            .above(of: continueButton)
+            .marginBottom(16)
+            .horizontally(16)
+            .height(40)
+        
+        collectionView.pin
+            .top(view.pin.safeArea.top)
+            .horizontally()
+            .above(of: stackView)
     }
     
     private func proceedToPayment() {
@@ -119,17 +127,24 @@ final class RentSummaryViewController: UIViewController {
     }
     
     private func tapInfoButton() {
-        print("+++ tapInfoButon RentSummaryVC")
+        print("+++ tapInfoButton RentSummaryVC")
     }
 }
 
+
 extension RentSummaryViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+    
+    func collectionView(_ collectionView: UICollectionView,
+                        numberOfItemsInSection section: Int) -> Int {
         items.count
     }
     
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell: RentSummaryCollectionViewCell = collectionView.dequeueCell(for: indexPath)
+    func collectionView(_ collectionView: UICollectionView,
+                        cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        
+        let cell: RentSummaryCollectionViewCell =
+            collectionView.dequeueCell(for: indexPath)
+        
         let item = items[indexPath.item]
         cell.configure(with: item)
         
@@ -142,9 +157,10 @@ extension RentSummaryViewController: UICollectionViewDataSource {
 }
 
 extension RentSummaryViewController: UICollectionViewDelegateFlowLayout {
+    
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
-        CGSize(width: collectionView.frame.width, height: 44)
+        CGSize(width: collectionView.bounds.width, height: 44)
     }
 }
