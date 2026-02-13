@@ -8,6 +8,11 @@
 import UIKit
 import PinLayout
 
+enum RentSummaryCellModel {
+    case item(RentItem)
+    case separator
+}
+
 struct RentItem {
     let title: String
     let amount: Int
@@ -16,38 +21,24 @@ struct RentItem {
 
 final class RentSummaryCollectionViewCell: UICollectionViewCell {
 
-    static let reuseId = "RentSummaryCollectionViewCell"
-
     private lazy var iconImage: UIImageView = {
         let image = UIImageView()
         image.contentMode = .scaleAspectFit
-        image.clipsToBounds = true
+        image.tintColor = .white
         image.isHidden = true
         return image
     }()
 
     private let titleLabel = Label(
-        text: "",
         numberOfLines: 1,
-        fontSize: 16,
         textColor: .secondaryTextColor,
         textAlignment: .left
     )
 
     private let valueLabel = Label(
-        text: "",
         numberOfLines: 1,
-        fontSize: 16,
-        textColor: .whiteTextColor,
         textAlignment: .right
     )
-
-    private let separatorView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .separator
-        view.isHidden = true
-        return view
-    }()
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -64,21 +55,16 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
     }
     
     private func setupViews(){
-        contentView.addSubviews([iconImage, titleLabel, valueLabel, separatorView])
-    }
-    
-    func setSeparatorVisible(_ visible: Bool) {
-        separatorView.isHidden = !visible
+        contentView.addSubviews([iconImage, titleLabel, valueLabel])
     }
 
     private func layoutCell() {
         let horizontalInset: CGFloat = 16
-        let iconSize: CGFloat = 16
+        let iconSize = CGSize(square: 16)
         let titleLeftInset: CGFloat = 50
-        let separatorInset: CGFloat = 32
 
         iconImage.pin
-            .size(CGSize(width: iconSize, height: iconSize))
+            .size(iconSize)
             .left(horizontalInset)
             .vCenter()
 
@@ -91,12 +77,6 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
             .right(horizontalInset)
             .vCenter()
             .sizeToFit()
-
-        separatorView.pin
-            .top()
-            .left(separatorInset)
-            .right(separatorInset)
-            .height(1)
     }
 
     func configure(with item: RentItem) {
@@ -104,7 +84,6 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
         valueLabel.text = item.amount > 0 ? "\(item.amount) ₽" : ""
 
         iconImage.image = item.icon?.withRenderingMode(.alwaysTemplate)
-        iconImage.tintColor = item.icon == nil ? nil : .white
         iconImage.isHidden = item.icon == nil
     }
 
