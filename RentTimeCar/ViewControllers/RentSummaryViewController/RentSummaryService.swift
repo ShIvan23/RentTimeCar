@@ -8,10 +8,14 @@
 import UIKit
 
 final class RentSummaryService {
+    
+    // MARK: - Public Properties
     static let shared = RentSummaryService()
     
+    // MARK: - Init
     private init() {}
     
+    // MARK: - Public Methods
     func getRentSummaryItems(selectedOptions: [String]) -> [RentItem] {
         let baseRent = 45000
         var items: [RentItem] = []

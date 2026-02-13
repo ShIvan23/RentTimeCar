@@ -8,6 +8,8 @@
 import UIKit
 import PinLayout
 
+// MARK: - Models
+
 enum RentSummaryCellModel {
     case item(RentItem)
     case separator
@@ -19,8 +21,11 @@ struct RentItem {
     let icon: UIImage?
 }
 
-final class RentSummaryCollectionViewCell: UICollectionViewCell {
+// MARK: - Cell
 
+final class RentSummaryCollectionViewCell: UICollectionViewCell {
+    
+    // MARK: - Private Properties
     private lazy var iconImage: UIImageView = {
         let image = UIImageView()
         image.contentMode = .scaleAspectFit
@@ -40,6 +45,7 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
         textAlignment: .right
     )
 
+    // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupViews()
@@ -49,11 +55,30 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
 
+    // MARK: - Override Methods
     override func layoutSubviews() {
         super.layoutSubviews()
         layoutCell()
     }
-    
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        iconImage.image = nil
+        iconImage.isHidden = true
+        titleLabel.text = nil
+        valueLabel.text = nil
+    }
+
+    // MARK: - Internal Methods
+    func configure(with item: RentItem) {
+        titleLabel.text = item.title
+        valueLabel.text = item.amount > 0 ? "\(item.amount) ₽" : ""
+
+        iconImage.image = item.icon?.withRenderingMode(.alwaysTemplate)
+        iconImage.isHidden = item.icon == nil
+    }
+
+    // MARK: - Private Methods
     private func setupViews(){
         contentView.addSubviews([iconImage, titleLabel, valueLabel])
     }
@@ -77,21 +102,5 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
             .right(horizontalInset)
             .vCenter()
             .sizeToFit()
-    }
-
-    func configure(with item: RentItem) {
-        titleLabel.text = item.title
-        valueLabel.text = item.amount > 0 ? "\(item.amount) ₽" : ""
-
-        iconImage.image = item.icon?.withRenderingMode(.alwaysTemplate)
-        iconImage.isHidden = item.icon == nil
-    }
-
-    override func prepareForReuse() {
-        super.prepareForReuse()
-        iconImage.image = nil
-        iconImage.isHidden = true
-        titleLabel.text = nil
-        valueLabel.text = nil
     }
 }
