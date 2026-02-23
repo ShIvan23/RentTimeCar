@@ -14,6 +14,10 @@ protocol DoubledSliderDelegate: AnyObject {
     func maxValueDidChange(_ value: Int)
 }
 
+protocol DoubledSliderEndDraggingDelegate: AnyObject {
+    func didEndDragging(minimumValueNow: Int, maximumValueNow: Int)
+}
+
 final class DoubledSlider: UIView {
     
     // MARK: - UI
@@ -26,7 +30,8 @@ final class DoubledSlider: UIView {
     // MARK: - Internal Properties
     
     weak var delegate: DoubledSliderDelegate?
-    
+    weak var endDraggingDelegate: DoubledSliderEndDraggingDelegate?
+
     // MARK: - Private Properties
     
     private var minimumValue: CGFloat = .zero
@@ -198,6 +203,11 @@ final class DoubledSlider: UIView {
             let translation = gesture.translation(in: self)
             handleDragging(view, withTranslation: translation)
             gesture.setTranslation(.zero, in: view)
+        case .ended:
+            endDraggingDelegate?.didEndDragging(
+                minimumValueNow: Int(minimumValueNow),
+                maximumValueNow: Int(maximumValueNow)
+            )
         default:
             break
         }

@@ -16,6 +16,7 @@ final class EnterSmsCodeViewController: UIViewController, ToastViewShowable {
     // MARK: - Private Properties
 
     private let checkCode: String
+    private let clearPhoneNumber: String
     private var isKeyboardShow = false
     private var keyBoardHeight: CGFloat = .zero
     private var timer: Timer?
@@ -42,8 +43,9 @@ final class EnterSmsCodeViewController: UIViewController, ToastViewShowable {
         checkCode: String
     ) {
         self.checkCode = checkCode
+        clearPhoneNumber = "+7\(phoneNumber.cancelPhoneNumberMask())"
         super.init(nibName: nil, bundle: nil)
-        label.text = "Отправили Вам смс на номер \(phoneNumber)"
+        label.text = "Отправили Вам смс на номер +7 \(phoneNumber)"
     }
 
     @available(*, unavailable)
@@ -158,7 +160,7 @@ final class EnterSmsCodeViewController: UIViewController, ToastViewShowable {
 extension EnterSmsCodeViewController: EnterCodeViewDelegate {
     func validateCode(_ code: String) {
         guard checkCode == code else { return showToast(with: "Код из смс введен не верно")}
-        AuthService.shared.saveState(isAuthorized: true)
+        AuthService.shared.saveState(authState: .needRegister)
     }
 }
 

@@ -16,5 +16,15 @@ struct Clients: Decodable {
 }
 
 struct Client: Decodable {
-    
+    let name: Name
+
+    enum CodingKeys: String, CodingKey {
+        case name = "Name"
+    }
+}
+
+extension Client {
+    struct Name: Decodable {
+
+    }
 }

@@ -23,8 +23,8 @@ struct SearchAutoInput: Encodable {
         case brands = "Brands"
         case defaultPriceFrom = "DefaultPriceFrom"
         case defaultPriceTo = "DefaultPriceTo"
-        case autoClasses = "AutoClassCodes"
-        case powerMin = "ModInfoPowerLSMin"
-        case powerMax = "ModInfoPowerLSMax"
+        case autoClasses = "AutoClasses"
+        case powerMin = "PowerLSFrom"
+        case powerMax = "PowerLsTo"
     }
 }

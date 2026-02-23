@@ -35,7 +35,14 @@ final class ButtonCell: UICollectionViewCell {
         super.layoutSubviews()
         performLayout()
     }
-    
+
+    // MARK: - Internal Methods
+
+    func configure(with buttonType: MainViewController.CellType.ButtonType) {
+        let buttonTitle: String = buttonType == .authorization ? .enterTitle : .registerTitle
+        button.setTitle(buttonTitle, for: .normal)
+    }
+
     // MARK: - Private Methods
 
     private func setupView() {
@@ -50,4 +57,9 @@ final class ButtonCell: UICollectionViewCell {
             .marginHorizontal(12)
             .marginVertical(4)
     }
+}
+
+private extension String {
+    static let enterTitle = "Войти"
+    static let registerTitle = "Зарегистрироваться"
 }

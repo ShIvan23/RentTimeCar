@@ -8,20 +8,18 @@
 import Foundation
 
 struct GetFilterParams: Decodable {
-    let brands: [DictValueDTO]
-    
+    let autoClassCodes: [DictValueDTO]
+
     enum CodingKeys: String, CodingKey {
-        case brands = "Brands"
+        case autoClassCodes = "AutoClassCodes"
     }
 }
 
 struct DictValueDTO: Decodable {
-    let id: Int // тут везде 0 приходит
     let title: String
-    let code: String // тут везде пустая строка приходит
+    let code: String
     
     enum CodingKeys: String, CodingKey {
-        case id = "Id"
         case title = "Title"
         case code = "Code"
     }

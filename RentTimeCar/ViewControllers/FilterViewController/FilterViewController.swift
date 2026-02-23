@@ -354,7 +354,7 @@ private extension FilterViewController {
     }
 
     func getSelectedAutoClasses() -> [String] {
-        filterService.classesAuto.compactMap { $0.isSelected ? $0.name : nil }
+        filterService.getSelectedAutosClassesCodes()
     }
 
     func updateConfirmButton() {

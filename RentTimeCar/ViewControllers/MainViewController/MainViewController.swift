@@ -22,8 +22,6 @@ final class MainViewController: UIViewController {
     private let transparentView = UIView()
     private let navBarView = NavBarView()
     private lazy var filterView = FilterView(coordinator: coordinator)
-    private let filterService = FilterService.shared
-    private let authService = AuthService.shared
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -45,6 +43,8 @@ final class MainViewController: UIViewController {
     private var cells: [CellType] = []
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
+    private let filterService = FilterService.shared
+    private let authService = AuthService.shared
     private lazy var imagePrefetcher = ImagePrefetcher(pipeline: ImagePipeline.shared)
     private var isShowSideMenu = false
     private var collectionViewContentYOffset: CGFloat = .zero
@@ -59,8 +59,8 @@ final class MainViewController: UIViewController {
         }
     }
     
-    // MARK: Init
-    
+    // MARK: - Init
+
     init(
         coordinator: ICoordinator,
         rentApiFacade: IRentApiFacade
@@ -75,8 +75,8 @@ final class MainViewController: UIViewController {
         fatalError("init(coder:) has not been implemented")
     }
     
-    // MARK: Life Cycle
-    
+    // MARK: - Life Cycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
@@ -174,8 +174,15 @@ extension MainViewController {
             .car($0)
         }
         result.insert(.empty(.emptyCellHeight), at: .zero)
-        if !authService.isAuthorized {
-            result.insert(.button, at: 2)
+        switch authService.authState {
+        case .needAuthorize:
+            result.insert(.button(.authorization), at: 2)
+        case .needRegister:
+            result.insert(.button(.registration), at: 2)
+        case .onCheck:
+            result.insert(.button(.onCheck), at: 2)
+        case .fullAccess:
+            break
         }
         return result
     }
@@ -285,8 +292,9 @@ extension MainViewController: UICollectionViewDataSource {
         case .empty:
             let cell: EmptyCell = collectionView.dequeueCell(for: indexPath)
             return cell
-        case .button:
+        case let .button(buttonType):
             let cell: ButtonCell = collectionView.dequeueCell(for: indexPath)
+            cell.configure(with: buttonType)
             return cell
         case let .car(autoModel):
             let cell: CarCell = collectionView.dequeueCell(for: indexPath)
@@ -334,8 +342,16 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
         switch cells[indexPath.item] {
         case let .car(autoModel):
             coordinator.openDetailAutoCar(model: autoModel)
-        case .button:
-            coordinator.openAuthorization()
+        case let .button(buttonType):
+            switch buttonType {
+            case .authorization:
+                coordinator.openAuthorization()
+            case .registration:
+                print("+++ show registration screen")
+            case .onCheck:
+                print("+++ show onCheck screen")
+                break
+            }
         case .empty:
             break
         }
@@ -367,27 +383,49 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
 // MARK: - AuthServiceObserver
 
 extension MainViewController: AuthServiceObserver {
-    func post(isAuthorized: Bool) {
-        updateCellsAfterAuthorization(isAuthorized: isAuthorized)
+    func post(state: AuthState) {
+        switch state {
+        case .needAuthorize:
+            showAuthorizationButton()
+        case .needRegister:
+            showRegistrationButton()
+        case .onCheck:
+            showOnCheckButton()
+        case .fullAccess:
+            removeAllButtons()
+        }
         animateSideMenu(isHidden: true) { [weak self] in
             self?.coordinator.popToRootViewController()
         }
     }
 
-    private func updateCellsAfterAuthorization(isAuthorized: Bool) {
-        if isAuthorized {
-            guard let firstButtonCellIndex = cells.firstIndex(where: {
-                if case .button = $0 {
-                    return true
-                } else {
-                    return false
-                }
-            }) else { return }
-            cells.remove(at: firstButtonCellIndex)
-        } else {
-            cells.insert(.button, at: 2)
-        }
+    private func showAuthorizationButton() {
+        removeAllButtons()
+        cells.insert(.button(.authorization), at: 2)
         collectionView.reloadData()
+    }
+
+    private func showRegistrationButton() {
+        removeAllButtons()
+        cells.insert(.button(.registration), at: 2)
+        collectionView.reloadData()
+    }
+
+    private func showOnCheckButton() {
+        removeAllButtons()
+        cells.insert(.button(.onCheck), at: 2)
+        collectionView.reloadData()
+    }
+
+    private func removeAllButtons() {
+        guard let firstButtonCellIndex = cells.firstIndex(where: {
+            if case .button = $0 {
+                return true
+            } else {
+                return false
+            }
+        }) else { return }
+        cells.remove(at: firstButtonCellIndex)
     }
 }
 
@@ -409,6 +447,12 @@ extension MainViewController {
     enum CellType {
         case car(Auto)
         case empty(_ height: CGFloat)
-        case button
+        case button(ButtonType)
+
+        enum ButtonType {
+            case authorization
+            case registration
+            case onCheck
+        }
     }
 }

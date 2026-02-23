@@ -9,15 +9,9 @@ import Foundation
 
 final class FilterService {
     static let shared = FilterService()
-    
-    private init () {
-        sortingAuto = [
-            FilterInfoAuto(name: "По классу"),
-            FilterInfoAuto(name: "По марке"),
-            FilterInfoAuto(name: "По цене (по возрастанию)"),
-        ]
-    }
-    
+
+    // MARK: - Internal Properties
+
     private(set) var allAutos: [Auto] = []
     private(set) var brands = [FilterBrandAuto]()
     private(set) var price: (min: Int, max: Int) = (.zero, .zero)
@@ -30,7 +24,20 @@ final class FilterService {
     private(set) var selectedMotorPower: (min: Int, max: Int) = (.zero, .zero)
     private(set) var filteredAutos: [Auto] = []
     private(set) var selectedBrands: [String] = []
-    // нужна проперти на фильтр по мощности
+
+    // MARK: - Private Properties
+
+    private let rentApiFacade: IRentApiFacade = RentApiFacade()
+    private var autoClassesCodes = [String: String]()
+
+    private init () {
+        sortingAuto = [
+            FilterInfoAuto(name: "По классу"),
+            FilterInfoAuto(name: "По марке"),
+            FilterInfoAuto(name: "По цене (по возрастанию)"),
+        ]
+        fetchAutoClassesCodes()
+    }
     
     var hasFilters: Bool {
         !selectedDates.isEmpty || selectedPrice.min != price.min || selectedPrice.max != price.max || !filteredAutos.isEmpty
@@ -88,7 +95,17 @@ final class FilterService {
         selectedBrands = []
         NotificationCenter.default.post(name: .filteredAutosUpdated, object: nil)
     }
-    
+
+    func getSelectedAutosClassesCodes() -> [String] {
+        let selectedAutoClasses = classesAuto.compactMap { $0.isSelected ? $0.name : nil }
+        var codes = [String]()
+        selectedAutoClasses.forEach {
+            guard let value = autoClassesCodes[$0] else { return }
+            codes.append(value)
+        }
+        return codes
+    }
+
     private func makeBrands(with model: [Auto]) {
         DispatchQueue.global(qos: .userInteractive).async {
             var brandsSet = Set<String>()
@@ -139,6 +156,25 @@ final class FilterService {
             self.classesAuto = setOfClasses.map {
                 FilterInfoAuto(name: $0)
             }
+        }
+    }
+
+    private func fetchAutoClassesCodes() {
+        rentApiFacade.getFilterPrams { [weak self] result in
+            switch result {
+            case .success(let model):
+                self?.makeAutoClassesCodes(with: model.result)
+            case .failure(let failure):
+                print("+++ failure = \(failure)")
+                break
+            }
+        }
+    }
+
+    private func makeAutoClassesCodes(with model: GetFilterParams?) {
+        guard let model else { return }
+        model.autoClassCodes.forEach {
+            autoClassesCodes[$0.title] = $0.code
         }
     }
 }

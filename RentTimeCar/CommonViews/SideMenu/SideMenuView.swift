@@ -23,6 +23,7 @@ final class SideMenuView: UIView {
     
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
+    private let authService = AuthService.shared
 
     // MARK: - UI
     
@@ -64,10 +65,24 @@ final class SideMenuView: UIView {
         rightActionView.addTapGestureClosure { [weak self] in
             self?.delegate?.needHideSideMenuView()
         }
+        configureNeedSignUpView()
     }
 
     private func subscribeToAuthService() {
-        AuthService.shared.addObserver(self)
+        authService.addObserver(self)
+    }
+
+    private func configureNeedSignUpView() {
+        switch authService.authState {
+        case .needAuthorize:
+            needSignUpView.configure(with: .authorization)
+        case .needRegister:
+            needSignUpView.configure(with: .registration)
+        case .onCheck:
+            print("+++ onCheck in SideMenuView")
+        case .fullAccess:
+            print("+++ fullAccess in SideMenuView")
+        }
     }
 
     private func configureVisibleView(isUserLogin: Bool) {
@@ -162,7 +177,12 @@ extension SideMenuView: SideMenuContentViewProtocol {
 // MARK: - NeedSignUpViewDelegate
 
 extension SideMenuView: AuthServiceObserver {
-    func post(isAuthorized: Bool) {
+    func post(state: AuthState) {
+        let isAuthorized = state != .needAuthorize
         configureVisibleView(isUserLogin: isAuthorized)
+    }
+
+    func post(isRegistered: Bool) {
+
     }
 }

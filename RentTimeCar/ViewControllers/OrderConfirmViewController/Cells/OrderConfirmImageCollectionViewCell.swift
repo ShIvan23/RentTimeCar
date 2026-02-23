@@ -43,7 +43,7 @@ final class OrderConfirmImageCollectionViewCell: UICollectionViewCell {
 
     private func setupView() {
         contentView.addSubview(imageView)
-        contentView.backgroundColor = .secondaryBackground
+        contentView.backgroundColor = .clear
         imageView.layer.cornerRadius = 16
         imageView.clipsToBounds = true
     }

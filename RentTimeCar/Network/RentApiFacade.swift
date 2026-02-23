@@ -19,7 +19,8 @@ protocol IRentApiFacade {
 final class RentApiFacade: IRentApiFacade {
     private let requestManager = RequestManager()
     private let networkManager = NetworkManager()
-    
+
+    // Запрос делается без + перед 7
     func getClients(with phoneNumber: String, completion: @escaping (Result<ApiResult<Clients>, Error>) -> Void) {
         guard let request = requestManager.getClients(with: phoneNumber) else { return }
         networkManager.fetch(request: request, completion: completion)
