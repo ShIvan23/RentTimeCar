@@ -74,11 +74,14 @@ final class RentSummaryViewController: UIViewController {
     }
 
     private func tapInfoButton() {
-        let infoView = InfoView(text: """
+        let infoView = InfoView(
+            text: """
             В случае отказа от аренды предоплата не возвращается.
             Можем перенести аренду на другую дату.
-        """)
-        infoView.show(in: self.view)
+            """,
+            anchorView: infoButton
+        )
+        infoView.show(in: view)
     }
 
     // MARK: - Private methods

@@ -11,15 +11,6 @@ import PinLayout
 final class InfoViewContentView: UIView {
     
     // MARK: - Private Properties
-    private let contentView: UIView = {
-        let view = UIView()
-        view.backgroundColor = .mainBackground
-        view.layer.cornerRadius = 8
-        view.layer.borderWidth = 1
-        view.layer.borderColor = UIColor.whiteTextColor.cgColor
-        return view
-    }()
-    
     private let iconImage: UIImageView = {
         let image = UIImageView()
         image.image = UIImage(resource: .info).withRenderingMode(.alwaysTemplate)
@@ -32,10 +23,17 @@ final class InfoViewContentView: UIView {
         fontSize: 12
     )
     
+    private let arrowView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .secondaryBackground
+        view.transform = CGAffineTransform(rotationAngle: .pi / 4)
+        return view
+    }()
+    
     // MARK: - Init
     override init(frame: CGRect) {
         super.init(frame: frame)
-        setupViews()
+        setupView()
     }
     
     required init?(coder: NSCoder) {
@@ -55,31 +53,29 @@ final class InfoViewContentView: UIView {
     }
     
     // MARK: - Private Methods
-    private func setupViews() {
-        addSubview(contentView)
-        contentView.addSubviews([iconImage, infoLabel])
+    private func setupView() {
+        backgroundColor = .secondaryBackground
+        layer.cornerRadius = 12
+        addSubviews([iconImage, infoLabel, arrowView])
     }
     
     private func layout() {
-        contentView.pin
-            .width(260)
+        iconImage.pin
+            .top(8)
+            .hCenter()
+            .size(16)
         
-            iconImage.pin
-                .top(8)
-                .hCenter()
-                .size(16)
-            
-            infoLabel.pin
-                .below(of: iconImage)
-                .marginTop(8)
-                .horizontally(8)
-                .sizeToFit(.width)
-        //высота контейнера подстраивается под высоту лейбла
+        infoLabel.pin
+            .below(of: iconImage)
+            .horizontally(8) 
+            .sizeToFit(.width)
+        
         let dinamicHeight = infoLabel.frame.maxY + 8
-        contentView.pin
-            .height(dinamicHeight)
-            .center()
+        pin.height(dinamicHeight)
+        
+        arrowView.pin
+            .size(10)
+            .hCenter()
+            .top(dinamicHeight - 10 / 2)
     }
-    
-
 }
