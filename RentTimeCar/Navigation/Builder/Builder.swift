@@ -130,4 +130,10 @@ final class Builder {
         let orderConfirmViewController = OrderConfirmViewController(coordinator: coordinator)
         return orderConfirmViewController
     }
+    
+    static func makeRentSummaryViewController() -> UIViewController {
+        let coordinator = Coordinator.shared
+        let rentSummaryViewController = RentSummaryViewController(coordinator: coordinator)
+        return rentSummaryViewController
+    }
 }

@@ -27,6 +27,7 @@ protocol ICoordinator {
     func dismissViewController()
     func popToRootViewController()
     func openAnotherApplication(url: URL)
+    func openRentSummaryViewController()
 }
 
 final class Coordinator: NSObject, ICoordinator {
@@ -130,6 +131,12 @@ final class Coordinator: NSObject, ICoordinator {
         if UIApplication.shared.canOpenURL(url) {
             UIApplication.shared.open(url, options: [:], completionHandler: nil)
         }
+    }
+    
+    func openRentSummaryViewController() {
+        let rentSummaryViewController = Builder.makeRentSummaryViewController()
+        rentSummaryViewController.title = "Стоимость"
+        navigationController?.pushViewController(rentSummaryViewController, animated: true)
     }
 }
 
