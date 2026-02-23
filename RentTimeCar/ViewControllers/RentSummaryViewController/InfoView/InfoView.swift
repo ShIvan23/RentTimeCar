@@ -50,7 +50,6 @@ final class InfoView: UIView {
         contentView.pin
             .above(of: anchor, aligned: .center)
             .marginBottom(8)
-            .hCenter()
         
         contentView.pin
             .left(max(contentView.frame.minX, 16))
