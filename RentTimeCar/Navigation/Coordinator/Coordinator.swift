@@ -7,6 +7,10 @@
 
 import UIKit
 
+enum ICoordinatorController {
+    case registration
+}
+
 protocol ICoordinator {
     var navigationController: UINavigationController? { get set }
     func openAuthorization()
@@ -28,6 +32,12 @@ protocol ICoordinator {
     func popToRootViewController()
     func openAnotherApplication(url: URL)
     func openRentSummaryViewController()
+    func openRegistrationViewController()
+    func openCameraViewController()
+    func openSettingsApp()
+    func openInfoBottomSheetViewController()
+    func openSuccessPhotoViewController(image: UIImage)
+    func popToViewController(_ controller: ICoordinatorController)
 }
 
 final class Coordinator: NSObject, ICoordinator {
@@ -137,6 +147,41 @@ final class Coordinator: NSObject, ICoordinator {
         let rentSummaryViewController = Builder.makeRentSummaryViewController()
         rentSummaryViewController.title = "Стоимость"
         navigationController?.pushViewController(rentSummaryViewController, animated: true)
+    }
+
+    func openRegistrationViewController() {
+        let registrationViewController = Builder.makeRegistrationViewController()
+        registrationViewController.title = "Регистрация"
+        navigationController?.pushViewController(registrationViewController, animated: true)
+        navigationController?.isNavigationBarHidden = false
+    }
+
+    func openCameraViewController() {
+        let cameraViewController = Builder.makeCameraViewController()
+        navigationController?.pushViewController(cameraViewController, animated: true)
+    }
+
+    func openSettingsApp() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        UIApplication.shared.open(url)
+    }
+
+    func openInfoBottomSheetViewController() {
+        let infoBottomSheetViewController = Builder.makeInfoBottomSheetViewController()
+        navigationController?.present(infoBottomSheetViewController, animated: true)
+    }
+
+    func openSuccessPhotoViewController(image: UIImage) {
+        let successPhotoViewController = Builder.makeSuccessPhotoViewController(image: image)
+        navigationController?.pushViewController(successPhotoViewController, animated: true)
+    }
+
+    func popToViewController(_ controller: ICoordinatorController) {
+        switch controller {
+        case .registration:
+            guard let registrationViewController = navigationController?.viewControllers.first(where: { $0 is RegistrationViewController }) else { return }
+            navigationController?.popToViewController(registrationViewController, animated: true)
+        }
     }
 }
 

@@ -54,7 +54,7 @@ final class AuthService {
             return
         }
 
-        authState = .fullAccess
+        authState = .needRegister
         print("+++ authState = \(authState)")
     }
 

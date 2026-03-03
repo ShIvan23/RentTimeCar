@@ -136,4 +136,43 @@ final class Builder {
         let rentSummaryViewController = RentSummaryViewController(coordinator: coordinator)
         return rentSummaryViewController
     }
+
+    static func makeRegistrationViewController() -> UIViewController {
+        let coordinator = Coordinator.shared
+        let cameraPermissionService = CameraPermissionService()
+        let registrationViewController = RegistrationViewController(
+            coordinator: coordinator,
+            cameraPermissionService: cameraPermissionService
+        )
+        return registrationViewController
+    }
+
+    static func makeCameraViewController() -> UIViewController {
+        let coordinator = Coordinator.shared
+        let cameraViewController = CameraViewController(coordinator: coordinator)
+        return cameraViewController
+    }
+
+    static func makeInfoBottomSheetViewController() -> UIViewController {
+        let coordinator = Coordinator.shared
+        let infoBottomSheetViewController = InfoBottomSheetViewController(
+            coordinator: coordinator,
+            model: InfoBottomSheetModel.makeDeniedCameraPermissionModel()
+        )
+        if let sheet = infoBottomSheetViewController.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+        return infoBottomSheetViewController
+    }
+
+    static func makeSuccessPhotoViewController(image: UIImage) -> UIViewController {
+        let coordinator = Coordinator.shared
+        let successPhotoViewController = SuccessPhotoViewController(
+            coordinator: coordinator,
+            image: image
+        )
+        return successPhotoViewController
+    }
 }

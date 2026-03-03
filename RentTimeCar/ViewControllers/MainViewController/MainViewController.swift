@@ -347,7 +347,7 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
             case .authorization:
                 coordinator.openAuthorization()
             case .registration:
-                print("+++ show registration screen")
+                coordinator.openRegistrationViewController()
             case .onCheck:
                 print("+++ show onCheck screen")
                 break
