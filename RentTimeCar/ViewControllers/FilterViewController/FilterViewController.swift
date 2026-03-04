@@ -271,7 +271,6 @@ extension FilterViewController: FilterValueCellDelegate {
                   model[safe: priceCellIndex] != nil else { return }
             model[priceCellIndex] = .price(newModel)
             filterService.setSelectedPrice(min: newModel.minValueNow, max: newModel.maxValueNow)
-            updateConfirmButton()
         case .motorPower:
             let priceCellIndex = model.firstIndex { cellType in
                 switch cellType {
@@ -285,8 +284,11 @@ extension FilterViewController: FilterValueCellDelegate {
                   model[safe: priceCellIndex] != nil else { return }
             model[priceCellIndex] = .motorPower(newModel)
             filterService.setSelectedMotorPower(min: newModel.minValueNow, max: newModel.maxValueNow)
-            updateConfirmButton()
         }
+    }
+
+    func filterValuesDidEndDragging() {
+        updateConfirmButton()
     }
 }
 

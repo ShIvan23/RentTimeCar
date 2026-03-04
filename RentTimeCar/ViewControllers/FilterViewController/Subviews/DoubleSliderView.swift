@@ -15,7 +15,7 @@ protocol DoubledSliderDelegate: AnyObject {
 }
 
 protocol DoubledSliderEndDraggingDelegate: AnyObject {
-    func didEndDragging(minimumValueNow: Int, maximumValueNow: Int)
+    func didEndDragging()
 }
 
 final class DoubledSlider: UIView {
@@ -204,10 +204,7 @@ final class DoubledSlider: UIView {
             handleDragging(view, withTranslation: translation)
             gesture.setTranslation(.zero, in: view)
         case .ended:
-            endDraggingDelegate?.didEndDragging(
-                minimumValueNow: Int(minimumValueNow),
-                maximumValueNow: Int(maximumValueNow)
-            )
+            endDraggingDelegate?.didEndDragging()
         default:
             break
         }

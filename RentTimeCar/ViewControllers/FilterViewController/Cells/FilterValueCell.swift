@@ -10,6 +10,7 @@ import UIKit
 
 protocol FilterValueCellDelegate: AnyObject {
     func filterValuesChanged(newModel: FilterValueModel, cellType: FilterValueCell.CellType)
+    func filterValuesDidEndDragging()
 }
 
 final class FilterValueCell: UICollectionViewCell {
@@ -72,6 +73,7 @@ final class FilterValueCell: UICollectionViewCell {
     private func setupView() {
         addSubviews([minValueView, maxValueView, doubleSliderView])
         doubleSliderView.delegate = self
+        doubleSliderView.endDraggingDelegate = self
         minValueView.delegate = self
         maxValueView.delegate = self
     }
@@ -112,6 +114,14 @@ extension FilterValueCell: DoubledSliderDelegate {
         maxValueView.configure(value: value)
         model.maxValueNow = value
         callDelegate()
+    }
+}
+
+// MARK: - DoubledSliderEndDraggingDelegate
+
+extension FilterValueCell: DoubledSliderEndDraggingDelegate {
+    func didEndDragging() {
+        delegate?.filterValuesDidEndDragging()
     }
 }
 
