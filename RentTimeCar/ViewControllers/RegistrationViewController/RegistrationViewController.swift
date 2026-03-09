@@ -35,10 +35,40 @@ final class RegistrationViewController: UIViewController {
     private let backButton = SecondaryButton(title: "Позже")
     private let bottomContainerView = UIView()
 
+    // MARK: - Upload Overlay UI
+
+    private lazy var uploadOverlayView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.75)
+        view.isHidden = true
+        return view
+    }()
+
+    private let uploadActivityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .white
+        return indicator
+    }()
+
+    private let uploadProgressLabel = Label(
+        fontSize: 18,
+        textColor: .whiteTextColor,
+        textAlignment: .center
+    )
+
+    private let uploadWarningLabel = Label(
+        text: "Дождитесь, пока фото загрузятся. Не выходите с этого экрана и не сворачивайте приложение",
+        numberOfLines: 0,
+        fontSize: 14,
+        textColor: .whiteTextColor,
+        textAlignment: .center
+    )
+
     // MARK: - Private Properties
 
     private let coordinator: ICoordinator
     private let cameraPermissionService: ICameraPermissionService
+    private let rentApiFacade: RentApiFacade
     private let registrationModelBox = RegistrationModelBox()
     private var registrationStep = RegistrationStep.initial
     private let cameraCaptureService = CameraCaptureService.shared
@@ -47,10 +77,12 @@ final class RegistrationViewController: UIViewController {
 
     init(
         coordinator: ICoordinator,
-        cameraPermissionService: ICameraPermissionService
+        cameraPermissionService: ICameraPermissionService,
+        rentApiFacade: RentApiFacade
     ) {
         self.coordinator = coordinator
         self.cameraPermissionService = cameraPermissionService
+        self.rentApiFacade = rentApiFacade
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -65,6 +97,11 @@ final class RegistrationViewController: UIViewController {
         setupView()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        scrollToBottom()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         performLayout()
@@ -73,8 +110,9 @@ final class RegistrationViewController: UIViewController {
     // MARK: - Private Methods
 
     private func setupView() {
-        view.addSubviews([collectionView, bottomContainerView])
+        view.addSubviews([collectionView, bottomContainerView, uploadOverlayView])
         bottomContainerView.addSubviews([nextStepButton, backButton])
+        uploadOverlayView.addSubviews([uploadActivityIndicator, uploadProgressLabel, uploadWarningLabel])
         view.backgroundColor = .mainBackground
         bottomContainerView.backgroundColor = .secondaryBackground
 
@@ -87,6 +125,16 @@ final class RegistrationViewController: UIViewController {
         }
 
         cameraCaptureService.setObserver(self)
+    }
+    
+    private func scrollToBottom() {
+        let lastIndex = registrationModelBox.items.count - 1
+        guard lastIndex >= 0 else { return }
+        collectionView.scrollToItem(
+            at: IndexPath(item: lastIndex, section: 0),
+            at: .bottom,
+            animated: true
+        )
     }
 
     private func handleNextStepAction() {
@@ -103,7 +151,7 @@ final class RegistrationViewController: UIViewController {
         case .licenseDone:
             openCamera(for: .passportMain)
         case .readyToSubmit:
-            break
+            uploadPhotos()
         }
     }
 
@@ -117,6 +165,55 @@ final class RegistrationViewController: UIViewController {
                 }
             }
         }
+    }
+
+    private func uploadPhotos() {
+        let images = registrationModelBox.items.compactMap { item -> UIImage? in
+            if case let .image(image) = item { return image }
+            return nil
+        }
+        showUploadOverlay()
+        rentApiFacade.uploadImages(images, onProgress: { [weak self] progress in
+            self?.updateUploadProgress(progress)
+        }, completion: { [weak self] result in
+            DispatchQueue.main.async {
+                self?.hideUploadOverlay()
+                switch result {
+                case let .success(links):
+                    print("+++ фото загружены, links = \(links)")
+                    // теперь эти линки надо передать в CRM и сменить статус приложения "На проверке"
+                case .failure(let error):
+                    self?.showUploadError(error)
+                }
+            }
+        })
+    }
+
+    private func showUploadOverlay() {
+        uploadProgressLabel.text = "Загрузка: 0%"
+        uploadOverlayView.isHidden = false
+        uploadActivityIndicator.startAnimating()
+        view.setNeedsLayout()
+    }
+
+    private func hideUploadOverlay() {
+        uploadOverlayView.isHidden = true
+        uploadActivityIndicator.stopAnimating()
+    }
+
+    private func updateUploadProgress(_ progress: Double) {
+        let percentage = Int(progress * 100)
+        uploadProgressLabel.text = "Загрузка: \(percentage)%"
+    }
+
+    private func showUploadError(_ error: Error) {
+        let alert = UIAlertController(
+            title: "Ошибка загрузки",
+            message: error.localizedDescription,
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 
     private func performLayout() {
@@ -156,6 +253,38 @@ final class RegistrationViewController: UIViewController {
             .horizontally()
             .marginTop(view.safeAreaInsets.top)
             .bottom(to: bottomContainerView.edge.top)
+
+        layoutUploadOverlay()
+    }
+
+    private func layoutUploadOverlay() {
+        uploadOverlayView.pin.all()
+
+        let centerY = view.bounds.midY
+        let labelWidth = view.bounds.width - 64
+
+        uploadActivityIndicator.pin
+            .hCenter()
+            .top(centerY - 80)
+            .sizeToFit()
+
+        let progressHeight = uploadProgressLabel.sizeThatFits(
+            CGSize(width: labelWidth, height: .greatestFiniteMagnitude)
+        ).height
+        uploadProgressLabel.pin
+            .below(of: uploadActivityIndicator)
+            .horizontally(32)
+            .height(progressHeight)
+            .marginTop(20)
+
+        let warningHeight = uploadWarningLabel.sizeThatFits(
+            CGSize(width: labelWidth, height: .greatestFiniteMagnitude)
+        ).height
+        uploadWarningLabel.pin
+            .below(of: uploadProgressLabel)
+            .horizontally(32)
+            .height(warningHeight)
+            .marginTop(20)
     }
 }
 

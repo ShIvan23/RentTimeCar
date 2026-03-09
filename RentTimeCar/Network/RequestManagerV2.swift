@@ -74,7 +74,7 @@ final class RequestManagerV2 {
     /// Возвращает URLRequest и тело запроса отдельно — необходимо для uploadTask.
     func uploadImages(_ images: [UIImage]) -> (request: URLRequest, body: Data)? {
         let base64Strings = images.compactMap {
-            $0.jpegData(compressionQuality: 0.85)?.base64EncodedString()
+            $0.resized(maxDimension: 1024).jpegData(compressionQuality: 0.7)?.base64EncodedString()
         }
         guard !base64Strings.isEmpty else { return nil }
         guard let url = URL(string: baseURL + "/api/upload-images") else {
@@ -149,4 +149,17 @@ private struct VaporSearchAutoBody: Encodable {
     let autoClasses: [String]
     let powerMin: Int
     let powerMax: Int
+}
+
+private extension UIImage {
+    func resized(maxDimension: CGFloat) -> UIImage {
+        let pixelSize = CGSize(width: size.width * scale, height: size.height * scale)
+        guard pixelSize.width > maxDimension || pixelSize.height > maxDimension else { return self }
+        let ratio = maxDimension / max(pixelSize.width, pixelSize.height)
+        let newSize = CGSize(width: (pixelSize.width * ratio).rounded(), height: (pixelSize.height * ratio).rounded())
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let renderer = UIGraphicsImageRenderer(size: newSize, format: format)
+        return renderer.image { _ in self.draw(in: CGRect(origin: .zero, size: newSize)) }
+    }
 }
