@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 final class RequestManagerV2 {
     enum Method: String {
@@ -68,6 +69,25 @@ final class RequestManagerV2 {
         makeRequest(path: "/api/filters", method: .get)
     }
 
+    // MARK: - POST /api/upload-images
+
+    /// Возвращает URLRequest и тело запроса отдельно — необходимо для uploadTask.
+    func uploadImages(_ images: [UIImage]) -> (request: URLRequest, body: Data)? {
+        let base64Strings = images.compactMap {
+            $0.jpegData(compressionQuality: 0.85)?.base64EncodedString()
+        }
+        guard !base64Strings.isEmpty else { return nil }
+        guard let url = URL(string: baseURL + "/api/upload-images") else {
+            assertionFailure("Invalid URL: \(baseURL)/api/upload-images")
+            return nil
+        }
+        guard let body = try? encoder.encode(UploadImagesBody(images: base64Strings)) else { return nil }
+        var request = URLRequest(url: url)
+        request.httpMethod = Method.post.rawValue
+        request.allHTTPHeaderFields = baseHeader
+        return (request, body)
+    }
+
     // MARK: - POST /api/sms
 
     func getSmsRequest(for number: String, code: String) -> URLRequest? {
@@ -104,6 +124,10 @@ final class RequestManagerV2 {
 }
 
 // MARK: - Request body models (Vapor camelCase format)
+
+private struct UploadImagesBody: Encodable {
+    let images: [String]
+}
 
 private struct PhoneBody: Encodable {
     let phoneNumber: String

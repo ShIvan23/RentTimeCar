@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 protocol IRentApiFacade {
     func getClients(with phoneNumber: String, completion: @escaping (Result<ApiResult<Clients>, Error>) -> Void)
@@ -14,6 +15,11 @@ protocol IRentApiFacade {
     func searchAuto(with: SearchAutoInput, completion: @escaping (Result<ApiResult<[Auto]>, Error>) -> Void)
     func getFilterPrams(completion: @escaping (Result<ApiResult<GetFilterParams>, Error>) -> Void)
     func getSmsCode(with phoneNumber: String, code: String, completion: @escaping (Result<SmsModel, Error>) -> Void)
+    func uploadImages(
+        _ images: [UIImage],
+        onProgress: @escaping (Double) -> Void,
+        completion: @escaping (Result<[String], Error>) -> Void
+    )
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -50,4 +56,25 @@ final class RentApiFacade: IRentApiFacade {
         guard let request = requestManager.getSmsRequest(for: phoneNumber, code: code) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
+
+    func uploadImages(
+        _ images: [UIImage],
+        onProgress: @escaping (Double) -> Void,
+        completion: @escaping (Result<[String], Error>) -> Void
+    ) {
+        guard let (request, body) = requestManager.uploadImages(images) else { return }
+        networkManager.upload(
+            request: request,
+            body: body,
+            onProgress: onProgress
+        ) { (result: Result<UploadImagesResponse, Error>) in
+            completion(result.map(\.urls))
+        }
+    }
+}
+
+// MARK: - Response model
+
+private struct UploadImagesResponse: Decodable {
+    let urls: [String]
 }
