@@ -7,15 +7,13 @@
 
 import Foundation
 
-// TODO: Заменить на финальный хост Vapor-сервера
-private let vaporBaseURL = "http://localhost:8080"
-
 final class RequestManagerV2 {
     enum Method: String {
         case get = "GET"
         case post = "POST"
     }
 
+    private let baseURL = "https://renttimecarapi-production.up.railway.app"
     private let baseHeader = ["content-type": "application/json"]
     private let encoder = JSONEncoder()
 
@@ -83,8 +81,8 @@ final class RequestManagerV2 {
     // MARK: - Private helpers
 
     private func makeRequest<T: Encodable>(path: String, method: Method, body: T) -> URLRequest? {
-        guard let url = URL(string: vaporBaseURL + path) else {
-            assertionFailure("Invalid URL: \(vaporBaseURL + path)")
+        guard let url = URL(string: baseURL + path) else {
+            assertionFailure("Invalid URL: \(baseURL + path)")
             return nil
         }
         var request = URLRequest(url: url)
@@ -95,8 +93,8 @@ final class RequestManagerV2 {
     }
 
     private func makeRequest(path: String, method: Method) -> URLRequest? {
-        guard let url = URL(string: vaporBaseURL + path) else {
-            assertionFailure("Invalid URL: \(vaporBaseURL + path)")
+        guard let url = URL(string: baseURL + path) else {
+            assertionFailure("Invalid URL: \(baseURL + path)")
             return nil
         }
         var request = URLRequest(url: url)

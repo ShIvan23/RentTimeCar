@@ -17,7 +17,7 @@ protocol IRentApiFacade {
 }
 
 final class RentApiFacade: IRentApiFacade {
-    private let requestManager = RequestManager()
+    private let requestManager = RequestManagerV2()
     private let networkManager = NetworkManager()
 
     // Запрос делается без + перед 7
