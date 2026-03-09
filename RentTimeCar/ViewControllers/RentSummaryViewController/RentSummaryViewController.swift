@@ -9,11 +9,18 @@ import UIKit
 import PinLayout
 
 final class RentSummaryViewController: UIViewController {
-
+    
     // MARK: - Private properties
     private let coordinator: ICoordinator
     private var cells: [RentSummaryCellModel] = []
-
+    
+    private let infoView = InfoView(
+        text: """
+        В случае отказа от аренды предоплата не возвращается.
+        Можем перенести аренду на другую дату.
+        """
+    )
+    
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -24,7 +31,7 @@ final class RentSummaryViewController: UIViewController {
         collectionView.delegate = self
         return collectionView
     }()
-
+    
     private let prepayTitleLabel = Label(
         text: "Предоплата для брони авто",
         numberOfLines: 1,
@@ -32,15 +39,15 @@ final class RentSummaryViewController: UIViewController {
         textColor: .secondaryTextColor,
         textAlignment: .left
     )
-
+    
     private let infoButton = IconButton(image: .info)
-
+    
     private let prepayValueLabel = Label(
         text: "5000 ₽",
         numberOfLines: 1,
         textAlignment: .right
     )
-
+    
     private let continueButton = MainButton(
         title: "Подтвердить и оплатить 5000 ₽"
     )
@@ -50,63 +57,58 @@ final class RentSummaryViewController: UIViewController {
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-
-    // MARK: - Override methods
+    
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViews()
         setupActions()
         loadData()
     }
-
+    
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         layout()
     }
-
-    // MARK: - Internal methods
+    
+    // MARK: - Actions
     private func proceedToPayment() {
         print("+++ navigate переход на экран оплаты")
     }
-
+    
     private func tapInfoButton() {
-        let infoView = InfoView(
-            text: """
-            В случае отказа от аренды предоплата не возвращается.
-            Можем перенести аренду на другую дату.
-            """,
-            anchorView: infoButton
-        )
-        infoView.show(in: view)
+        let frame = infoButton.convert(infoButton.bounds, to: view)
+        infoView.show(anchorFrame: frame)
+        view.setNeedsLayout()
     }
-
-    // MARK: - Private methods
+    
+    // MARK: - Setup
     private func setupViews() {
         view.backgroundColor = .mainBackground
-        view.addSubviews([collectionView, prepayTitleLabel, infoButton, prepayValueLabel, continueButton])
+        view.addSubviews([collectionView, prepayTitleLabel, infoButton, prepayValueLabel, continueButton, infoView])
+        infoView.isHidden = true
     }
-
+    
     private func setupActions() {
         continueButton.action = { [weak self] in
             self?.proceedToPayment()
         }
-        
         infoButton.action = { [weak self] in
             self?.tapInfoButton()
         }
     }
-
+    
     private func loadData() {
         let selectedOptions = OrderConfirmService.shared.selectedOptions
         let items = RentSummaryService.shared.getRentSummaryItems(selectedOptions: selectedOptions)
         cells = buildCellModels(from: items)
         collectionView.reloadData()
     }
-
+    
     private func buildCellModels(from items: [RentItem]) -> [RentSummaryCellModel] {
         var result: [RentSummaryCellModel] = []
         for (index, item) in items.enumerated() {
@@ -117,51 +119,56 @@ final class RentSummaryViewController: UIViewController {
         }
         return result
     }
-
+    
     private func layout() {
         let horizontalInset: CGFloat = 32
         let continueButtonHeight: CGFloat = 50
         let prepayHeight: CGFloat = 40
         let prepaySpacing: CGFloat = 8
         let prepayBottomMargin: CGFloat = 16
-
+        let infoButtonSize: CGFloat = 20
+        
         continueButton.pin
             .horizontally(horizontalInset)
             .bottom(view.pin.safeArea.bottom)
             .height(continueButtonHeight)
-
+        
         prepayTitleLabel.pin
             .bottom(to: continueButton.edge.top)
             .marginBottom(prepayBottomMargin)
             .left(horizontalInset)
             .height(prepayHeight)
             .sizeToFit()
-
+        
         infoButton.pin
             .vCenter(to: prepayTitleLabel.edge.vCenter)
             .after(of: prepayTitleLabel)
             .marginLeft(prepaySpacing)
-            .size(CGSize(square: 20))
-
+            .size(CGSize(square: infoButtonSize))
+        
         prepayValueLabel.pin
             .vCenter(to: prepayTitleLabel.edge.vCenter)
             .right(horizontalInset)
             .sizeToFit()
-
+        
         collectionView.pin
             .top(view.pin.safeArea.top)
             .horizontally()
             .above(of: prepayTitleLabel)
+        
+        if !infoView.isHidden {
+            infoView.pin.all()
+        }
     }
 }
 
 // MARK: - UICollectionViewDataSource
 extension RentSummaryViewController: UICollectionViewDataSource {
-
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         cells.count
     }
-
+    
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         switch cells[indexPath.item] {
         case .item(let item):
@@ -177,7 +184,7 @@ extension RentSummaryViewController: UICollectionViewDataSource {
 
 // MARK: - UICollectionViewDelegateFlowLayout
 extension RentSummaryViewController: UICollectionViewDelegateFlowLayout {
-
+    
     func collectionView(_ collectionView: UICollectionView,
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {

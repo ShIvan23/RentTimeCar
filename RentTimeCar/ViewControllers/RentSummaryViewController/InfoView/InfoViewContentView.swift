@@ -19,9 +19,7 @@ final class InfoViewContentView: UIView {
         return image
     }()
     
-    private let infoLabel = Label (
-        fontSize: 12
-    )
+    private let infoLabel = Label(fontSize: 12)
     
     private let arrowView: UIView = {
         let view = UIView()
@@ -46,10 +44,13 @@ final class InfoViewContentView: UIView {
         layout()
     }
     
+    override func sizeThatFits(_ size: CGSize) -> CGSize {
+        autoSizeThatFits(size, layoutClosure: layout)
+    }
+    
     // MARK: - Internal Methods
-    func configure (text: String){
+    func configure(text: String) {
         infoLabel.text = text
-        setNeedsLayout()
     }
     
     // MARK: - Private Methods
@@ -67,15 +68,13 @@ final class InfoViewContentView: UIView {
         
         infoLabel.pin
             .below(of: iconImage)
-            .horizontally(8) 
+            .horizontally(8)
+            .marginBottom(8)
             .sizeToFit(.width)
-        
-        let dinamicHeight = infoLabel.frame.maxY + 8
-        pin.height(dinamicHeight)
         
         arrowView.pin
             .size(10)
             .hCenter()
-            .top(dinamicHeight - 10 / 2)
+            .bottom(-5)
     }
 }

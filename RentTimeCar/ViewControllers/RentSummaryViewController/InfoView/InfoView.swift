@@ -9,90 +9,62 @@ import UIKit
 import PinLayout
 
 final class InfoView: UIView {
-    
+
     // MARK: - Private Properties
-    private let dimmedBackground: UIView = {
-        let view = UIView()
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        return view
-    }()
-    
     private let contentView = InfoViewContentView()
-    private weak var anchorView: UIView?
+    private var anchorFrame: CGRect?
     private let widthRatio: CGFloat = 0.7
-    
+
     // MARK: - Init
-    init(text: String, anchorView: UIView) {
-        self.anchorView = anchorView
+    init(text: String) {
         super.init(frame: .zero)
         setupViews()
         contentView.configure(text: text)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     // MARK: - Override Methods
     override func layoutSubviews() {
         super.layoutSubviews()
-        
-        dimmedBackground.pin.all()
-        
-        guard let anchor = anchorView else { return }
+        guard let anchorFrame = self.anchorFrame else { return }
         let maxWidth = bounds.width * widthRatio
+        let size = contentView.sizeThatFits(CGSize(width: maxWidth, height: .greatestFiniteMagnitude) )
+        
+        let x = anchorFrame.midX - size.width / 2
+        let y = anchorFrame.minY - size.height - 8
         
         contentView.pin
-            .width(maxWidth)
+            .size(size)
+            .top(y)
+            .left(x)
         
-        contentView.layoutIfNeeded()
-
-        contentView.pin
-            .above(of: anchor, aligned: .center)
-            .marginBottom(8)
-        
-        contentView.pin
-            .left(max(contentView.frame.minX, 16))
-        
+        if contentView.frame.minX < 16 {
+            contentView.pin.left(16)
+        }
         if contentView.frame.maxX > bounds.width - 16 {
-            contentView.pin
-                .right(bounds.width - 16)
+            contentView.pin.right(16)
         }
     }
-    
+
     // MARK: - Internal Methods
-    func show(in parentView: UIView) {
-        frame = parentView.bounds
+    func show(anchorFrame: CGRect) {
+        self.anchorFrame = anchorFrame
+        isHidden = false
         alpha = 0
-        parentView.addSubview(self)
-        
-        UIView.animate(withDuration: 0.25) {
-            self.alpha = 1
-        }
+        UIView.animate(withDuration: 0.3) { self.alpha = 1 }
     }
-    
+
     func hide() {
-        UIView.animate(withDuration: 0.25, animations: {
-            self.alpha = 0
-        }, completion: { _ in
-            self.removeFromSuperview()
-        })
+        UIView.animate(withDuration: 0.3) { self.alpha = 0 } completion: { _ in self.isHidden = true }
     }
-    
+
     // MARK: - Private Methods
     private func setupViews() {
-        backgroundColor = .clear        
-        addSubview(dimmedBackground)
-        addSubview(contentView)
-        
-        let tapGesture = UITapGestureRecognizer(
-            target: self,
-            action: #selector(backgroundTapped)
-        )
-        dimmedBackground.addGestureRecognizer(tapGesture)
-    }
-    
-    @objc private func backgroundTapped() {
-        hide()
+        backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        addSubviews([contentView])
+        addTapGestureClosure { [weak self] in self?.hide() }
     }
 }
