@@ -189,8 +189,19 @@ final class Builder {
         return vc
     }
 
+    static func makePaymentCancelConfirmationBottomSheet(onConfirm: @escaping () -> Void) -> UIViewController {
+        let model = InfoBottomSheetModel.makePaymentCancelConfirmationModel(onConfirm: onConfirm)
+        let vc = InfoBottomSheetViewController(model: model)
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+        return vc
+    }
+
     static func makeRobokassaWebViewController(paymentURL: URL, invId: Int) -> RobokassaWebViewController {
-        RobokassaWebViewController(paymentURL: paymentURL, invId: invId)
+        RobokassaWebViewController(coordinator: Coordinator.shared, paymentURL: paymentURL, invId: invId)
     }
 
     static func makeSuccessPhotoViewController(image: UIImage) -> UIViewController {

@@ -35,6 +35,7 @@ protocol ICoordinator {
     func openRobokassaPayment(amount: Int, invId: Int, description: String, onSuccess: @escaping (Int) -> Void, onFail: @escaping () -> Void)
     func openPaymentSuccessBottomSheet(onDismiss: @escaping () -> Void)
     func openPaymentFailBottomSheet(onDismiss: @escaping () -> Void)
+    func openPaymentCancelConfirmationBottomSheet(onConfirm: @escaping () -> Void)
     func openRegistrationViewController()
     func openCameraViewController()
     func openSettingsApp()
@@ -169,6 +170,11 @@ final class Coordinator: NSObject, ICoordinator {
     func openPaymentFailBottomSheet(onDismiss: @escaping () -> Void) {
         let vc = Builder.makePaymentFailBottomSheet(onDismiss: onDismiss)
         navigationController?.present(vc, animated: true)
+    }
+
+    func openPaymentCancelConfirmationBottomSheet(onConfirm: @escaping () -> Void) {
+        let vc = Builder.makePaymentCancelConfirmationBottomSheet(onConfirm: onConfirm)
+        navigationController?.topViewController?.present(vc, animated: true)
     }
 
     func openRegistrationViewController() {

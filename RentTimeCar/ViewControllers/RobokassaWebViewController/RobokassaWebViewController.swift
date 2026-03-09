@@ -12,6 +12,7 @@ final class RobokassaWebViewController: UIViewController {
     var onSuccess: ((Int) -> Void)?
     var onFail: (() -> Void)?
 
+    private let coordinator: ICoordinator
     private let paymentURL: URL
     private let invId: Int
 
@@ -28,7 +29,8 @@ final class RobokassaWebViewController: UIViewController {
     }()
 
     // MARK: - Init
-    init(paymentURL: URL, invId: Int) {
+    init(coordinator: ICoordinator, paymentURL: URL, invId: Int) {
+        self.coordinator = coordinator
         self.paymentURL = paymentURL
         self.invId = invId
         super.init(nibName: nil, bundle: nil)
@@ -75,16 +77,9 @@ final class RobokassaWebViewController: UIViewController {
     }
 
     private func showCancelConfirmation() {
-        let alert = UIAlertController(
-            title: "Отменить оплату?",
-            message: "Вы уверены, что хотите прервать оплату?",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "Нет", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Да, отменить", style: .destructive) { [weak self] _ in
+        coordinator.openPaymentCancelConfirmationBottomSheet { [weak self] in
             self?.onFail?()
-        })
-        present(alert, animated: true)
+        }
     }
 }
 

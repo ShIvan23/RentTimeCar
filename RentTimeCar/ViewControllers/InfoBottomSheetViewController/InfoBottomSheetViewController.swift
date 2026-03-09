@@ -41,6 +41,15 @@ extension InfoBottomSheetModel {
             onConfirm: onConfirm
         )
     }
+
+    static func makePaymentCancelConfirmationModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Вы уверены, что хотите прервать оплату?",
+            image: .redCross,
+            buttonTitle: "Да, отменить",
+            onConfirm: onConfirm
+        )
+    }
 }
 
 final class InfoBottomSheetViewController: UIViewController {
