@@ -82,7 +82,8 @@ final class SelectDateView: UIView {
         containerView.layer.borderColor = UIColor.lightGray.cgColor
         containerView.layer.borderWidth = 2
         containerView.addSubviews([containerLabel, containerImageView])
-        containerImageView.image = .calendar
+        containerImageView.image = .calendar.withRenderingMode(.alwaysTemplate)
+        containerImageView.tintColor = .whiteTextColor
         configure(selectedDates: filterService.selectedDates)
     }
     
