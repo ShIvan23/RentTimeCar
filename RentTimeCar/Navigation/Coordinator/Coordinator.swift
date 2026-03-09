@@ -37,10 +37,10 @@ protocol ICoordinator {
     func openPaymentFailBottomSheet(onDismiss: @escaping () -> Void)
     func openPaymentCancelConfirmationBottomSheet(onConfirm: @escaping () -> Void)
     func openRegistrationViewController()
-    func openCameraViewController()
+    func openCameraViewController(photoStep: RegistrationPhotoStep)
     func openSettingsApp()
     func openInfoBottomSheetViewController()
-    func openSuccessPhotoViewController(image: UIImage)
+    func openSuccessPhotoViewController(image: UIImage, photoStep: RegistrationPhotoStep)
     func popToViewController(_ controller: ICoordinatorController)
 }
 
@@ -184,8 +184,8 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.isNavigationBarHidden = false
     }
 
-    func openCameraViewController() {
-        let cameraViewController = Builder.makeCameraViewController()
+    func openCameraViewController(photoStep: RegistrationPhotoStep) {
+        let cameraViewController = Builder.makeCameraViewController(photoStep: photoStep)
         navigationController?.pushViewController(cameraViewController, animated: true)
     }
 
@@ -199,8 +199,8 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.present(infoBottomSheetViewController, animated: true)
     }
 
-    func openSuccessPhotoViewController(image: UIImage) {
-        let successPhotoViewController = Builder.makeSuccessPhotoViewController(image: image)
+    func openSuccessPhotoViewController(image: UIImage, photoStep: RegistrationPhotoStep) {
+        let successPhotoViewController = Builder.makeSuccessPhotoViewController(image: image, photoStep: photoStep)
         navigationController?.pushViewController(successPhotoViewController, animated: true)
     }
 

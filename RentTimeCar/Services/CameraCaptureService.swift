@@ -15,6 +15,7 @@ final class CameraCaptureService {
     static let shared = CameraCaptureService()
 
     private weak var observer: CameraCaptureServiceObserver?
+    var pendingNextPhotoStep: RegistrationPhotoStep?
 
     private init() {}
 

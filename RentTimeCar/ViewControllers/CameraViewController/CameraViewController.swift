@@ -11,14 +11,22 @@ import AVFoundation
 final class CameraViewController: UIViewController {
 
     // MARK: - Private Properties
+
     private let coordinator: ICoordinator
+    private var photoStep: RegistrationPhotoStep
     private let generator = UIImpactFeedbackGenerator(style: .light)
     private let cameraService = CameraService()
     private var capturingInProgress = false
+    private var isCameraSetup = false
 
     // MARK: - UI
 
     private let previewView = UIView()
+    private lazy var instructionLabel = Label(
+        text: photoStep.cameraLabel,
+        numberOfLines: 0,
+        textAlignment: .center
+    )
     private lazy var captureImageButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .white
@@ -30,11 +38,12 @@ final class CameraViewController: UIViewController {
 
     // MARK: - Init
 
-    init(coordinator: ICoordinator) {
+    init(coordinator: ICoordinator, photoStep: RegistrationPhotoStep) {
         self.coordinator = coordinator
+        self.photoStep = photoStep
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -44,13 +53,29 @@ final class CameraViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
+    }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        guard !isMovingToParent else { return }
+        let captureService = CameraCaptureService.shared
+        if let nextStep = captureService.pendingNextPhotoStep {
+            captureService.pendingNextPhotoStep = nil
+            photoStep = nextStep
+            instructionLabel.text = nextStep.cameraLabel
+            view.setNeedsLayout()
+        }
     }
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         performLayout()
-        setupCamera()
+        if !isCameraSetup {
+            isCameraSetup = true
+            setupCamera()
+        } else {
+            cameraService.updatePreviewLayer(frame: previewView.bounds)
+        }
     }
 
     deinit {
@@ -78,7 +103,7 @@ final class CameraViewController: UIViewController {
 
     private func setupView() {
         view.backgroundColor = .mainBackground
-        view.addSubviews([previewView, captureImageButton])
+        view.addSubviews([previewView, instructionLabel, captureImageButton])
         previewView.backgroundColor = .mainBackground
     }
 
@@ -93,10 +118,21 @@ final class CameraViewController: UIViewController {
     }
 
     private func performLayout() {
+        let labelWidth = view.bounds.width - 32
+        let labelHeight = instructionLabel.sizeThatFits(
+            CGSize(width: labelWidth, height: .greatestFiniteMagnitude)
+        ).height
+
+        instructionLabel.pin
+            .top(view.safeAreaInsets.top + 16)
+            .horizontally(16)
+            .height(labelHeight)
+
         previewView.pin
-            .top(view.safeAreaInsets.top)
+            .below(of: instructionLabel)
             .horizontally()
             .height(view.bounds.width)
+            .marginTop(8)
 
         captureImageButton.pin
             .bottom()
@@ -106,22 +142,20 @@ final class CameraViewController: UIViewController {
     }
 }
 
-// MARK: -
+// MARK: - CameraServiceDelegate
 
 extension CameraViewController: CameraServiceDelegate {
     func cameraService(_ service: CameraService, didCapture image: UIImage) {
-           // Обрабатываем захваченное изображение
         guard capturingInProgress else { return }
         capturingInProgress = false
-        coordinator.openSuccessPhotoViewController(image: image)
+        coordinator.openSuccessPhotoViewController(image: image, photoStep: photoStep)
         captureImageButton.isEnabled = true
-       }
+    }
 
-       func cameraService(_ service: CameraService, didFailWith error: Error) {
-           showError(error)
-       }
+    func cameraService(_ service: CameraService, didFailWith error: Error) {
+        showError(error)
+    }
 }
-
 
 private extension CGSize {
     static let buttonSize = CGSize(square: 50)

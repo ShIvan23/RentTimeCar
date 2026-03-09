@@ -12,8 +12,9 @@ final class RegistrationViewController: UIViewController {
 
     private enum RegistrationStep {
         case initial
-        case needPhoto
-        case takePhoto
+        case takeDriverLicense
+        case licenseDone
+        case readyToSubmit
     }
 
     // MARK: - UI
@@ -52,7 +53,7 @@ final class RegistrationViewController: UIViewController {
         self.cameraPermissionService = cameraPermissionService
         super.init(nibName: nil, bundle: nil)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -76,7 +77,6 @@ final class RegistrationViewController: UIViewController {
         bottomContainerView.addSubviews([nextStepButton, backButton])
         view.backgroundColor = .mainBackground
         bottomContainerView.backgroundColor = .secondaryBackground
-        collectionView.backgroundColor = .red
 
         backButton.action = { [weak self] in
             self?.coordinator.popViewController()
@@ -92,23 +92,28 @@ final class RegistrationViewController: UIViewController {
     private func handleNextStepAction() {
         switch registrationStep {
         case .initial:
-            registrationStep = .needPhoto
-            handleNextStepAction()
-        case .needPhoto:
             registrationModelBox.items.append(RegistrationModel.makeNeedPhotoStepModel())
             collectionView.reloadData()
             backButton.isHidden = true
             nextStepButton.setTitle("Сфотографировать", for: .normal)
             view.setNeedsLayout()
-            registrationStep = .takePhoto
-        case .takePhoto:
-            cameraPermissionService.isCameraGranted { [weak self] isGranted in
-                DispatchQueue.main.async {
-                    if isGranted {
-                        self?.coordinator.openCameraViewController()
-                    } else {
-                        self?.coordinator.openInfoBottomSheetViewController()
-                    }
+            registrationStep = .takeDriverLicense
+        case .takeDriverLicense:
+            openCamera(for: .driverLicenseFront)
+        case .licenseDone:
+            openCamera(for: .passportMain)
+        case .readyToSubmit:
+            break
+        }
+    }
+
+    private func openCamera(for step: RegistrationPhotoStep) {
+        cameraPermissionService.isCameraGranted { [weak self] isGranted in
+            DispatchQueue.main.async {
+                if isGranted {
+                    self?.coordinator.openCameraViewController(photoStep: step)
+                } else {
+                    self?.coordinator.openInfoBottomSheetViewController()
                 }
             }
         }
@@ -160,7 +165,7 @@ extension RegistrationViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         registrationModelBox.items.count
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let model = registrationModelBox.items[safe: indexPath.item] else { return UICollectionViewCell() }
         switch model {
@@ -203,6 +208,26 @@ extension RegistrationViewController: CameraCaptureServiceObserver {
     func post(capturedImage: UIImage) {
         registrationModelBox.items.append(.image(capturedImage))
         collectionView.reloadData()
+
+        let imageCount = registrationModelBox.items.filter {
+            if case .image = $0 { return true }
+            return false
+        }.count
+
+        switch imageCount {
+        case 2:
+            registrationModelBox.items.append(RegistrationModel.makePassportInstructionModel())
+            collectionView.reloadData()
+            registrationStep = .licenseDone
+            nextStepButton.setTitle("Сфотографировать", for: .normal)
+        case 4:
+            registrationStep = .readyToSubmit
+            nextStepButton.setTitle("Отправить фото", for: .normal)
+        default:
+            break
+        }
+
+        view.setNeedsLayout()
     }
 }
 

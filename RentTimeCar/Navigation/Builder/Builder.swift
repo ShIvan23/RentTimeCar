@@ -147,9 +147,9 @@ final class Builder {
         return registrationViewController
     }
 
-    static func makeCameraViewController() -> UIViewController {
+    static func makeCameraViewController(photoStep: RegistrationPhotoStep) -> UIViewController {
         let coordinator = Coordinator.shared
-        let cameraViewController = CameraViewController(coordinator: coordinator)
+        let cameraViewController = CameraViewController(coordinator: coordinator, photoStep: photoStep)
         return cameraViewController
     }
 
@@ -204,11 +204,12 @@ final class Builder {
         RobokassaWebViewController(coordinator: Coordinator.shared, paymentURL: paymentURL, invId: invId)
     }
 
-    static func makeSuccessPhotoViewController(image: UIImage) -> UIViewController {
+    static func makeSuccessPhotoViewController(image: UIImage, photoStep: RegistrationPhotoStep) -> UIViewController {
         let coordinator = Coordinator.shared
         let successPhotoViewController = SuccessPhotoViewController(
             coordinator: coordinator,
-            image: image
+            image: image,
+            photoStep: photoStep
         )
         return successPhotoViewController
     }

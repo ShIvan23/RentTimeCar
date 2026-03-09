@@ -20,13 +20,16 @@ final class SuccessPhotoViewController: UIViewController {
     // MARK: - Private Properties
 
     private let coordinator: ICoordinator
+    private let photoStep: RegistrationPhotoStep
     private let cameraCaptureService = CameraCaptureService.shared
 
     init(
         coordinator: ICoordinator,
-        image: UIImage
+        image: UIImage,
+        photoStep: RegistrationPhotoStep
     ) {
         self.coordinator = coordinator
+        self.photoStep = photoStep
         super.init(nibName: nil, bundle: nil)
         successPhotoView.configure(with: image)
     }
@@ -51,6 +54,11 @@ extension SuccessPhotoViewController: SuccessPhotoViewDelegate {
 
     func didTapConfirm(image: UIImage) {
         cameraCaptureService.setImage(image)
-        coordinator.popToViewController(.registration)
+        if let nextStep = photoStep.next {
+            cameraCaptureService.pendingNextPhotoStep = nextStep
+            coordinator.popViewController()
+        } else {
+            coordinator.popToViewController(.registration)
+        }
     }
 }
