@@ -10,13 +10,35 @@ import UIKit
 struct InfoBottomSheetModel {
     let text: String
     let image: UIImage
+    let buttonTitle: String
+    let onConfirm: () -> Void
 }
 
 extension InfoBottomSheetModel {
-    static func makeDeniedCameraPermissionModel() -> InfoBottomSheetModel {
+    static func makeDeniedCameraPermissionModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
         InfoBottomSheetModel(
             text: "Чтобы дать доступ к камере вам нужно перейти в настройки.\n\n1. В настройках зайдите в раздел Приложения\n2. Далее найдите наше приложение\n3. Разрешите доступ к камере",
-            image: .info
+            image: .info,
+            buttonTitle: "Перейти в настройки",
+            onConfirm: onConfirm
+        )
+    }
+
+    static func makePaymentSuccessModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Оплата прошла успешно!\n\nБронирование подтверждено. Ожидайте звонка менеджера.",
+            image: .rublesign,
+            buttonTitle: "Отлично",
+            onConfirm: onConfirm
+        )
+    }
+
+    static func makePaymentFailModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Оплата не завершена.\n\nПопробуйте ещё раз или свяжитесь с поддержкой.",
+            image: .redCross,
+            buttonTitle: "Понятно",
+            onConfirm: onConfirm
         )
     }
 }
@@ -25,23 +47,18 @@ final class InfoBottomSheetViewController: UIViewController {
     // MARK: - UI
 
     private let label = Label()
-    private let confirmButton = MainButton(title: "Перейти в настройки")
     private let imageView = UIImageView()
+    private let confirmButton = MainButton(title: "")
 
     // MARK: - Private Properties
 
-    private let coordinator: ICoordinator
+    private let model: InfoBottomSheetModel
 
     // MARK: - Init
 
-    init(
-        coordinator: ICoordinator,
-        model: InfoBottomSheetModel
-    ) {
-        self.coordinator = coordinator
+    init(model: InfoBottomSheetModel) {
+        self.model = model
         super.init(nibName: nil, bundle: nil)
-        label.text = model.text
-        imageView.image = model.image.withRenderingMode(.alwaysTemplate)
     }
 
     @available(*, unavailable)
@@ -65,12 +82,17 @@ final class InfoBottomSheetViewController: UIViewController {
 
     private func setupView() {
         view.addSubviews([label, imageView, confirmButton])
-        imageView.image = .info.withRenderingMode(.alwaysTemplate)
-        imageView.tintColor = .whiteTextColor
         view.backgroundColor = .mainBackground
+
+        label.text = model.text
+        imageView.image = model.image.withRenderingMode(.alwaysTemplate)
+        imageView.tintColor = .whiteTextColor
+        confirmButton.setTitle(model.buttonTitle, for: .normal)
+
         confirmButton.action = { [weak self] in
-            guard let self else { return }
-            coordinator.openSettingsApp()
+            self?.dismiss(animated: true) {
+                self?.model.onConfirm()
+            }
         }
     }
 

@@ -155,16 +155,42 @@ final class Builder {
 
     static func makeInfoBottomSheetViewController() -> UIViewController {
         let coordinator = Coordinator.shared
-        let infoBottomSheetViewController = InfoBottomSheetViewController(
-            coordinator: coordinator,
-            model: InfoBottomSheetModel.makeDeniedCameraPermissionModel()
-        )
+        let model = InfoBottomSheetModel.makeDeniedCameraPermissionModel {
+            coordinator.openSettingsApp()
+        }
+        let infoBottomSheetViewController = InfoBottomSheetViewController(model: model)
         if let sheet = infoBottomSheetViewController.sheetPresentationController {
             sheet.detents = [.medium()]
             sheet.prefersGrabberVisible = true
             sheet.preferredCornerRadius = 20
         }
         return infoBottomSheetViewController
+    }
+
+    static func makePaymentSuccessBottomSheet(onDismiss: @escaping () -> Void) -> UIViewController {
+        let model = InfoBottomSheetModel.makePaymentSuccessModel(onConfirm: onDismiss)
+        let vc = InfoBottomSheetViewController(model: model)
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+        return vc
+    }
+
+    static func makePaymentFailBottomSheet(onDismiss: @escaping () -> Void) -> UIViewController {
+        let model = InfoBottomSheetModel.makePaymentFailModel(onConfirm: onDismiss)
+        let vc = InfoBottomSheetViewController(model: model)
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 20
+        }
+        return vc
+    }
+
+    static func makeRobokassaWebViewController(paymentURL: URL, invId: Int) -> RobokassaWebViewController {
+        RobokassaWebViewController(paymentURL: paymentURL, invId: invId)
     }
 
     static func makeSuccessPhotoViewController(image: UIImage) -> UIViewController {

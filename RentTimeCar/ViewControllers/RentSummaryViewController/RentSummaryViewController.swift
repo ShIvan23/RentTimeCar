@@ -68,9 +68,34 @@ final class RentSummaryViewController: UIViewController {
         layout()
     }
 
-    // MARK: - Internal methods
+    // MARK: - Private methods (Payment)
     private func proceedToPayment() {
-        print("+++ navigate переход на экран оплаты")
+        let selectedOptions = OrderConfirmService.shared.selectedOptions
+        let items = RentSummaryService.shared.getRentSummaryItems(selectedOptions: selectedOptions)
+        let prepayAmount = 5000  // сумма предоплаты в рублях
+        let invId = RobokassaService.shared.generateInvId()
+
+        coordinator.openRobokassaPayment(
+            amount: prepayAmount,
+            invId: invId,
+            description: "Предоплата аренды автомобиля"
+        ) { [weak self] _ in
+            self?.handlePaymentSuccess()
+        } onFail: { [weak self] in
+            self?.handlePaymentFail()
+        }
+    }
+
+    private func handlePaymentSuccess() {
+        coordinator.openPaymentSuccessBottomSheet { [weak self] in
+            self?.coordinator.popToRootViewController()
+        }
+    }
+
+    private func handlePaymentFail() {
+        coordinator.openPaymentFailBottomSheet { [weak self] in
+            self?.coordinator.popViewController()
+        }
     }
 
     private func tapInfoButton() {

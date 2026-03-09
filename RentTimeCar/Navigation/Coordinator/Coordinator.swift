@@ -32,6 +32,9 @@ protocol ICoordinator {
     func popToRootViewController()
     func openAnotherApplication(url: URL)
     func openRentSummaryViewController()
+    func openRobokassaPayment(amount: Int, invId: Int, description: String, onSuccess: @escaping (Int) -> Void, onFail: @escaping () -> Void)
+    func openPaymentSuccessBottomSheet(onDismiss: @escaping () -> Void)
+    func openPaymentFailBottomSheet(onDismiss: @escaping () -> Void)
     func openRegistrationViewController()
     func openCameraViewController()
     func openSettingsApp()
@@ -147,6 +150,25 @@ final class Coordinator: NSObject, ICoordinator {
         let rentSummaryViewController = Builder.makeRentSummaryViewController()
         rentSummaryViewController.title = "Стоимость"
         navigationController?.pushViewController(rentSummaryViewController, animated: true)
+    }
+
+    func openRobokassaPayment(amount: Int, invId: Int, description: String, onSuccess: @escaping (Int) -> Void, onFail: @escaping () -> Void) {
+        guard let url = RobokassaService.shared.buildPaymentURL(amount: amount, invId: invId, description: description) else { return }
+        let paymentVC = Builder.makeRobokassaWebViewController(paymentURL: url, invId: invId)
+        paymentVC.onSuccess = onSuccess
+        paymentVC.onFail = onFail
+        paymentVC.title = "Оплата"
+        navigationController?.pushViewController(paymentVC, animated: true)
+    }
+
+    func openPaymentSuccessBottomSheet(onDismiss: @escaping () -> Void) {
+        let vc = Builder.makePaymentSuccessBottomSheet(onDismiss: onDismiss)
+        navigationController?.present(vc, animated: true)
+    }
+
+    func openPaymentFailBottomSheet(onDismiss: @escaping () -> Void) {
+        let vc = Builder.makePaymentFailBottomSheet(onDismiss: onDismiss)
+        navigationController?.present(vc, animated: true)
     }
 
     func openRegistrationViewController() {
