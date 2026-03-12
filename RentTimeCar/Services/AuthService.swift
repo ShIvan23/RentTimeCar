@@ -30,6 +30,7 @@ final class AuthService {
     }
 
     private(set) var authState: AuthState
+    private(set) var integrationId: String?
 
     // MARK: - Private Properties
 
@@ -43,11 +44,15 @@ final class AuthService {
 
     private init() {
         // debug clear
-//        userDefaults.set(false, forKey: .isAuthorizedKey)
+        userDefaults.set(nil, forKey: .isAuthorizedKey)
+        userDefaults.set(nil, forKey: .phoneNumberKey)
+        userDefaults.set(nil, forKey: .isRegisteredKey)
+        userDefaults.set(nil, forKey: .integrationIdKey)
 
         let isAuthorized = userDefaults.bool(forKey: .isAuthorizedKey)
         phoneNumber = userDefaults.string(forKey: .phoneNumberKey)
         isRegistered = userDefaults.bool(forKey: .isRegisteredKey)
+        integrationId = userDefaults.string(forKey: .integrationIdKey)
 
         guard isAuthorized else {
             authState = .needAuthorize
@@ -94,6 +99,7 @@ final class AuthService {
     }
 
     func savePhoneNumber(_ phoneNumber: String) {
+        self.phoneNumber = phoneNumber
         userDefaults.set(phoneNumber, forKey: .phoneNumberKey)
     }
 
@@ -101,9 +107,13 @@ final class AuthService {
 
     private func checkRegistration(completion: @escaping (Bool) -> Void) {
         guard let phoneNumber else { return completion(false) }
-        rentApiFacade.getClients(with: phoneNumber) { result in
+        rentApiFacade.getClients(with: phoneNumber) { [weak self] result in
             switch result {
             case let .success(clients):
+                print("+++ success clients = \(clients)")
+                let integrationId = clients.result?.clients.first?.integrationId
+                self?.integrationId = integrationId
+                self?.userDefaults.set(integrationId, forKey: .integrationIdKey)
                 completion(clients.result?.clients.isEmpty == false)
             case let .failure(error):
                 debugPrint("+++ error = \(error)")
@@ -124,4 +134,5 @@ private extension String {
     static let isAuthorizedKey = "isAuthorizedKey"
     static let isRegisteredKey = "isRegisteredKey"
     static let phoneNumberKey = "phoneNumberKey"
+    static let integrationIdKey = "integrationIdKey"
 }

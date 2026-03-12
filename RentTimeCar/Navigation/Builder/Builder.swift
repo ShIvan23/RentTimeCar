@@ -106,7 +106,9 @@ final class Builder {
     }
 
     static func makeEnterSmsCodeViewController(phoneNumber: String, checkCode: String) -> UIViewController {
-        EnterSmsCodeViewController(
+        let coordinator = Coordinator.shared
+        return EnterSmsCodeViewController(
+            coordinator: coordinator,
             phoneNumber: phoneNumber,
             checkCode: checkCode
         )
