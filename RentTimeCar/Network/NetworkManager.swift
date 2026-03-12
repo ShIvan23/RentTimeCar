@@ -11,7 +11,13 @@ typealias JSONCompletionHandler = (Data?, HTTPURLResponse?, Error?) -> Void
 
 final class NetworkManager {
     private let sessionConfiguration = URLSessionConfiguration.default
-    private lazy var session = URLSession(configuration: sessionConfiguration)
+    private lazy var session: URLSession = {
+        #if DEBUG
+        return URLSession(configuration: sessionConfiguration, delegate: TLSBypassDelegate(), delegateQueue: nil)
+        #else
+        return URLSession(configuration: sessionConfiguration)
+        #endif
+    }()
     
     func fetch<T: Decodable>(request: URLRequest, completion: @escaping (Result<T, Error>) -> Void) {
         
@@ -111,6 +117,28 @@ final class NetworkManager {
     }
 }
 
+// MARK: - TLSBypassDelegate (DEBUG only)
+
+#if DEBUG
+/// Принимает любой TLS-сертификат. Нужен для работы с Proxyman/Charles.
+/// НЕ использовать в продакшене.
+private final class TLSBypassDelegate: NSObject, URLSessionDelegate {
+    func urlSession(
+        _ session: URLSession,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        print("🔐 TLSBypassDelegate called, method: \(challenge.protectionSpace.authenticationMethod)")
+        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+           let trust = challenge.protectionSpace.serverTrust {
+            completionHandler(.useCredential, URLCredential(trust: trust))
+        } else {
+            completionHandler(.performDefaultHandling, nil)
+        }
+    }
+}
+#endif
+
 // MARK: - UploadDelegate
 
 /// Делегат одноразовой upload-сессии.
@@ -153,6 +181,22 @@ extension UploadDelegate: URLSessionTaskDelegate {
         session.finishTasksAndInvalidate()
     }
 }
+
+#if DEBUG
+extension UploadDelegate: URLSessionDelegate {
+    func urlSession(
+        _ session: URLSession,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        guard let trust = challenge.protectionSpace.serverTrust else {
+            completionHandler(.cancelAuthenticationChallenge, nil)
+            return
+        }
+        completionHandler(.useCredential, URLCredential(trust: trust))
+    }
+}
+#endif
 
 extension UploadDelegate: URLSessionDataDelegate {
 
