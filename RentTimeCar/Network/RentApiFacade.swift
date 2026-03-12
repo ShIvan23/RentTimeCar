@@ -18,8 +18,9 @@ protocol IRentApiFacade {
     func uploadImages(
         _ images: [UIImage],
         onProgress: @escaping (Double) -> Void,
-        completion: @escaping (Result<[String], Error>) -> Void
+        completion: @escaping (Result<Void, Error>) -> Void
     )
+    func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -60,21 +61,20 @@ final class RentApiFacade: IRentApiFacade {
     func uploadImages(
         _ images: [UIImage],
         onProgress: @escaping (Double) -> Void,
-        completion: @escaping (Result<[String], Error>) -> Void
+        completion: @escaping (Result<Void, Error>) -> Void
     ) {
         guard let (request, body) = requestManager.uploadImages(images) else { return }
         networkManager.upload(
             request: request,
             body: body,
             onProgress: onProgress
-        ) { (result: Result<UploadImagesResponse, Error>) in
-            completion(result.map(\.urls))
+        ) { (result: Result<EmptyResponse, Error>) in
+            completion(result.map { _ in })
         }
     }
-}
 
-// MARK: - Response model
-
-private struct UploadImagesResponse: Decodable {
-    let urls: [String]
+    func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void) {
+        guard let request = requestManager.addRequest(with: input) else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
 }

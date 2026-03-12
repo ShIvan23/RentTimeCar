@@ -88,6 +88,12 @@ final class RequestManagerV2 {
         return (request, body)
     }
 
+    // MARK: - POST /api/requests/add
+
+    func addRequest(with input: AddRequestInput) -> URLRequest? {
+        makeRequest(path: "/api/requests/add", method: .post, body: input)
+    }
+
     // MARK: - POST /api/sms
 
     func getSmsRequest(for number: String, code: String) -> URLRequest? {

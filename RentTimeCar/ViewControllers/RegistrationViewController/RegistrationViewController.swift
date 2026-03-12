@@ -179,8 +179,8 @@ final class RegistrationViewController: UIViewController {
             DispatchQueue.main.async {
                 self?.hideUploadOverlay()
                 switch result {
-                case let .success(links):
-                    print("+++ фото загружены, links = \(links)")
+                case .success:
+                    print("+++ фото загружены")
                     // теперь эти линки надо передать в CRM и сменить статус приложения "На проверке"
                 case .failure(let error):
                     self?.showUploadError(error)
