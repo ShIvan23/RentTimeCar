@@ -80,9 +80,11 @@ final class AuthService {
             invokeAllSubscribers()
             return
         }
+        
+        // тут должна быть логика, что пользователь уже регался ранее и имеет подтверждению учетку и учетка не заблочена
 
         // Если пользователь уже имеет подтвержденный аккаунт, то не нужно идти в сеть
-        // TODO: - Узнать у Стаса, могут ли они блокировать учетки в CRM
+        // TODO: - Узнать у Стаса, могут ли они блокировать учетки в CRM - могут
         guard !isRegistered else {
             self.authState = .needRegister
             invokeAllSubscribers()
