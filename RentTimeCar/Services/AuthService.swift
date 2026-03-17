@@ -95,6 +95,7 @@ final class AuthService {
             userDefaults.set(isRegistered, forKey: .isRegisteredKey)
             print("+++ isRegistered = \(isRegistered)")
             self.authState = isRegistered ? .fullAccess : .onCheck
+            invokeAllSubscribers()
         }
     }
 
