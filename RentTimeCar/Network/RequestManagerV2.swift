@@ -94,6 +94,16 @@ final class RequestManagerV2 {
         makeRequest(path: "/api/requests/add", method: .post, body: input)
     }
 
+    // MARK: - POST /api/requests/get
+
+    func getClientRequests(clientIntegrationId: String) -> URLRequest? {
+        makeRequest(
+            path: "/api/requests/get",
+            method: .post,
+            body: ClientIntegrationBody(clientIntegrationId: clientIntegrationId)
+        )
+    }
+
     // MARK: - POST /api/sms
 
     func getSmsRequest(for number: String, code: String) -> URLRequest? {
@@ -142,6 +152,10 @@ private struct PhoneBody: Encodable {
 private struct SmsBody: Encodable {
     let number: String
     let code: String
+}
+
+private struct ClientIntegrationBody: Encodable {
+    let clientIntegrationId: String
 }
 
 /// Vapor-сервер ожидает camelCase ключи, в отличие от SearchAutoInput,

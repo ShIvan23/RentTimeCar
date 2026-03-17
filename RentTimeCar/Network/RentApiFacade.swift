@@ -21,6 +21,7 @@ protocol IRentApiFacade {
         completion: @escaping (Result<Void, Error>) -> Void
     )
     func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
+    func getClientRequests(clientIntegrationId: String, completion: @escaping (Result<ApiResult<[ClientRequest]>, Error>) -> Void)
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -75,6 +76,11 @@ final class RentApiFacade: IRentApiFacade {
 
     func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void) {
         guard let request = requestManager.addRequest(with: input) else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+
+    func getClientRequests(clientIntegrationId: String, completion: @escaping (Result<ApiResult<[ClientRequest]>, Error>) -> Void) {
+        guard let request = requestManager.getClientRequests(clientIntegrationId: clientIntegrationId) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
 }
