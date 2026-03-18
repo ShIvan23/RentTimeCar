@@ -104,6 +104,16 @@ final class RequestManagerV2 {
         )
     }
 
+    // MARK: - POST /api/fines/get
+
+    func getClientFines(clientIntegrationId: String) -> URLRequest? {
+        makeRequest(
+            path: "/api/fines/get",
+            method: .post,
+            body: ClientIntegrationBody(clientIntegrationId: clientIntegrationId)
+        )
+    }
+
     // MARK: - POST /api/sms
 
     func getSmsRequest(for number: String, code: String) -> URLRequest? {
