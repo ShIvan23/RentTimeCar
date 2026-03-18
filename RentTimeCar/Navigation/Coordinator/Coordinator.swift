@@ -43,6 +43,7 @@ protocol ICoordinator {
     func openSuccessPhotoViewController(image: UIImage, photoStep: RegistrationPhotoStep)
     func popToViewController(_ controller: ICoordinatorController)
     func openClientRequestsViewController()
+    func openClientFinesViewController()
 }
 
 final class Coordinator: NSObject, ICoordinator {
@@ -214,8 +215,15 @@ final class Coordinator: NSObject, ICoordinator {
     }
 
     func openClientRequestsViewController() {
-        let vc = Builder.makeClientRequestsViewController()
+        let vc = Builder.makeClientItemsViewController(mode: .rents)
         vc.title = "Мои аренды"
+        navigationController?.pushViewController(vc, animated: true)
+        navigationController?.isNavigationBarHidden = false
+    }
+
+    func openClientFinesViewController() {
+        let vc = Builder.makeClientItemsViewController(mode: .fines)
+        vc.title = "Мои штрафы"
         navigationController?.pushViewController(vc, animated: true)
         navigationController?.isNavigationBarHidden = false
     }

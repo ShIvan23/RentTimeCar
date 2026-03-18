@@ -1,12 +1,19 @@
 //
-//  ClientRequestsViewController.swift
+//  ClientItemsViewController.swift
 //  RentTimeCar
 //
 
 import PinLayout
 import UIKit
 
-final class ClientRequestsViewController: UIViewController {
+final class ClientItemsViewController: UIViewController {
+
+    // MARK: - Mode
+
+    enum Mode {
+        case rents
+        case fines
+    }
 
     // MARK: - UI
 
@@ -19,6 +26,7 @@ final class ClientRequestsViewController: UIViewController {
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.register(cell: ClientRequestCell.self)
+        collectionView.register(cell: FineCell.self)
         return collectionView
     }()
 
@@ -31,7 +39,6 @@ final class ClientRequestsViewController: UIViewController {
 
     private let emptyLabel: UILabel = {
         let label = UILabel()
-        label.text = "Нет заявок"
         label.textColor = .secondaryTextColor
         label.textAlignment = .center
         label.isHidden = true
@@ -40,13 +47,16 @@ final class ClientRequestsViewController: UIViewController {
 
     // MARK: - Private Properties
 
+    private let mode: Mode
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
     private var requests: [ClientRequest] = []
+    private var fines: [FineDto] = []
 
     // MARK: - Init
 
-    init(coordinator: ICoordinator, rentApiFacade: IRentApiFacade) {
+    init(mode: Mode, coordinator: ICoordinator, rentApiFacade: IRentApiFacade) {
+        self.mode = mode
         self.coordinator = coordinator
         self.rentApiFacade = rentApiFacade
         super.init(nibName: nil, bundle: nil)
@@ -61,7 +71,7 @@ final class ClientRequestsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
-        fetchRequests()
+        fetchItems()
     }
 
     override func viewDidLayoutSubviews() {
@@ -75,6 +85,13 @@ final class ClientRequestsViewController: UIViewController {
         view.backgroundColor = .mainBackground
         view.addSubviews([collectionView, activityIndicator, emptyLabel])
         navigationController?.isNavigationBarHidden = false
+
+        switch mode {
+        case .rents:
+            emptyLabel.text = "Нет заявок"
+        case .fines:
+            emptyLabel.text = "Нет штрафов"
+        }
     }
 
     private func performLayout() {
@@ -92,12 +109,21 @@ final class ClientRequestsViewController: UIViewController {
             .sizeToFit(.width)
     }
 
-    private func fetchRequests() {
+    private func fetchItems() {
         guard let integrationId = AuthService.shared.integrationId else {
             emptyLabel.isHidden = false
             return
         }
         activityIndicator.startAnimating()
+        switch mode {
+        case .rents:
+            fetchRequests(integrationId: integrationId)
+        case .fines:
+            fetchFines(integrationId: integrationId)
+        }
+    }
+
+    private func fetchRequests(integrationId: String) {
         rentApiFacade.getClientRequests(clientIntegrationId: integrationId) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self else { return }
@@ -113,30 +139,62 @@ final class ClientRequestsViewController: UIViewController {
             }
         }
     }
+
+    private func fetchFines(integrationId: String) {
+        rentApiFacade.getClientFines(clientIntegrationId: integrationId) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.activityIndicator.stopAnimating()
+                switch result {
+                case let .success(fines):
+                    self.fines = fines
+                    self.emptyLabel.isHidden = !fines.isEmpty
+                    self.collectionView.reloadData()
+                case .failure:
+                    self.emptyLabel.isHidden = false
+                }
+            }
+        }
+    }
 }
 
 // MARK: - UICollectionViewDataSource
 
-extension ClientRequestsViewController: UICollectionViewDataSource {
+extension ClientItemsViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        requests.count
+        switch mode {
+        case .rents: return requests.count
+        case .fines: return fines.count
+        }
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell: ClientRequestCell = collectionView.dequeueCell(for: indexPath)
-        cell.configure(with: requests[indexPath.item])
-        return cell
+        switch mode {
+        case .rents:
+            let cell: ClientRequestCell = collectionView.dequeueCell(for: indexPath)
+            cell.configure(with: requests[indexPath.item])
+            return cell
+        case .fines:
+            let cell: FineCell = collectionView.dequeueCell(for: indexPath)
+            cell.configure(with: fines[indexPath.item])
+            return cell
+        }
     }
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
 
-extension ClientRequestsViewController: UICollectionViewDelegateFlowLayout {
+extension ClientItemsViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(
         _ collectionView: UICollectionView,
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
-        CGSize(width: collectionView.bounds.width - 32, height: 96)
+        switch mode {
+        case .rents:
+            return CGSize(width: collectionView.bounds.width - 32, height: 96)
+        case .fines:
+            return CGSize(width: collectionView.bounds.width - 32, height: 110)
+        }
     }
 }

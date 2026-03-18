@@ -218,9 +218,9 @@ final class Builder {
         return successPhotoViewController
     }
 
-    static func makeClientRequestsViewController() -> UIViewController {
+    static func makeClientItemsViewController(mode: ClientItemsViewController.Mode) -> UIViewController {
         let coordinator = Coordinator.shared
         let rentApiFacade = RentApiFacade()
-        return ClientRequestsViewController(coordinator: coordinator, rentApiFacade: rentApiFacade)
+        return ClientItemsViewController(mode: mode, coordinator: coordinator, rentApiFacade: rentApiFacade)
     }
 }

@@ -118,7 +118,7 @@ extension SideMenuContentView: UITableViewDelegate {
         case .myRents:
             coordinator.openClientRequestsViewController()
         case .myFines:
-            print("+++ открыть экран со списком штрафов")
+            coordinator.openClientFinesViewController()
         case .mySettings:
             print("+++ открыть экран с настройками")
         case .catalog:
