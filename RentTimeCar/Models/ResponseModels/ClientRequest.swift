@@ -5,6 +5,14 @@
 
 import Foundation
 
+struct ClientRequestsResponse: Decodable {
+    let requests: [ClientRequest]
+
+    enum CodingKeys: String, CodingKey {
+        case requests = "Requests"
+    }
+}
+
 struct ClientRequest: Decodable {
     let id: Int
     let number: String
@@ -12,11 +20,11 @@ struct ClientRequest: Decodable {
     let service: String
     let dealTypeId: Int
     let approvalStatus: String
-    let requestState: String
-    let requestWorkingState: String
+    let requestState: Int
+    let requestWorkingState: Int
     let rejectStatus: String?
     let currentStep: String
-    let steps: [ClientRequestStep]
+    let steps: ClientRequestStepsWrapper
 
     enum CodingKeys: String, CodingKey {
         case id = "Id"
@@ -29,6 +37,14 @@ struct ClientRequest: Decodable {
         case requestWorkingState = "RequestWorkingState"
         case rejectStatus = "RejectStatus"
         case currentStep = "CurrentStep"
+        case steps = "Steps"
+    }
+}
+
+struct ClientRequestStepsWrapper: Decodable {
+    let steps: [ClientRequestStep]
+
+    enum CodingKeys: String, CodingKey {
         case steps = "Steps"
     }
 }

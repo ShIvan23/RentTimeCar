@@ -116,7 +116,7 @@ extension SideMenuContentView: UITableViewDelegate {
         guard let item = model[safe: indexPath.section]?[safe: indexPath.row] else { return }
         switch item.title {
         case .myRents:
-            print("+++ открыть экран со списком аренд")
+            coordinator.openClientRequestsViewController()
         case .myFines:
             print("+++ открыть экран со списком штрафов")
         case .mySettings:
