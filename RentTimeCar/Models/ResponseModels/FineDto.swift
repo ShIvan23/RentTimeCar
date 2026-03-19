@@ -5,6 +5,14 @@
 
 import Foundation
 
+struct FinesResponse: Decodable {
+    let fines: [FineDto]
+
+    enum CodingKeys: String, CodingKey {
+        case fines = "Fines"
+    }
+}
+
 struct FineDto: Decodable {
     let id: Int64
     let creationDate: Date?
@@ -83,31 +91,31 @@ struct FineDto: Decodable {
         discountEffectCountDays = try container.decode(Int.self, forKey: .discountEffectCountDays)
         location = try container.decodeIfPresent(String.self, forKey: .location)
 
-        let iso8601 = ISO8601DateFormatter()
-        iso8601.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd.MM.yyyy HH:mm:ss"
+        formatter.locale = Locale(identifier: "ru_RU")
 
-        creationDate = try FineDto.decodeDate(from: container, key: .creationDate, formatter: iso8601)
-        violationDate = try FineDto.decodeDate(from: container, key: .violationDate, formatter: iso8601)
-        payToDueDate = try FineDto.decodeDateRequired(from: container, key: .payToDueDate, formatter: iso8601)
+        creationDate = try FineDto.decodeDate(from: container, key: .creationDate, formatter: formatter)
+        violationDate = try FineDto.decodeDate(from: container, key: .violationDate, formatter: formatter)
+        payToDueDate = try FineDto.decodeDateRequired(from: container, key: .payToDueDate, formatter: formatter)
     }
 
     private static func decodeDate(
         from container: KeyedDecodingContainer<CodingKeys>,
         key: CodingKeys,
-        formatter: ISO8601DateFormatter
+        formatter: DateFormatter
     ) throws -> Date? {
         guard let string = try container.decodeIfPresent(String.self, forKey: key) else { return nil }
-        return formatter.date(from: string) ?? ISO8601DateFormatter().date(from: string)
+        return formatter.date(from: string)
     }
 
     private static func decodeDateRequired(
         from container: KeyedDecodingContainer<CodingKeys>,
         key: CodingKeys,
-        formatter: ISO8601DateFormatter
+        formatter: DateFormatter
     ) throws -> Date {
         let string = try container.decode(String.self, forKey: key)
-        let fallback = ISO8601DateFormatter()
-        if let date = formatter.date(from: string) ?? fallback.date(from: string) {
+        if let date = formatter.date(from: string) {
             return date
         }
         throw DecodingError.dataCorruptedError(forKey: key, in: container, debugDescription: "Invalid date: \(string)")
@@ -123,16 +131,35 @@ enum FinesDocumentType: Int, Decodable {
     case snils = 3
     case rawid = 4
     case none = 5
+    case unknown = -1
+
+    init(from decoder: Decoder) throws {
+        let value = try decoder.singleValueContainer().decode(Int.self)
+        self = FinesDocumentType(rawValue: value) ?? .unknown
+    }
 }
 
 enum PaidStatuses: Int, Decodable {
     case notPaid = 0
     case partiallyPaid = 1
     case paid = 2
+    case unknown = -1
+
+    init(from decoder: Decoder) throws {
+        let value = try decoder.singleValueContainer().decode(Int.self)
+        self = PaidStatuses(rawValue: value) ?? .unknown
+    }
 }
 
 enum PaymentInternalStatuses: Int, Decodable {
     case unknown = 0
     case paid = 1
     case charged = 2
+    case unrecognized = -1
+
+    init(from decoder: Decoder) throws {
+        let value = try decoder.singleValueContainer().decode(Int.self)
+        self = PaymentInternalStatuses(rawValue: value) ?? .unrecognized
+    }
 }
+

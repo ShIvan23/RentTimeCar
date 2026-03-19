@@ -103,9 +103,8 @@ final class ClientItemsViewController: UIViewController {
             .sizeToFit()
 
         emptyLabel.pin
-            .hCenter()
-            .vCenter()
             .horizontally(16)
+            .vCenter()
             .sizeToFit(.width)
     }
 
@@ -146,7 +145,8 @@ final class ClientItemsViewController: UIViewController {
                 guard let self else { return }
                 self.activityIndicator.stopAnimating()
                 switch result {
-                case let .success(fines):
+                case let .success(response):
+                    let fines = response.result?.fines ?? []
                     self.fines = fines
                     self.emptyLabel.isHidden = !fines.isEmpty
                     self.collectionView.reloadData()

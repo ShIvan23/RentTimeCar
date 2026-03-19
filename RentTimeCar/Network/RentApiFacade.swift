@@ -22,7 +22,7 @@ protocol IRentApiFacade {
     )
     func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
     func getClientRequests(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ClientRequestsResponse>, Error>) -> Void)
-    func getClientFines(clientIntegrationId: String, completion: @escaping (Result<[FineDto], Error>) -> Void)
+    func getClientFines(clientIntegrationId: String, completion: @escaping (Result<ApiResult<FinesResponse>, Error>) -> Void)
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -85,7 +85,7 @@ final class RentApiFacade: IRentApiFacade {
         networkManager.fetch(request: request, completion: completion)
     }
 
-    func getClientFines(clientIntegrationId: String, completion: @escaping (Result<[FineDto], Error>) -> Void) {
+    func getClientFines(clientIntegrationId: String, completion: @escaping (Result<ApiResult<FinesResponse>, Error>) -> Void) {
         guard let request = requestManager.getClientFines(clientIntegrationId: clientIntegrationId) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
