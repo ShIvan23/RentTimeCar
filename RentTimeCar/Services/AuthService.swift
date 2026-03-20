@@ -12,11 +12,12 @@ protocol AuthServiceObserver: AnyObject {
     func post(state: AuthState)
 }
 
-enum AuthState {
+enum AuthState: String {
     case needAuthorize
     case needRegister
     case onCheck
     case fullAccess
+    case banned
 }
 
 // Сервис, который хранит информацию залогинился ли клиент через смс в приложении
@@ -24,10 +25,6 @@ final class AuthService {
     static let shared = AuthService()
 
     // MARK: - Internal Properties
-
-    var isAuthorized: Bool {
-        authState != .needAuthorize
-    }
 
     private(set) var authState: AuthState
     private(set) var integrationId: String?
@@ -38,29 +35,29 @@ final class AuthService {
     private var observers = NSHashTable<AnyObject>.weakObjects()
     private let rentApiFacade: IRentApiFacade = RentApiFacade()
     private var phoneNumber: String?
-    private var isRegistered: Bool
 
     // MARK: - Init
 
     private init() {
         // debug clear
-        userDefaults.set(nil, forKey: .isAuthorizedKey)
-        userDefaults.set(nil, forKey: .phoneNumberKey)
-        userDefaults.set(nil, forKey: .isRegisteredKey)
-        userDefaults.set(nil, forKey: .integrationIdKey)
+//        userDefaults.set(nil, forKey: .isAuthorizedKey)
+//        userDefaults.set(nil, forKey: .phoneNumberKey)
+//        userDefaults.set(nil, forKey: .isRegisteredKey)
+//        userDefaults.set(nil, forKey: .integrationIdKey)
 
-        let isAuthorized = userDefaults.bool(forKey: .isAuthorizedKey)
         phoneNumber = userDefaults.string(forKey: .phoneNumberKey)
-        isRegistered = userDefaults.bool(forKey: .isRegisteredKey)
         integrationId = userDefaults.string(forKey: .integrationIdKey)
-
-        guard isAuthorized else {
+        if let authState = AuthState(rawValue: userDefaults.string(forKey: .authStateKey) ?? "") {
+            print("+++ authState id UD = \(authState)")
+            self.authState = authState
+        } else {
+            print("+++ NOOOO authState id UD. needAuthorize")
             authState = .needAuthorize
-            return
         }
 
-        authState = .needRegister
-        print("+++ authState = \(authState)")
+        guard authState != .needAuthorize else { return }
+        
+        checkRegistration(needInvoke: false)
     }
 
     // MARK: - Internal Methods
@@ -72,33 +69,10 @@ final class AuthService {
     }
 
     func saveState(authState: AuthState) {
-        let isAuthorized = authState != .needAuthorize
-        userDefaults.set(isAuthorized, forKey: .isAuthorizedKey)
-        guard isAuthorized else {
-            // Если пользователь вышел из профиля, то надо всех уведомить, что необходимо залогиниться через смс
-            self.authState = .needAuthorize
-            invokeAllSubscribers()
-            return
-        }
-        
-        // тут должна быть логика, что пользователь уже регался ранее и имеет подтверждению учетку и учетка не заблочена
-
-        // Если пользователь уже имеет подтвержденный аккаунт, то не нужно идти в сеть
-        // TODO: - Узнать у Стаса, могут ли они блокировать учетки в CRM - могут
-        guard !isRegistered else {
-            self.authState = .needRegister
-            invokeAllSubscribers()
-            return
-        }
+        userDefaults.set(authState.rawValue, forKey: .authStateKey)
 
         // Если пользователь авторизовался через смс, то нужно проверить, заведена ли карточка на клиента и есть ли его доки в системе
-        checkRegistration { [weak self] isRegistered in
-            guard let self else { return }
-            userDefaults.set(isRegistered, forKey: .isRegisteredKey)
-            print("+++ isRegistered = \(isRegistered)")
-            self.authState = isRegistered ? .fullAccess : .onCheck
-            invokeAllSubscribers()
-        }
+        checkRegistration()
     }
 
     func savePhoneNumber(_ phoneNumber: String) {
@@ -108,34 +82,57 @@ final class AuthService {
 
     // MARK: - Private Methods
 
-    private func checkRegistration(completion: @escaping (Bool) -> Void) {
-        guard let phoneNumber else { return completion(false) }
+    private func checkRegistration(needInvoke: Bool = true) {
+        guard let phoneNumber else { return }
         rentApiFacade.getClients(with: phoneNumber) { [weak self] result in
+            guard let self else { return }
             switch result {
             case let .success(clients):
                 print("+++ success clients = \(clients)")
                 let integrationId = clients.result?.clients.first?.integrationId
-                self?.integrationId = integrationId
-                self?.userDefaults.set(integrationId, forKey: .integrationIdKey)
-                completion(clients.result?.clients.isEmpty == false)
+                self.integrationId = integrationId
+                userDefaults.set(integrationId, forKey: .integrationIdKey)
+                handleClientRegistration(with: clients.result, needInvoke: needInvoke)
             case let .failure(error):
                 debugPrint("+++ error = \(error)")
-                completion(false)
             }
         }
     }
+    
+    private func handleClientRegistration(with model: Clients?, needInvoke: Bool) {
+        guard let client = model?.clients.first else { return }
+        
+        defer {
+            if needInvoke {
+                invokeAllSubscribers()
+            }
+        }
+        
+        if client.isBanned {
+            authState = .banned
+            return
+        }
+        
+        if client.name.isEmptyFirstAndLastNames || client.passport.isEmptySerriesAndNumber {
+            authState = .onCheck
+            return
+        }
+        
+        authState = .fullAccess
+    }
 
     private func invokeAllSubscribers() {
-        observers.allObjects.forEach {
-            guard let authServiceObserver = $0 as? AuthServiceObserver else { return }
-            authServiceObserver.post(state: authState)
+        DispatchQueue.main.async {
+            self.observers.allObjects.forEach {
+                guard let authServiceObserver = $0 as? AuthServiceObserver else { return }
+                authServiceObserver.post(state: self.authState)
+            }
         }
     }
 }
 
 private extension String {
-    static let isAuthorizedKey = "isAuthorizedKey"
-    static let isRegisteredKey = "isRegisteredKey"
+    static let authStateKey = "authStateKey"
     static let phoneNumberKey = "phoneNumberKey"
     static let integrationIdKey = "integrationIdKey"
 }

@@ -183,6 +183,8 @@ extension MainViewController {
             result.insert(.button(.onCheck), at: 2)
         case .fullAccess:
             break
+        case .banned:
+            break
         }
         return result
     }
@@ -392,6 +394,8 @@ extension MainViewController: AuthServiceObserver {
         case .onCheck:
             showOnCheckButton()
         case .fullAccess:
+            removeAllButtons()
+        case .banned:
             removeAllButtons()
         }
         animateSideMenu(isHidden: true) { [weak self] in

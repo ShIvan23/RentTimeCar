@@ -61,7 +61,7 @@ final class SideMenuContentView: UIView {
     
     private func setupView() {
         setupTableView()
-        model = SideMenuModel.makeModels(isAuthorized: AuthService.shared.isAuthorized)
+        model = SideMenuModel.makeModels(isAuthorized: AuthService.shared.authState != .needAuthorize)
         tableView.reloadData()
         backgroundColor = .mainBackground
     }

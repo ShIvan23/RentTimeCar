@@ -18,10 +18,14 @@ struct Clients: Decodable {
 struct Client: Decodable {
     let name: Name
     let integrationId: String
+    let isBanned: Bool
+    let passport: Passport
 
     enum CodingKeys: String, CodingKey {
         case name = "Name"
         case integrationId = "IntegrationId"
+        case isBanned = "IsBanned"
+        case passport = "Passport"
     }
 }
 
@@ -39,6 +43,20 @@ extension Client {
         enum CodingKeys: String, CodingKey {
             case firstName = "FirstName"
             case lastName = "LastName"
+        }
+    }
+    
+    struct Passport: Decodable {
+        let series: String
+        let number: String
+        
+        var isEmptySerriesAndNumber: Bool {
+            return series.isEmpty && number.isEmpty
+        }
+        
+        enum CodingKeys: String, CodingKey {
+            case series = "Series"
+            case number = "Number"
         }
     }
 }

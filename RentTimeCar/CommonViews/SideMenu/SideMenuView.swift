@@ -59,7 +59,7 @@ final class SideMenuView: UIView {
         addSubviews([contentView, rightActionView])
         contentView.addSubviews([needSignUpView, sideMenuContentView])
         subscribeToAuthService()
-        configureVisibleView(isUserLogin: AuthService.shared.isAuthorized)
+        configureVisibleView(isUserLogin: AuthService.shared.authState != .needAuthorize)
         setupPanGesture()
         needSignUpView.delegate = self
         rightActionView.addTapGestureClosure { [weak self] in
@@ -82,6 +82,9 @@ final class SideMenuView: UIView {
             print("+++ onCheck in SideMenuView")
         case .fullAccess:
             print("+++ fullAccess in SideMenuView")
+        case .banned:
+            break
+            // тут можно модалку воткнуть, что вы заблокированы. надо звонить в поддержку
         }
     }
 
@@ -101,7 +104,7 @@ final class SideMenuView: UIView {
     }
     
     private func performLayout() {
-        let isUserLogin = AuthService.shared.isAuthorized
+        let isUserLogin = AuthService.shared.authState != .needAuthorize
         contentView.pin
             .all()
             .marginRight(bounds.width * 0.13)
