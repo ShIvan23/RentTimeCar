@@ -17,6 +17,7 @@ final class DetailAutoViewController: UIViewController {
     private var indexOfCellBeforeDragging = 0
     private let coordinator: ICoordinator
     private let filterService = FilterService.shared
+    private let authService = AuthService.shared
 
     // MARK: - UI
     
@@ -105,11 +106,15 @@ final class DetailAutoViewController: UIViewController {
     }
 
     private func setupContinueButton() {
-        filterService.selectedDates.isEmpty ? disableContinueButton() : enableContinueButton()
+        filterService.selectedDates.isEmpty || authService.authState != .fullAccess ? disableContinueButton() : enableContinueButton()
         continueButton.action = { [weak self]  in
             self?.coordinator.openYandexMapController()
             self?.saveChangesInOrderConfirmService()
         }
+    }
+    
+    private func checkFullAccessInApp() {
+        authService.authState != .fullAccess ? disableContinueButton() : enableContinueButton()
     }
 
     private func saveChangesInOrderConfirmService() {
@@ -125,8 +130,13 @@ final class DetailAutoViewController: UIViewController {
     }
 
     private func disableContinueButton() {
+        let textButton: String = if authService.authState != .fullAccess {
+            "Зарегистрируйтесь, чтобы продолжить"
+        } else {
+            "Выбирите даты"
+        }
         continueButton.disable()
-        continueButton.setTitle("Выбирите даты", for: .disabled)
+        continueButton.setTitle(textButton, for: .disabled)
     }
 
     private func subscribeToNotifications() {
@@ -136,7 +146,7 @@ final class DetailAutoViewController: UIViewController {
     @objc
     private func selectedDatesUpdated() {
         let selectedDates = filterService.selectedDates
-        selectedDates.isEmpty ? disableContinueButton() : enableContinueButton()
+        selectedDates.isEmpty || authService.authState != .fullAccess ? disableContinueButton() : enableContinueButton()
         selectedDateView.configure(selectedDates: selectedDates)
     }
 

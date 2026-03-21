@@ -72,6 +72,7 @@ final class RegistrationViewController: UIViewController {
     private let registrationModelBox = RegistrationModelBox()
     private var registrationStep = RegistrationStep.initial
     private let cameraCaptureService = CameraCaptureService.shared
+    private let authService = AuthService.shared
 
     // MARK: - Init
 
@@ -180,8 +181,8 @@ final class RegistrationViewController: UIViewController {
                 self?.hideUploadOverlay()
                 switch result {
                 case .success:
-                    print("+++ фото загружены")
-                    // теперь эти линки надо передать в CRM и сменить статус приложения "На проверке"
+                    self?.authService.saveState(authState: .onCheck)
+                    self?.coordinator.popToRootViewController()
                 case .failure(let error):
                     self?.showUploadError(error)
                 }

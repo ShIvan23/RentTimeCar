@@ -453,10 +453,10 @@ extension MainViewController {
         case empty(_ height: CGFloat)
         case button(ButtonType)
 
-        enum ButtonType {
-            case authorization
-            case registration
-            case onCheck
+        enum ButtonType: String {
+            case authorization = "Войти"
+            case registration = "Зарегистрироваться"
+            case onCheck = "Ожидайте проверки документов"
         }
     }
 }

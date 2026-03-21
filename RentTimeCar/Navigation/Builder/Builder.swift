@@ -208,6 +208,10 @@ final class Builder {
         RobokassaWebViewController(coordinator: Coordinator.shared, paymentURL: paymentURL, invId: invId)
     }
 
+    static func makeYukassaWebViewController(paymentURL: URL) -> YukassaWebViewController {
+        YukassaWebViewController(coordinator: Coordinator.shared, paymentURL: paymentURL)
+    }
+
     static func makeSuccessPhotoViewController(image: UIImage, photoStep: RegistrationPhotoStep) -> UIViewController {
         let coordinator = Coordinator.shared
         let successPhotoViewController = SuccessPhotoViewController(
