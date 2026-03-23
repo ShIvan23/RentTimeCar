@@ -96,6 +96,7 @@ final class MainViewController: UIViewController {
         sideMenuView.delegate = self
         navBarView.delegate = self
         transparentView.isHidden = true
+        filterView.isHidden = true
         subscribeToNotification()
     }
     
@@ -160,6 +161,8 @@ extension MainViewController {
                     self.cells = self.mapAutos(with: model.result ?? [])
                     self.collectionView.reloadData()
                     self.filterService.setModel(model.result ?? [])
+                    self.filterView.isHidden = model.result?.isEmpty ?? true
+                    self.view.setNeedsLayout()
                 }
             case .failure(let error):
                 print("Ошибка: \(error.localizedDescription)")
@@ -194,6 +197,7 @@ extension MainViewController {
 
 extension MainViewController {
     private func layoutFilterView() {
+        guard !filterView.isHidden else { return }
         if filterViewIsHidden {
             filterView.pin
                 .top(view.safeAreaInsets.top)
