@@ -23,6 +23,7 @@ protocol IRentApiFacade {
     func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
     func getClientRequests(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ClientRequestsResponse>, Error>) -> Void)
     func getClientFines(clientIntegrationId: String, completion: @escaping (Result<ApiResult<FinesResponse>, Error>) -> Void)
+    func createYukassaPayment(amount: Int, description: String, completion: @escaping (Result<URL, Error>) -> Void)
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -88,5 +89,17 @@ final class RentApiFacade: IRentApiFacade {
     func getClientFines(clientIntegrationId: String, completion: @escaping (Result<ApiResult<FinesResponse>, Error>) -> Void) {
         guard let request = requestManager.getClientFines(clientIntegrationId: clientIntegrationId) else { return }
         networkManager.fetch(request: request, completion: completion)
+    }
+
+    func createYukassaPayment(amount: Int, description: String, completion: @escaping (Result<URL, Error>) -> Void) {
+        guard let request = YukassaService.shared.makeCreatePaymentRequest(amount: amount, description: description) else { return }
+        networkManager.fetch(request: request) { (result: Result<YukassaCreatePaymentResponse, Error>) in
+            completion(result.flatMap { response in
+                guard let url = URL(string: response.confirmationUrl) else {
+                    return .failure(YukassaError.missingConfirmationURL)
+                }
+                return .success(url)
+            })
+        }
     }
 }

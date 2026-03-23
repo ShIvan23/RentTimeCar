@@ -70,16 +70,12 @@ final class RentSummaryViewController: UIViewController {
 
     // MARK: - Private methods (Payment)
     private func proceedToPayment() {
-        let selectedOptions = OrderConfirmService.shared.selectedOptions
-        let items = RentSummaryService.shared.getRentSummaryItems(selectedOptions: selectedOptions)
         let prepayAmount = 5000  // сумма предоплаты в рублях
-        let invId = RobokassaService.shared.generateInvId()
 
-        coordinator.openRobokassaPayment(
+        coordinator.openYukassaPayment(
             amount: prepayAmount,
-            invId: invId,
             description: "Предоплата аренды автомобиля"
-        ) { [weak self] _ in
+        ) { [weak self] in
             self?.handlePaymentSuccess()
         } onFail: { [weak self] in
             self?.handlePaymentFail()

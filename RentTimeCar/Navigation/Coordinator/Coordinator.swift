@@ -33,6 +33,7 @@ protocol ICoordinator {
     func openAnotherApplication(url: URL)
     func openRentSummaryViewController()
     func openRobokassaPayment(amount: Int, invId: Int, description: String, onSuccess: @escaping (Int) -> Void, onFail: @escaping () -> Void)
+    func openYukassaPayment(amount: Int, description: String, onSuccess: @escaping () -> Void, onFail: @escaping () -> Void)
     func openPaymentSuccessBottomSheet(onDismiss: @escaping () -> Void)
     func openPaymentFailBottomSheet(onDismiss: @escaping () -> Void)
     func openPaymentCancelConfirmationBottomSheet(onConfirm: @escaping () -> Void)
@@ -162,6 +163,21 @@ final class Coordinator: NSObject, ICoordinator {
         paymentVC.onFail = onFail
         paymentVC.title = "Оплата"
         navigationController?.pushViewController(paymentVC, animated: true)
+    }
+
+    func openYukassaPayment(amount: Int, description: String, onSuccess: @escaping () -> Void, onFail: @escaping () -> Void) {
+        RentApiFacade().createYukassaPayment(amount: amount, description: description) { [weak self] result in
+            switch result {
+            case .success(let url):
+                let paymentVC = Builder.makeYukassaWebViewController(paymentURL: url)
+                paymentVC.onSuccess = onSuccess
+                paymentVC.onFail = onFail
+                paymentVC.title = "Оплата"
+                self?.navigationController?.pushViewController(paymentVC, animated: true)
+            case .failure:
+                onFail()
+            }
+        }
     }
 
     func openPaymentSuccessBottomSheet(onDismiss: @escaping () -> Void) {
