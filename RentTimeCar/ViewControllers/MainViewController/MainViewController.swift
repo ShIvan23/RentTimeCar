@@ -164,8 +164,17 @@ extension MainViewController {
                     self.filterView.isHidden = model.result?.isEmpty ?? true
                     self.view.setNeedsLayout()
                 }
-            case .failure(let error):
-                print("Ошибка: \(error.localizedDescription)")
+            case .failure:
+                DispatchQueue.main.async { [weak self] in
+                    guard let self else { return }
+                    let model = InfoBottomSheetModel(
+                        text: "Ошибка при загрузке",
+                        image: .redCross,
+                        buttonTitle: "Повторить",
+                        onConfirm: { [weak self] in self?.fetchAutos() }
+                    )
+                    self.coordinator.openInfoBottomSheetViewController(model: model)
+                }
             }
         }
     }

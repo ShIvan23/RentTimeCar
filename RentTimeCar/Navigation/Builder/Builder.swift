@@ -162,6 +162,10 @@ final class Builder {
         let model = InfoBottomSheetModel.makeDeniedCameraPermissionModel {
             coordinator.openSettingsApp()
         }
+        return makeInfoBottomSheetViewController(model: model)
+    }
+
+    static func makeInfoBottomSheetViewController(model: InfoBottomSheetModel) -> UIViewController {
         let infoBottomSheetViewController = InfoBottomSheetViewController(model: model)
         if let sheet = infoBottomSheetViewController.sheetPresentationController {
             sheet.detents = [.medium()]

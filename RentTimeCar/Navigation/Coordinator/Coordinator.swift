@@ -41,6 +41,7 @@ protocol ICoordinator {
     func openCameraViewController(photoStep: RegistrationPhotoStep)
     func openSettingsApp()
     func openInfoBottomSheetViewController()
+    func openInfoBottomSheetViewController(model: InfoBottomSheetModel)
     func openSuccessPhotoViewController(image: UIImage, photoStep: RegistrationPhotoStep)
     func popToViewController(_ controller: ICoordinatorController)
     func openClientRequestsViewController()
@@ -214,6 +215,11 @@ final class Coordinator: NSObject, ICoordinator {
 
     func openInfoBottomSheetViewController() {
         let infoBottomSheetViewController = Builder.makeInfoBottomSheetViewController()
+        navigationController?.present(infoBottomSheetViewController, animated: true)
+    }
+
+    func openInfoBottomSheetViewController(model: InfoBottomSheetModel) {
+        let infoBottomSheetViewController = Builder.makeInfoBottomSheetViewController(model: model)
         navigationController?.present(infoBottomSheetViewController, animated: true)
     }
 
