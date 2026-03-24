@@ -363,7 +363,6 @@ private extension FilterViewController {
         let selectedBrands = filterSelectedBrands()
         let selectedDates = filterService.selectedDates
         let selectedAutoClasses = getSelectedAutoClasses()
-// тут проблема на стороне API, что не работает сортировка по выбранным брендам и по мощности двигателя
         let input = SearchAutoInput(
             dateFrom: selectedDates.first?.convertDateToString() ?? .defaultDate,
             dateTo: selectedDates.last?.convertDateToString() ?? .defaultDate,

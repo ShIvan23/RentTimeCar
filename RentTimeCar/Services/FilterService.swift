@@ -29,6 +29,7 @@ final class FilterService {
 
     private let rentApiFacade: IRentApiFacade = RentApiFacade()
     private var autoClassesCodes = [String: String]()
+    private var rentApiFacadeRetriesCount = 5
 
     private init () {
         sortingAuto = [
@@ -161,12 +162,14 @@ final class FilterService {
 
     private func fetchAutoClassesCodes() {
         rentApiFacade.getFilterPrams { [weak self] result in
+            guard let self else { return }
             switch result {
             case .success(let model):
-                self?.makeAutoClassesCodes(with: model.result)
-            case .failure(let failure):
-                print("+++ failure = \(failure)")
-                break
+                makeAutoClassesCodes(with: model.result)
+            case .failure:
+                guard rentApiFacadeRetriesCount != .zero else { return }
+                rentApiFacadeRetriesCount -= 1
+                fetchAutoClassesCodes()
             }
         }
     }
@@ -176,6 +179,7 @@ final class FilterService {
         model.autoClassCodes.forEach {
             autoClassesCodes[$0.title] = $0.code
         }
+        print("+++ autoClassesCodes = \(autoClassesCodes)")
     }
 }
 
