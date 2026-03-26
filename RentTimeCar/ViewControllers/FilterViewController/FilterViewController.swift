@@ -339,10 +339,6 @@ extension FilterViewController {
 // MARK: - Filter Operations
 
 private extension FilterViewController {
-    func getSelectedAutoClasses() -> [String] {
-        filterService.getSelectedAutosClassesCodes()
-    }
-
     func updateConfirmButton() {
         filterService.searchAutos { autos in
             self.updateConfirmButtonTitle(autoCount: autos.count)

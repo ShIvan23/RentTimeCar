@@ -32,9 +32,9 @@ final class FilterService {
 
     private init () {
         sortingAuto = [
-            FilterInfoAuto(name: "По классу"),
-            FilterInfoAuto(name: "По марке"),
-            FilterInfoAuto(name: "По цене (по возрастанию)"),
+            FilterInfoAuto(name: .filterClassText),
+            FilterInfoAuto(name: .filterBrandText),
+            FilterInfoAuto(name: .filterPriceText),
         ]
         fetchAutoClassesCodes()
     }
@@ -53,10 +53,6 @@ final class FilterService {
     func setSelectedDates(_ selectedDates: [Date]) {
         self.selectedDates = selectedDates
         NotificationCenter.default.post(name: .selectedDatesUpdated, object: nil)
-    }
-    
-    func setFilteredAutos(_ autos: [Auto]) {
-        filteredAutos = autos
     }
     
     func setSelectedBrands(_ brands: [String]) {
@@ -92,7 +88,7 @@ final class FilterService {
             
         }
         searchAutos { autos in
-            self.filteredAutos = autos
+            self.setFilteredAutos(autos)
             switch type {
             case .sorting:
                 NotificationCenter.default.post(name: .sortingAutoUpdated, object: nil)
@@ -141,14 +137,33 @@ final class FilterService {
                 case .failure:
                     guard self.rentApiFacadeRetriesCount != .zero else { return }
                     self.rentApiFacadeRetriesCount -= 1
+                    self.searchAutos(completion: completion)
                 }
             }
         }
     }
 
-    func getSelectedAutosClassesCodes() -> [String] {
+    private func getSelectedAutosClassesCodes() -> [String] {
         let selectedAutoClasses = autoClassesCodes.compactMap { $1.isSelected ? $0 : nil }
         return selectedAutoClasses
+    }
+    
+    private func setFilteredAutos(_ autos: [Auto]) {
+        filteredAutos = sortIfNeeded(autos)
+    }
+    
+    private func sortIfNeeded(_ autos: [Auto]) -> [Auto] {
+        guard let hasSotingItem = sortingAuto.first(where: { $0.isSelected }) else { return autos }
+        switch hasSotingItem.name {
+        case .filterClassText:
+            return autos.sorted(by: { $0.classAuto > $1.classAuto })
+        case .filterBrandText:
+            return autos.sorted(by: { $0.marka < $1.marka })
+        case .filterPriceText:
+            return autos.sorted(by: { $0.defaultPriceWithDiscountSt < $1.defaultPriceWithDiscountSt })
+        default:
+            return autos
+        }
     }
 
     private func makeBrands(with model: [Auto]) {
@@ -217,6 +232,9 @@ final class FilterService {
 
 private extension String {
     static let defaultDate = "1900.01.01 00:00:00"
+    static let filterClassText = "По классу"
+    static let filterBrandText = "По марке"
+    static let filterPriceText = "По цене (по возрастанию)"
 }
 
 extension Notification.Name {
