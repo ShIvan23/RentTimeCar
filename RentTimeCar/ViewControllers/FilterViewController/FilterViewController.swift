@@ -339,56 +339,13 @@ extension FilterViewController {
 // MARK: - Filter Operations
 
 private extension FilterViewController {
-    func filterSelectedBrands() -> [String] {
-        var selectedBrands: [String] = []
-        model.forEach {
-            switch $0 {
-            case let .brandAuto(brandModel):
-                if brandModel.isSelected {
-                    selectedBrands.append(brandModel.name)
-                }
-            default:
-                break
-            }
-        }
-        filterService.setSelectedBrands(selectedBrands)
-        return selectedBrands
-    }
-
     func getSelectedAutoClasses() -> [String] {
         filterService.getSelectedAutosClassesCodes()
     }
 
     func updateConfirmButton() {
-        let selectedBrands = filterSelectedBrands()
-        let selectedDates = filterService.selectedDates
-        let selectedAutoClasses = getSelectedAutoClasses()
-        let input = SearchAutoInput(
-            dateFrom: selectedDates.first?.convertDateToString() ?? .defaultDate,
-            dateTo: selectedDates.last?.convertDateToString() ?? .defaultDate,
-            brands: selectedBrands,
-            defaultPriceFrom: filterService.selectedPrice.min,
-            defaultPriceTo: filterService.selectedPrice.max,
-            autoClasses: selectedAutoClasses,
-            powerMin: filterService.selectedMotorPower.min,
-            powerMax: filterService.selectedMotorPower.max
-        )
-        rentApiFacade.searchAuto(with: input) { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case let .success(model):
-                    self?.updateConfirmButtonTitle(autoCount: model.result?.count ?? .zero)
-                    // тут слабая ссылка, если уйти с экрана, то не отработает
-                    self?.filterService.setFilteredAutos(model.result ?? [])
-                    NotificationCenter.default.post(name: .filteredAutosUpdated, object: nil)
-                case let .failure(error):
-                    print("+++ error = \(error)")
-                }
-            }
+        filterService.searchAutos { autos in
+            self.updateConfirmButtonTitle(autoCount: autos.count)
         }
     }
-}
-
-private extension String {
-    static let defaultDate = "1900.01.01 00:00:00"
 }

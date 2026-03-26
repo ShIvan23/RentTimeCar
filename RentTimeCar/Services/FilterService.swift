@@ -16,7 +16,7 @@ final class FilterService {
     private(set) var brands = [FilterBrandAuto]()
     private(set) var price: (min: Int, max: Int) = (.zero, .zero)
     private(set) var motorPower: (min: Int, max: Int) = (.zero, .zero)
-    private(set) var classesAuto = [FilterInfoAuto]()
+    private(set) var autoClassesCodes = [String: FilterInfoAuto]()
     private(set) var sortingAuto: [FilterInfoAuto]
 
     private(set) var selectedDates = [Date]()
@@ -28,7 +28,6 @@ final class FilterService {
     // MARK: - Private Properties
 
     private let rentApiFacade: IRentApiFacade = RentApiFacade()
-    private var autoClassesCodes = [String: String]()
     private var rentApiFacadeRetriesCount = 5
 
     private init () {
@@ -49,7 +48,6 @@ final class FilterService {
         makeBrands(with: model)
         makePrices(with: model)
         makeMotorPower(with: model)
-        makeClassesAuto(with: model)
     }
     
     func setSelectedDates(_ selectedDates: [Date]) {
@@ -80,11 +78,27 @@ final class FilterService {
         case .sorting:
             guard let index = sortingAuto.firstIndex(where: { $0.name == item.name }) else { return }
             sortingAuto[index] = item
-            NotificationCenter.default.post(name: .sortingAutoUpdated, object: nil)
+            
         case .autoType:
-            guard let index = classesAuto.firstIndex(where: { $0.name == item.name }) else { return }
-            classesAuto[index] = item
-            NotificationCenter.default.post(name: .classAutoUpdated, object: nil)
+            
+            var keyForChange: String?
+            autoClassesCodes.forEach { key, value in
+                if value.name == item.name {
+                    keyForChange = key
+                }
+            }
+            guard let keyForChange else { return }
+            autoClassesCodes[keyForChange] = item
+            
+        }
+        searchAutos { autos in
+            self.filteredAutos = autos
+            switch type {
+            case .sorting:
+                NotificationCenter.default.post(name: .sortingAutoUpdated, object: nil)
+            case .autoType:
+                NotificationCenter.default.post(name: .classAutoUpdated, object: nil)
+            }
         }
     }
 
@@ -94,17 +108,47 @@ final class FilterService {
         selectedPrice.max = price.max
         filteredAutos = []
         selectedBrands = []
+        var newAutoClasses = [String: FilterInfoAuto]()
+        autoClassesCodes.forEach {
+            newAutoClasses[$0] = FilterInfoAuto(name: $1.name, isSelected: false)
+        }
+        autoClassesCodes = newAutoClasses
+        sortingAuto = sortingAuto.map { FilterInfoAuto(name: $0.name, isSelected: false) }
         NotificationCenter.default.post(name: .filteredAutosUpdated, object: nil)
     }
 
-    func getSelectedAutosClassesCodes() -> [String] {
-        let selectedAutoClasses = classesAuto.compactMap { $0.isSelected ? $0.name : nil }
-        var codes = [String]()
-        selectedAutoClasses.forEach {
-            guard let value = autoClassesCodes[$0] else { return }
-            codes.append(value)
+    func searchAutos(completion: @escaping ([Auto]) -> Void) {
+        let selectedAutoClasses = getSelectedAutosClassesCodes()
+        let input = SearchAutoInput(
+            dateFrom: selectedDates.first?.convertDateToString() ?? .defaultDate,
+            dateTo: selectedDates.last?.convertDateToString() ?? .defaultDate,
+            brands: selectedBrands,
+            defaultPriceFrom: selectedPrice.min,
+            defaultPriceTo: selectedPrice.max,
+            autoClasses: selectedAutoClasses,
+            powerMin: selectedMotorPower.min,
+            powerMax: selectedMotorPower.max
+        )
+        rentApiFacade.searchAuto(with: input) { [weak self] result in
+            guard let self else { return }
+            DispatchQueue.main.async {
+                switch result {
+                case let .success(model):
+                    self.setFilteredAutos(model.result ?? [])
+                    NotificationCenter.default.post(name: .filteredAutosUpdated, object: nil)
+                    completion(model.result ?? [])
+                    self.rentApiFacadeRetriesCount = 5
+                case .failure:
+                    guard self.rentApiFacadeRetriesCount != .zero else { return }
+                    self.rentApiFacadeRetriesCount -= 1
+                }
+            }
         }
-        return codes
+    }
+
+    func getSelectedAutosClassesCodes() -> [String] {
+        let selectedAutoClasses = autoClassesCodes.compactMap { $1.isSelected ? $0 : nil }
+        return selectedAutoClasses
     }
 
     private func makeBrands(with model: [Auto]) {
@@ -147,18 +191,6 @@ final class FilterService {
             self.motorPower.max = allMotorPowers.max() ?? .zero
         }
     }
-    
-    private func makeClassesAuto(with model: [Auto]) {
-        DispatchQueue.global(qos: .userInteractive).async {
-            var setOfClasses: Set<String> = []
-            model.forEach {
-                setOfClasses.insert($0.classAuto)
-            }
-            self.classesAuto = setOfClasses.map {
-                FilterInfoAuto(name: $0)
-            }
-        }
-    }
 
     private func fetchAutoClassesCodes() {
         rentApiFacade.getFilterPrams { [weak self] result in
@@ -166,6 +198,7 @@ final class FilterService {
             switch result {
             case .success(let model):
                 makeAutoClassesCodes(with: model.result)
+                rentApiFacadeRetriesCount = 5
             case .failure:
                 guard rentApiFacadeRetriesCount != .zero else { return }
                 rentApiFacadeRetriesCount -= 1
@@ -177,10 +210,13 @@ final class FilterService {
     private func makeAutoClassesCodes(with model: GetFilterParams?) {
         guard let model else { return }
         model.autoClassCodes.forEach {
-            autoClassesCodes[$0.title] = $0.code
+            autoClassesCodes[$0.code] = FilterInfoAuto(name: $0.title)
         }
-        print("+++ autoClassesCodes = \(autoClassesCodes)")
     }
+}
+
+private extension String {
+    static let defaultDate = "1900.01.01 00:00:00"
 }
 
 extension Notification.Name {

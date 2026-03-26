@@ -58,7 +58,7 @@ extension FilterVCType {
                 )
             )
         }
-        let classesAuto: [FilterVCType] = FilterService.shared.classesAuto.map {
+        let classesAuto: [FilterVCType] = FilterService.shared.autoClassesCodes.values.map {
             .classAuto($0)
         }
         var result: [FilterVCType] = [

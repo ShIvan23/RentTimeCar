@@ -16,7 +16,7 @@ enum BottomSheetType {
         case .sorting:
             return FilterService.shared.sortingAuto
         case .autoType:
-            return FilterService.shared.classesAuto
+            return FilterService.shared.autoClassesCodes.values.map { $0 }
         }
     }
 }

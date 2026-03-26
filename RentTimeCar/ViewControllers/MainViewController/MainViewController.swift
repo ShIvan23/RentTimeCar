@@ -109,36 +109,22 @@ final class MainViewController: UIViewController {
     
     private func subscribeToNotification() {
         NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .filteredAutosUpdated, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(sortingAutoUpdated), name: .sortingAutoUpdated, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(classAutoUpdated), name: .classAutoUpdated, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .sortingAutoUpdated, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .classAutoUpdated, object: nil)
         AuthService.shared.addObserver(self)
     }
     
     @objc
     private func filteredAutosUpdated() {
-        let model = filterService.filteredAutos
-        if model.isEmpty {
-            cells = mapAutos(with: filterService.allAutos)
-        } else {
-            cells = mapAutos(with: model)
+        DispatchQueue.main.async {
+            let model = self.filterService.filteredAutos
+            if model.isEmpty {
+                self.cells = self.mapAutos(with: self.filterService.allAutos)
+            } else {
+                self.cells = self.mapAutos(with: model)
+            }
+            self.collectionView.reloadData()
         }
-        collectionView.reloadData()
-    }
-
-    @objc
-    private func sortingAutoUpdated() {
-        let firstSelectedIndex = filterService.sortingAuto.firstIndex(where: { $0.isSelected })
-        guard let firstSelectedIndex else {
-            cells = mapAutos(with: filterService.allAutos)
-            collectionView.reloadData()
-            return
-        }
-        // это наверное надо сортировать локально. без api
-    }
-
-    @objc
-    private func classAutoUpdated() {
-        // в api не работает сортировка
     }
 }
 
