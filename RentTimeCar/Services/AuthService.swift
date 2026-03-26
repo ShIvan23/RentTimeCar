@@ -114,8 +114,14 @@ final class AuthService {
         }
         
         if client.name.isEmptyFirstAndLastNames || client.passport.isEmptySerriesAndNumber {
-            authState = .onCheck
-            return
+            let allReadyOnCheck = authState == .onCheck
+            if allReadyOnCheck {
+                authState = .onCheck
+                return
+            } else {
+                authState = .needRegister
+                return
+            }
         }
         
         authState = .fullAccess
