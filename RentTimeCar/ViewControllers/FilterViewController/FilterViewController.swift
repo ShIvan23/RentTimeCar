@@ -236,6 +236,11 @@ extension FilterViewController: UICollectionViewDelegateFlowLayout {
             )
             model[indexPath.item] = .brandAuto(brandAutoModel)
             collectionView.reloadData()
+            let selectedBrands = model.compactMap { item -> String? in
+                guard case let .brandAuto(brand) = item, brand.isSelected else { return nil }
+                return brand.name
+            }
+            filterService.setSelectedBrands(selectedBrands)
         case let .classAuto(classAutoModel):
             let filterClassModel = FilterInfoAuto(
                 name: classAutoModel.name,

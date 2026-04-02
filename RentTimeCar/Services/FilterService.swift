@@ -40,7 +40,11 @@ final class FilterService {
     }
     
     var hasFilters: Bool {
-        !selectedDates.isEmpty || selectedPrice.min != price.min || selectedPrice.max != price.max || !filteredAutos.isEmpty
+        !selectedDates.isEmpty
+            || selectedPrice.min != price.min
+            || selectedPrice.max != price.max
+            || !selectedBrands.isEmpty
+            || autoClassesCodes.values.contains(where: { $0.isSelected })
     }
     
     func setModel(_ model: [Auto]) {
