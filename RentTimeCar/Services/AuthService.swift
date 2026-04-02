@@ -69,6 +69,7 @@ final class AuthService {
     }
 
     func saveState(authState: AuthState) {
+        self.authState = authState
         userDefaults.set(authState.rawValue, forKey: .authStateKey)
 
         // Если пользователь авторизовался через смс, то нужно проверить, заведена ли карточка на клиента и есть ли его доки в системе
