@@ -62,6 +62,7 @@ final class SuccessPhotoView: UIView {
         backgroundColor = .mainBackground
         addSubviews([capturedImageView, titleLabel, subtitleLabel, retryButton, confirmButton])
         capturedImageView.clipsToBounds = true
+        capturedImageView.contentMode = .scaleAspectFill
 
         retryButton.action = { [weak self] in
             self?.delegate?.didTapRetry()
@@ -76,7 +77,7 @@ final class SuccessPhotoView: UIView {
 
     private func performLayout() {
         capturedImageView.pin
-            .top()
+            .top(safeAreaInsets.top)
             .horizontally()
             .height(bounds.width)
 

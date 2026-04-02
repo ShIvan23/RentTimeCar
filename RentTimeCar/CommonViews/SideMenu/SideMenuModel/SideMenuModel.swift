@@ -38,13 +38,13 @@ extension SideMenuModel {
                         title: SideMenuModelNaming.myFines,
                         subtitle: "Оплата и детали штрафов ГИБДД",
                         cellType: .small
-                    ),
-                    SideMenuModel(
-                        image: .setting,
-                        title: SideMenuModelNaming.mySettings,
-                        subtitle: nil,
-                        cellType: .small
                     )
+//                    SideMenuModel(
+//                        image: .setting,
+//                        title: SideMenuModelNaming.mySettings,
+//                        subtitle: nil,
+//                        cellType: .small
+//                    )
                 ]
             )
         }
