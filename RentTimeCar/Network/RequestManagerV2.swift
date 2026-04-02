@@ -72,7 +72,7 @@ final class RequestManagerV2 {
     // MARK: - POST /api/upload-images
 
     /// Возвращает URLRequest и тело запроса отдельно — необходимо для uploadTask.
-    func uploadImages(_ images: [UIImage]) -> (request: URLRequest, body: Data)? {
+    func uploadImages(_ images: [UIImage], clientIntegrationId: String) -> (request: URLRequest, body: Data)? {
         let base64Strings = images.compactMap {
             $0.resized(maxDimension: 1024).jpegData(compressionQuality: 0.7)?.base64EncodedString()
         }
@@ -81,7 +81,8 @@ final class RequestManagerV2 {
             assertionFailure("Invalid URL: \(baseURL)/api/upload-images")
             return nil
         }
-        guard let body = try? encoder.encode(UploadImagesBody(images: base64Strings)) else { return nil }
+        let uploadBody = UploadImagesBody(clientIntegrationId: clientIntegrationId, images: base64Strings)
+        guard let body = try? encoder.encode(uploadBody) else { return nil }
         var request = URLRequest(url: url)
         request.httpMethod = Method.post.rawValue
         request.allHTTPHeaderFields = baseHeader
@@ -152,6 +153,7 @@ final class RequestManagerV2 {
 // MARK: - Request body models (Vapor camelCase format)
 
 private struct UploadImagesBody: Encodable {
+    let clientIntegrationId: String
     let images: [String]
 }
 

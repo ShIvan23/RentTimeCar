@@ -169,12 +169,13 @@ final class RegistrationViewController: UIViewController {
     }
 
     private func uploadPhotos() {
+        guard let clientIntegrationId = authService.integrationId else { return }
         let images = registrationModelBox.items.compactMap { item -> UIImage? in
             if case let .image(image) = item { return image }
             return nil
         }
         showUploadOverlay()
-        rentApiFacade.uploadImages(images, onProgress: { [weak self] progress in
+        rentApiFacade.uploadImages(images, clientIntegrationId: clientIntegrationId, onProgress: { [weak self] progress in
             self?.updateUploadProgress(progress)
         }, completion: { [weak self] result in
             DispatchQueue.main.async {

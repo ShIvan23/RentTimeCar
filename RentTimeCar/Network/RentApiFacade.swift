@@ -17,6 +17,7 @@ protocol IRentApiFacade {
     func getSmsCode(with phoneNumber: String, code: String, completion: @escaping (Result<SmsModel, Error>) -> Void)
     func uploadImages(
         _ images: [UIImage],
+        clientIntegrationId: String,
         onProgress: @escaping (Double) -> Void,
         completion: @escaping (Result<Void, Error>) -> Void
     )
@@ -63,10 +64,11 @@ final class RentApiFacade: IRentApiFacade {
 
     func uploadImages(
         _ images: [UIImage],
+        clientIntegrationId: String,
         onProgress: @escaping (Double) -> Void,
         completion: @escaping (Result<Void, Error>) -> Void
     ) {
-        guard let (request, body) = requestManager.uploadImages(images) else { return }
+        guard let (request, body) = requestManager.uploadImages(images, clientIntegrationId: clientIntegrationId) else { return }
         networkManager.upload(
             request: request,
             body: body,
