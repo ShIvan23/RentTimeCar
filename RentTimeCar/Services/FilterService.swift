@@ -102,6 +102,18 @@ final class FilterService {
         }
     }
 
+    func resetAutoType() {
+        var newAutoClasses = [String: FilterInfoAuto]()
+        autoClassesCodes.forEach {
+            newAutoClasses[$0] = FilterInfoAuto(name: $1.name, isSelected: false)
+        }
+        autoClassesCodes = newAutoClasses
+        searchAutos { autos in
+            self.setFilteredAutos(autos)
+            NotificationCenter.default.post(name: .classAutoUpdated, object: nil)
+        }
+    }
+
     func resetSorting() {
         sortingAuto = sortingAuto.map { FilterInfoAuto(name: $0.name, isSelected: false) }
         searchAutos { autos in

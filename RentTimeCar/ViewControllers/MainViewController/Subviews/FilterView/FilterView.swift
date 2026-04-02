@@ -87,6 +87,12 @@ final class FilterView: UIView {
             name: .sortingAutoUpdated,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(autoTypeUpdated),
+            name: .classAutoUpdated,
+            object: nil
+        )
     }
     
     @objc
@@ -125,6 +131,24 @@ final class FilterView: UIView {
         collectionView.reloadData()
     }
     
+    @objc
+    private func autoTypeUpdated() {
+        let autoTypeIndex = filterModel.firstIndex {
+            switch $0.type {
+            case .autoType: true
+            default: false
+            }
+        }
+        guard let autoTypeIndex, let oldModel = filterModel[safe: autoTypeIndex] else { return }
+        filterModel[autoTypeIndex] = FilterModel(
+            type: oldModel.type,
+            image: oldModel.image,
+            text: oldModel.text,
+            isSelected: FilterService.shared.autoClassesCodes.values.contains(where: { $0.isSelected })
+        )
+        collectionView.reloadData()
+    }
+
     @objc
     private func sortingUpdated() {
         let sortIndex = filterModel.firstIndex {

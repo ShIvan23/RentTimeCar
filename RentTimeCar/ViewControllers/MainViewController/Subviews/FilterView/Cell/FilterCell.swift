@@ -84,7 +84,7 @@ final class FilterCell: UICollectionViewCell {
         case .sort:
             FilterService.shared.resetSorting()
         case .autoType:
-            ()
+            FilterService.shared.resetAutoType()
         case .delete:
             print("+++ delete 2")
             ()
