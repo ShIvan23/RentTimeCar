@@ -75,11 +75,16 @@ final class FilterView: UIView {
             name: .selectedDatesUpdated,
             object: nil
         )
-        
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(filteredAutosUpdated),
             name: .filteredAutosUpdated,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(sortingUpdated),
+            name: .sortingAutoUpdated,
             object: nil
         )
     }
@@ -89,10 +94,8 @@ final class FilterView: UIView {
         let selectedDates = FilterService.shared.selectedDates
         let dateFilterIndex = filterModel.firstIndex {
             switch $0.type {
-            case .date:
-                true
-            default:
-                false
+            case .date: true
+            default: false
             }
         }
         guard let dateFilterIndex,
@@ -103,9 +106,43 @@ final class FilterView: UIView {
             text: oldModel.text,
             isSelected: !selectedDates.isEmpty
         )
+
+        let filterCellIndex = filterModel.firstIndex {
+            switch $0.type {
+            case .filter: true
+            default: false
+            }
+        }
+        if let filterCellIndex, let oldFilterModel = filterModel[safe: filterCellIndex] {
+            filterModel[filterCellIndex] = FilterModel(
+                type: oldFilterModel.type,
+                image: oldFilterModel.image,
+                text: oldFilterModel.text,
+                isSelected: FilterService.shared.hasFilters
+            )
+        }
+
         collectionView.reloadData()
     }
     
+    @objc
+    private func sortingUpdated() {
+        let sortIndex = filterModel.firstIndex {
+            switch $0.type {
+            case .sort: true
+            default: false
+            }
+        }
+        guard let sortIndex, let oldModel = filterModel[safe: sortIndex] else { return }
+        filterModel[sortIndex] = FilterModel(
+            type: oldModel.type,
+            image: oldModel.image,
+            text: oldModel.text,
+            isSelected: FilterService.shared.sortingAuto.contains(where: { $0.isSelected })
+        )
+        collectionView.reloadData()
+    }
+
     @objc
     private func filteredAutosUpdated() {
         let filtersIndex = filterModel.firstIndex {

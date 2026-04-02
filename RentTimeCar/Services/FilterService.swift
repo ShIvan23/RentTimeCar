@@ -102,6 +102,14 @@ final class FilterService {
         }
     }
 
+    func resetSorting() {
+        sortingAuto = sortingAuto.map { FilterInfoAuto(name: $0.name, isSelected: false) }
+        searchAutos { autos in
+            self.setFilteredAutos(autos)
+            NotificationCenter.default.post(name: .sortingAutoUpdated, object: nil)
+        }
+    }
+
     func resetAllFilters() {
         selectedDates = []
         selectedPrice.min = price.min

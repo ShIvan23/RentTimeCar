@@ -82,7 +82,7 @@ final class FilterCell: UICollectionViewCell {
         case .date:
             FilterService.shared.setSelectedDates([])
         case .sort:
-            ()
+            FilterService.shared.resetSorting()
         case .autoType:
             ()
         case .delete:
