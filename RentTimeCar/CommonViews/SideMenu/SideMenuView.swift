@@ -30,6 +30,7 @@ final class SideMenuView: UIView {
     private let contentView = UIView()
     private let rightActionView = UIView()
     private let needSignUpView = NeedSignUpView()
+    private lazy var bannedView = BannedView(coordinator: coordinator)
     private lazy var sideMenuContentView = SideMenuContentView(
         delegate: self,
         coordinator: coordinator
@@ -57,44 +58,38 @@ final class SideMenuView: UIView {
     private func setupView() {
         contentView.backgroundColor = .mainBackground
         addSubviews([contentView, rightActionView])
-        contentView.addSubviews([needSignUpView, sideMenuContentView])
+        contentView.addSubviews([needSignUpView, bannedView, sideMenuContentView])
         subscribeToAuthService()
-        configureVisibleView(isUserLogin: AuthService.shared.authState != .needAuthorize)
+        configureVisibleView(for: AuthService.shared.authState)
         setupPanGesture()
         needSignUpView.delegate = self
         rightActionView.addTapGestureClosure { [weak self] in
             self?.delegate?.needHideSideMenuView()
         }
-        configureNeedSignUpView()
     }
 
     private func subscribeToAuthService() {
         authService.addObserver(self)
     }
 
-    private func configureNeedSignUpView() {
-        switch authService.authState {
+    private func configureVisibleView(for state: AuthState) {
+        switch state {
         case .needAuthorize:
             needSignUpView.configure(with: .authorization)
+            needSignUpView.isHidden = false
+            bannedView.isHidden = true
         case .needRegister:
             needSignUpView.configure(with: .registration)
-        case .onCheck:
-            print("+++ onCheck in SideMenuView")
-        case .fullAccess:
-            print("+++ fullAccess in SideMenuView")
-        case .banned:
-            break
-            // тут можно модалку воткнуть, что вы заблокированы. надо звонить в поддержку
-        }
-    }
-
-    private func configureVisibleView(isUserLogin: Bool) {
-        if isUserLogin {
-            needSignUpView.isHidden = true
-        } else {
             needSignUpView.isHidden = false
+            bannedView.isHidden = true
+        case .onCheck, .fullAccess:
+            needSignUpView.isHidden = true
+            bannedView.isHidden = true
+        case .banned:
+            needSignUpView.isHidden = true
+            bannedView.isHidden = false
         }
-        sideMenuContentView.updateTableView(isUserLogin: isUserLogin)
+        sideMenuContentView.updateTableView(isUserLogin: state != .needAuthorize)
         setNeedsLayout()
     }
     
@@ -104,20 +99,18 @@ final class SideMenuView: UIView {
     }
     
     private func performLayout() {
-        let isUserLogin = AuthService.shared.authState != .needAuthorize
+        let state = AuthService.shared.authState
         contentView.pin
             .all()
             .marginRight(bounds.width * 0.13)
-        
+
         rightActionView.pin
             .vertically()
             .after(of: contentView)
             .right()
-        
-        if isUserLogin {
-            sideMenuContentView.pin
-                .all(pin.safeArea)
-        } else {
+
+        switch state {
+        case .needAuthorize, .needRegister:
             needSignUpView.pin
                 .horizontally()
                 .bottom()
@@ -129,6 +122,21 @@ final class SideMenuView: UIView {
                 .horizontally()
                 .marginTop(safeAreaInsets.top)
                 .bottom(to: needSignUpView.edge.top)
+        case .banned:
+            bannedView.pin
+                .horizontally()
+                .bottom()
+                .marginBottom(safeAreaInsets.bottom)
+                .sizeToFit(.width)
+
+            sideMenuContentView.pin
+                .top()
+                .horizontally()
+                .marginTop(safeAreaInsets.top)
+                .bottom(to: bannedView.edge.top)
+        case .onCheck, .fullAccess:
+            sideMenuContentView.pin
+                .all(pin.safeArea)
         }
     }
     
@@ -181,11 +189,6 @@ extension SideMenuView: SideMenuContentViewProtocol {
 
 extension SideMenuView: AuthServiceObserver {
     func post(state: AuthState) {
-        let isAuthorized = state != .needAuthorize
-        configureVisibleView(isUserLogin: isAuthorized)
-    }
-
-    func post(isRegistered: Bool) {
-
+        configureVisibleView(for: state)
     }
 }
