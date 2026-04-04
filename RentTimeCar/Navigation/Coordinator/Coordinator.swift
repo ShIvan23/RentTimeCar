@@ -168,15 +168,17 @@ final class Coordinator: NSObject, ICoordinator {
 
     func openYukassaPayment(amount: Int, description: String, onSuccess: @escaping () -> Void, onFail: @escaping () -> Void) {
         RentApiFacade().createYukassaPayment(amount: amount, description: description) { [weak self] result in
-            switch result {
-            case .success(let url):
-                let paymentVC = Builder.makeYukassaWebViewController(paymentURL: url)
-                paymentVC.onSuccess = onSuccess
-                paymentVC.onFail = onFail
-                paymentVC.title = "Оплата"
-                self?.navigationController?.pushViewController(paymentVC, animated: true)
-            case .failure:
-                onFail()
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let url):
+                    let paymentVC = Builder.makeYukassaWebViewController(paymentURL: url)
+                    paymentVC.onSuccess = onSuccess
+                    paymentVC.onFail = onFail
+                    paymentVC.title = "Оплата"
+                    self?.navigationController?.pushViewController(paymentVC, animated: true)
+                case .failure:
+                    onFail()
+                }
             }
         }
     }

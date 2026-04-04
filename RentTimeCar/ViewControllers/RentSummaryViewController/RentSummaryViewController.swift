@@ -131,7 +131,8 @@ final class RentSummaryViewController: UIViewController {
             for extra in selectedServices {
                 let price = extra.effectivePrice
                 extrasTotal += price
-                result.append(.item(RentItem(title: " •  \(extra.serviceTitle)", amount: price, icon: nil)))
+                let amountText: String? = price == 0 ? "Бесплатно" : nil
+                result.append(.item(RentItem(title: " •  \(extra.serviceTitle)", amount: price, icon: nil, amountText: amountText)))
             }
         }
 

@@ -19,6 +19,7 @@ struct RentItem {
     let title: String
     let amount: Int
     let icon: UIImage?
+    var amountText: String? = nil
 }
 
 // MARK: - Cell
@@ -72,8 +73,11 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
     // MARK: - Internal Methods
     func configure(with item: RentItem) {
         titleLabel.text = item.title
-        valueLabel.text = item.amount > 0 ? "\(item.amount) ₽" : ""
-
+        if let amountText = item.amountText {
+            valueLabel.text = amountText
+        } else {
+            valueLabel.text = item.amount > 0 ? "\(item.amount) ₽" : ""
+        }
         iconImage.image = item.icon?.withRenderingMode(.alwaysTemplate)
         iconImage.isHidden = item.icon == nil
     }

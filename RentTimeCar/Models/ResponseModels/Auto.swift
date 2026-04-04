@@ -16,6 +16,12 @@ struct AdditionalService: Decodable {
         basePrice == 0 ? currentBasePrice : basePrice
     }
 
+    init(serviceTitle: String, basePrice: Int = 0, currentBasePrice: Int = 0) {
+        self.serviceTitle = serviceTitle
+        self.basePrice = basePrice
+        self.currentBasePrice = currentBasePrice
+    }
+
     enum CodingKeys: String, CodingKey {
         case serviceTitle = "ServiceTitle"
         case basePrice = "BasePrice"

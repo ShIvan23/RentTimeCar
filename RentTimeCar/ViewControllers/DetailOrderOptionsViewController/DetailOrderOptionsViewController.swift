@@ -192,10 +192,8 @@ extension DetailOrderOptionsViewController: TitleSubtitleViewDelegate {
 
 extension DetailOrderOptionsViewController: DetailOrderOptionCellDelegate {
     func switcherValueDidChange(_ value: Bool, text: String) {
-        guard let service = model.first(where: { $0.title == text })
-                .flatMap({ item -> AdditionalService? in
-                    OrderConfirmService.shared.auto?.additionalServices.first(where: { $0.serviceTitle == item.title })
-                }) else { return }
+        let service = OrderConfirmService.shared.auto?.additionalServices.first(where: { $0.serviceTitle == text })
+            ?? AdditionalService(serviceTitle: text)
         if value {
             selectedServices.append(service)
         } else {

@@ -404,18 +404,21 @@ extension MainViewController: AuthServiceObserver {
 
     private func showAuthorizationButton() {
         removeAllButtons()
+        guard cells.count >= 2 else { return }
         cells.insert(.button(.authorization), at: 2)
         collectionView.reloadData()
     }
 
     private func showRegistrationButton() {
         removeAllButtons()
+        guard cells.count >= 2 else { return }
         cells.insert(.button(.registration), at: 2)
         collectionView.reloadData()
     }
 
     private func showOnCheckButton() {
         removeAllButtons()
+        guard cells.count >= 2 else { return }
         cells.insert(.button(.onCheck), at: 2)
         collectionView.reloadData()
     }
