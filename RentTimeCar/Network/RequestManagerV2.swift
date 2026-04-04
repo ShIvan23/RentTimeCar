@@ -69,6 +69,12 @@ final class RequestManagerV2 {
         makeRequest(path: "/api/contacts", method: .get)
     }
 
+    // MARK: - GET /api/officeAddress
+
+    func getOfficeAddress() -> URLRequest? {
+        makeRequest(path: "/api/officeAddress", method: .get)
+    }
+
     // MARK: - GET /api/filters
 
     func getFiltersParams() -> URLRequest? {

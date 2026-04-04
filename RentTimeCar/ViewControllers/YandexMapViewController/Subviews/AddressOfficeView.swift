@@ -12,12 +12,10 @@ final class AddressOfficeView: UIView {
     // MARK: - UI
     
     private let title = Label(
-        text: .title,
         numberOfLines: 2
     )
     
     private let subtitle = Label(
-        text: .subtitle,
         fontSize: 13,
         textColor: .secondaryTextColor
     )
@@ -52,6 +50,12 @@ final class AddressOfficeView: UIView {
         return address
     }
 
+    func configure(with officeAddress: OfficeAddress) {
+        title.text = officeAddress.address
+        subtitle.text = officeAddress.workingHours
+        setNeedsLayout()
+    }
+
     // MARK: - Private Methods
     
     private func setupView() {
@@ -71,9 +75,4 @@ final class AddressOfficeView: UIView {
             .bottom()
             .sizeToFit(.width)
     }
-}
-
-private extension String {
-    static let title = "Москва, улица Маршала Рыбалко д2 к6, подъезд 5 офис 106"
-    static let subtitle = "09:00 - 21:00 (ежедневно)"
 }

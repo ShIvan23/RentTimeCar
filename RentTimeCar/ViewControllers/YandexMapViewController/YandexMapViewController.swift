@@ -34,8 +34,9 @@ final class YandexMapViewController: UIViewController {
     private let searchManager = YMKSearchFactory.instance().createSearchManager(with: .online)
     private var searchSession: YMKSearchSession?
     private var searchSessions: [YMKSearchSession] = []
-    private let officeCameraPosition = YMKPoint(latitude: 55.7976500, longitude: 37.495626)
+    private var officeCameraPosition = YMKPoint(latitude: 55.7976500, longitude: 37.495626)
     private var placeMark: YMKPlacemarkMapObject?
+    private let rentApiFacade: IRentApiFacade = RentApiFacade()
     private var mapObjects: YMKMapObjectCollection {
         return mapView.mapWindow.map.mapObjects
     }
@@ -62,6 +63,7 @@ final class YandexMapViewController: UIViewController {
         super.viewDidLoad()
         setupView()
         setupMap()
+        fetchOfficeAddress()
     }
     
     override func viewDidLayoutSubviews() {
@@ -239,9 +241,32 @@ final class YandexMapViewController: UIViewController {
         editAddressView.isHidden = true
     }
     
+    private func fetchOfficeAddress() {
+        rentApiFacade.getOfficeAddress { [weak self] result in
+            guard let self else { return }
+            DispatchQueue.main.async {
+                switch result {
+                case let .success(officeAddress):
+                    self.officeCameraPosition = YMKPoint(
+                        latitude: officeAddress.latitude,
+                        longitude: officeAddress.longitude
+                    )
+                    self.placeMark?.geometry = self.officeCameraPosition
+                    self.addressOfficeView.configure(with: officeAddress)
+                    self.showOffice()
+                case .failure:
+                    let model = InfoBottomSheetModel.makeOfficeAddressLoadFailModel {
+                        self.fetchOfficeAddress()
+                    }
+                    self.coordinator.openInfoBottomSheetViewController(model: model)
+                }
+            }
+        }
+    }
+
     private func setupMap() {
         mapView.mapWindow.map.addCameraListener(with: self)
-        
+
         mapView.mapWindow.map.move(with: YMKCameraPosition(target: officeCameraPosition, zoom: 15.5, azimuth: 0, tilt: 0))
         let placeMark = mapObjects.addPlacemark()
         placeMark.setIconWith(.location)
