@@ -81,6 +81,16 @@ extension EnterCodeView: CodeTextFieldDelegate {
               let nextTextField = codeTextFieldsPool[safe: currentTextFieldIndex + 1] else { return validateCode() }
         nextTextField.becomeFirstResponder()
     }
+
+    func didAutofillCode(_ code: String) {
+        let digits = code.filter(\.isNumber)
+        for (index, field) in codeTextFieldsPool.enumerated() {
+            guard index < digits.count else { break }
+            field.text = String(digits[digits.index(digits.startIndex, offsetBy: index)])
+        }
+        codeTextFieldsPool.last?.resignFirstResponder()
+        validateCode()
+    }
 }
 
 private extension CGFloat {

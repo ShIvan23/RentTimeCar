@@ -9,6 +9,7 @@ import UIKit
 
 protocol CodeTextFieldDelegate: AnyObject {
     func didEnterNumber(_ textField: CodeTextField)
+    func didAutofillCode(_ code: String)
 }
 
 final class CodeTextField: UITextField {
@@ -46,6 +47,7 @@ final class CodeTextField: UITextField {
     private func setupTextField() {
         backgroundColor = .secondaryBackground
         self.keyboardType = .numberPad
+        self.textContentType = .oneTimeCode
         font = UIFont.openSans(fontSize: 21)
         textColor = .whiteTextColor
         textAlignment = .center
@@ -59,6 +61,11 @@ final class CodeTextField: UITextField {
 extension CodeTextField: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         guard string != "" else { return true }
+        // Автозаполнение из СМС — iOS вставляет весь код сразу
+        if string.count > 1 {
+            codeDelegate?.didAutofillCode(string)
+            return false
+        }
         guard textField.text == "" else { return false }
         textField.text = string
         codeDelegate?.didEnterNumber(self)

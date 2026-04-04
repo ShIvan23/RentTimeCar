@@ -22,7 +22,7 @@ final class EnterSmsCodeViewController: UIViewController, ToastViewShowable {
     private var timer: Timer?
     private let authService = AuthService.shared
     private let coordinator: ICoordinator
-    private var timeMinute = 10 {
+    private var timeMinute = 60 {
         didSet {
             guard timeMinute == .zero else { return }
             showRetryCodeButton()
