@@ -38,8 +38,8 @@ final class ContactTableViewCell: UITableViewCell {
 
     // MARK: - Internal Methods
 
-    func configure(with model: ContactsModel) {
-        secondaryButton.setTitle(model.title, for: .normal)
+    func configure(with contact: Contact) {
+        secondaryButton.setTitle(contact.title, for: .normal)
     }
 
     // MARK: - Private Methods

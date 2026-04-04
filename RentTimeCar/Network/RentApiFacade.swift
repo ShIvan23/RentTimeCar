@@ -13,6 +13,7 @@ protocol IRentApiFacade {
     func addClient(with phoneNumber: String, completion: @escaping (Result<ApiResult<Client>, Error>) -> Void)
     func getAutos(completion: @escaping (Result<ApiResult<[Auto]>, Error>) -> Void)
     func searchAuto(with: SearchAutoInput, completion: @escaping (Result<ApiResult<[Auto]>, Error>) -> Void)
+    func getContacts(completion: @escaping (Result<[Contact], Error>) -> Void)
     func getFilterPrams(completion: @escaping (Result<ApiResult<GetFilterParams>, Error>) -> Void)
     func getSmsCode(with phoneNumber: String, code: String, completion: @escaping (Result<SmsModel, Error>) -> Void)
     func uploadImages(
@@ -52,6 +53,11 @@ final class RentApiFacade: IRentApiFacade {
         networkManager.fetch(request: request, completion: completion)
     }
     
+    func getContacts(completion: @escaping (Result<[Contact], Error>) -> Void) {
+        guard let request = requestManager.getContacts() else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+
     func getFilterPrams(completion: @escaping (Result<ApiResult<GetFilterParams>, Error>) -> Void) {
         guard let request = requestManager.getFiltersParams() else { return }
         networkManager.fetch(request: request, completion: completion)

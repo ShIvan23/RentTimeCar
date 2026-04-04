@@ -63,6 +63,12 @@ final class RequestManagerV2 {
         return makeRequest(path: "/api/autos/search", method: .post, body: body)
     }
 
+    // MARK: - GET /api/contacts
+
+    func getContacts() -> URLRequest? {
+        makeRequest(path: "/api/contacts", method: .get)
+    }
+
     // MARK: - GET /api/filters
 
     func getFiltersParams() -> URLRequest? {

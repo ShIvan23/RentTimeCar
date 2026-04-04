@@ -13,11 +13,18 @@ final class ContactsViewController: UIViewController {
 
     private let button = MainButton(title: "Назад")
     private let tableView = UITableView()
+    private let errorLabel = Label(
+        text: "Не удалось загрузить контакты",
+        fontSize: 14,
+        textColor: .secondaryTextColor
+    )
+    private let retryButton = MainButton(title: "Попробовать снова")
 
     // MARK: - Private Properties
 
-    private let model = ContactsModel.makeModel()
+    private var contacts = [Contact]()
     private let coordinator: ICoordinator
+    private let rentApiFacade: IRentApiFacade = RentApiFacade()
 
     // MARK: - Init
 
@@ -38,6 +45,7 @@ final class ContactsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
+        fetchContacts()
     }
 
     override func viewDidLayoutSubviews() {
@@ -48,11 +56,15 @@ final class ContactsViewController: UIViewController {
     // MARK: - Private Methods
 
     private func setupView() {
-        view.addSubviews([tableView, button])
+        view.addSubviews([tableView, errorLabel, retryButton, button])
         view.backgroundColor = .mainBackground
         setupTableView()
+        setErrorViewHidden(true)
         button.action = { [weak self] in
             self?.coordinator.dismissViewController()
+        }
+        retryButton.action = { [weak self] in
+            self?.fetchContacts()
         }
     }
 
@@ -63,6 +75,29 @@ final class ContactsViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         tableView.backgroundColor = .clear
+    }
+
+    private func setErrorViewHidden(_ hidden: Bool) {
+        errorLabel.isHidden = hidden
+        retryButton.isHidden = hidden
+        tableView.isHidden = !hidden
+    }
+
+    private func fetchContacts() {
+        setErrorViewHidden(true)
+        rentApiFacade.getContacts { [weak self] result in
+            guard let self else { return }
+            DispatchQueue.main.async {
+                switch result {
+                case let .success(items):
+                    self.contacts = items
+                    self.tableView.reloadData()
+                case .failure:
+                    self.setErrorViewHidden(false)
+                    self.view.setNeedsLayout()
+                }
+            }
+        }
     }
 
     private func performLayout() {
@@ -76,6 +111,17 @@ final class ContactsViewController: UIViewController {
             .top()
             .horizontally()
             .bottom(to: button.edge.top)
+
+        errorLabel.pin
+            .vCenter(-33)
+            .horizontally(20)
+            .sizeToFit(.width)
+
+        retryButton.pin
+            .below(of: errorLabel)
+            .horizontally(20)
+            .marginTop(16)
+            .height(50)
     }
 }
 
@@ -83,30 +129,29 @@ final class ContactsViewController: UIViewController {
 
 extension ContactsViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return model.count
+        return contacts.count
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell: ContactTableViewCell = tableView.dequeueCell(for: indexPath)
-        let item = model[indexPath.row]
-        cell.configure(with: item)
+        cell.configure(with: contacts[indexPath.row])
         return cell
     }
 }
 
-// MARK: - UITableViewDataSource
+// MARK: - UITableViewDelegate
 
 extension ContactsViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard let type = model[safe: indexPath.row]?.type else { return }
-        let phone = "+79268202557"
+        guard let contact = contacts[safe: indexPath.row] else { return }
+        let phone = contact.phoneNumber
         let url: URL?
-        switch type {
-        case .call:
+        switch contact.type {
+        case .phone:
             url = URL(string: "tel://\(phone)")
         case .telegram:
             url = URL(string: "https://t.me/\(phone)")
-        case .whatsApp:
+        case .whatsapp:
             url = URL(string: "https://api.whatsapp.com/send?phone=\(phone)")
         }
         guard let url else { return }
