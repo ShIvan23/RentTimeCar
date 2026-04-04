@@ -21,8 +21,10 @@ final class OrderConfirmService {
     private(set) var datesCount = 0
     private(set) var deliveryAddress = ""
     private(set) var returnAddress = ""
-    private(set) var selectedOptions = [String]()
+    private(set) var selectedServices = [AdditionalService]()
     private(set) var auto: Auto?
+
+    var selectedOptions: [String] { selectedServices.map(\.serviceTitle) }
 
     // MARK: - Internal Methods
 
@@ -44,7 +46,7 @@ final class OrderConfirmService {
         self.returnAddress = returnAddress
     }
 
-    func setSelectedOptions(_ selectedOptions: [String]) {
-        self.selectedOptions = selectedOptions
+    func setSelectedServices(_ services: [AdditionalService]) {
+        self.selectedServices = services
     }
 }

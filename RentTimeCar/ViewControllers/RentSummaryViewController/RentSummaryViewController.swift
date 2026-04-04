@@ -124,16 +124,19 @@ final class RentSummaryViewController: UIViewController {
         result.append(.item(RentItem(title: "Аренда", amount: baseRent, icon: .calendar)))
         result.append(.separator)
 
-        let selectedOptions = service.selectedOptions
-        if !selectedOptions.isEmpty {
+        let selectedServices = service.selectedServices
+        var extrasTotal = 0
+        if !selectedServices.isEmpty {
             result.append(.item(RentItem(title: "Дополнительные опции:", amount: 0, icon: .file)))
-            for option in selectedOptions {
-                result.append(.item(RentItem(title: " •  \(option)", amount: 0, icon: nil)))
+            for extra in selectedServices {
+                let price = extra.effectivePrice
+                extrasTotal += price
+                result.append(.item(RentItem(title: " •  \(extra.serviceTitle)", amount: price, icon: nil)))
             }
         }
 
         result.append(.separator)
-        result.append(.item(RentItem(title: "Итого", amount: baseRent, icon: .rublesign)))
+        result.append(.item(RentItem(title: "Итого", amount: baseRent + extrasTotal, icon: .rublesign)))
         result.append(.item(RentItem(title: "Депозит", amount: auto.deposit, icon: .rublesignBank)))
 
         cells = result

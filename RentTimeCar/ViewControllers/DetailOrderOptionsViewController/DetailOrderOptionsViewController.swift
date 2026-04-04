@@ -56,7 +56,7 @@ final class DetailOrderOptionsViewController: UIViewController {
 
     private let coordinator: ICoordinator
     private var model = [DetailOrderOptionModel]()
-    private var selectedOptions = [String]()
+    private var selectedServices = [AdditionalService]()
 
     // MARK: - UI
 
@@ -121,8 +121,7 @@ final class DetailOrderOptionsViewController: UIViewController {
     }
 
     private func saveChangesInOrderConfirmService() {
-        let orderConfirmService = OrderConfirmService.shared
-        orderConfirmService.setSelectedOptions(selectedOptions)
+        OrderConfirmService.shared.setSelectedServices(selectedServices)
     }
 
     private func performLayout() {
@@ -154,8 +153,11 @@ extension DetailOrderOptionsViewController: UICollectionViewDataSource {
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: DetailOrderOptionCell = collectionView.dequeueCell(for: indexPath)
+        let item = model[indexPath.row]
+        let isSelected = selectedServices.contains(where: { $0.serviceTitle == item.title })
         cell.configure(
-            with: model[indexPath.row],
+            with: item,
+            isSelected: isSelected,
             titleSubtitleViewDelegate: self,
             detailOrderOptionCellDelegate: self
         )
@@ -190,11 +192,14 @@ extension DetailOrderOptionsViewController: TitleSubtitleViewDelegate {
 
 extension DetailOrderOptionsViewController: DetailOrderOptionCellDelegate {
     func switcherValueDidChange(_ value: Bool, text: String) {
-        let isSelected = value
-        if isSelected {
-            selectedOptions.append(text)
+        guard let service = model.first(where: { $0.title == text })
+                .flatMap({ item -> AdditionalService? in
+                    OrderConfirmService.shared.auto?.additionalServices.first(where: { $0.serviceTitle == item.title })
+                }) else { return }
+        if value {
+            selectedServices.append(service)
         } else {
-            selectedOptions.removeAll(where: { $0 == text })
+            selectedServices.removeAll(where: { $0.serviceTitle == service.serviceTitle })
         }
     }
 }

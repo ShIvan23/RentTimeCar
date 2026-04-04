@@ -49,6 +49,7 @@ final class DetailOrderOptionCell: UICollectionViewCell {
 
     func configure(
         with model: DetailOrderOptionModel,
+        isSelected: Bool,
         titleSubtitleViewDelegate: TitleSubtitleViewDelegate,
         detailOrderOptionCellDelegate: DetailOrderOptionCellDelegate
     ) {
@@ -59,7 +60,14 @@ final class DetailOrderOptionCell: UICollectionViewCell {
             delegate: titleSubtitleViewDelegate
         )
         imageView.image = model.image.withRenderingMode(.alwaysTemplate)
+        switcher.isOn = isSelected
         delegate = detailOrderOptionCellDelegate
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        switcher.isOn = false
+        delegate = nil
     }
 
     // MARK: - Private Methods
