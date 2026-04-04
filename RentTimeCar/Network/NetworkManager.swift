@@ -10,27 +10,65 @@ import Foundation
 typealias JSONCompletionHandler = (Data?, HTTPURLResponse?, Error?) -> Void
 
 final class NetworkManager {
-    private let sessionConfiguration = URLSessionConfiguration.default
+    private let sessionConfiguration: URLSessionConfiguration = {
+        let config = URLSessionConfiguration.default
+        config.waitsForConnectivity = true
+        config.httpShouldUsePipelining = false
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 60
+        return config
+    }()
+
+    /// Конфигурация без системного прокси — для работы с VPN в дебаге без Proxyman
+    private let sessionConfigurationNoProxy: URLSessionConfiguration = {
+        let config = URLSessionConfiguration.default
+        config.waitsForConnectivity = true
+        config.httpShouldUsePipelining = false
+        config.timeoutIntervalForRequest = 30
+        config.timeoutIntervalForResource = 60
+        config.connectionProxyDictionary = [:]  // отключает Proxyman/Charles
+        return config
+    }()
+
     private lazy var session: URLSession = {
         #if DEBUG
+        // Переключи на sessionConfigurationNoProxy если используешь VPN без Proxyman
         return URLSession(configuration: sessionConfiguration, delegate: TLSBypassDelegate(), delegateQueue: nil)
         #else
         return URLSession(configuration: sessionConfiguration)
         #endif
     }()
-    
+
+    private static let retryableErrorCodes: Set<Int> = [
+        NSURLErrorNetworkConnectionLost,   // -1005
+        NSURLErrorNotConnectedToInternet,  // -1009
+        NSURLErrorTimedOut,                // -1001
+    ]
+
     func fetch<T: Decodable>(request: URLRequest, completion: @escaping (Result<T, Error>) -> Void) {
-        
+        fetch(request: request, retries: 2, completion: completion)
+    }
+
+    private func fetch<T: Decodable>(request: URLRequest, retries: Int, completion: @escaping (Result<T, Error>) -> Void) {
         let dataTask = JSONTask(request: request) { [weak self] data, response, error in
+            if let error = error as NSError?,
+               Self.retryableErrorCodes.contains(error.code),
+               retries > 0 {
+                DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+                    self?.fetch(request: request, retries: retries - 1, completion: completion)
+                }
+                return
+            }
+
             guard let data = data else {
                 if let error = error {
                     completion(.failure(error))
+                } else {
+                    completion(.failure(NSError()))
                 }
-                let unownedError = NSError()
-                completion(.failure(unownedError))
                 return
             }
-            
+
             if let value = self?.decodeJSON(type: T.self, from: data) {
                 completion(.success(value))
             } else {

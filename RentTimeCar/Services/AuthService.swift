@@ -40,7 +40,7 @@ final class AuthService {
 
     private init() {
         // debug clear
-//        userDefaults.set(nil, forKey: .isAuthorizedKey)
+//        userDefaults.set(nil, forKey: .authStateKey)
 //        userDefaults.set(nil, forKey: .phoneNumberKey)
 //        userDefaults.set(nil, forKey: .isRegisteredKey)
 //        userDefaults.set(nil, forKey: .integrationIdKey)

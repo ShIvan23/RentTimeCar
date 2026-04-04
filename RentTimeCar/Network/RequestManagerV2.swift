@@ -14,7 +14,7 @@ final class RequestManagerV2 {
         case post = "POST"
     }
 
-    private let baseURL = "https://renttimecarapi-production.up.railway.app"
+    private let baseURL = "https://rent-time-car.ru"
     private let baseHeader = ["content-type": "application/json"]
     private let encoder = JSONEncoder()
 
