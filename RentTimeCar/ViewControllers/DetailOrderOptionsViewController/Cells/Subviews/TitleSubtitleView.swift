@@ -68,6 +68,8 @@ final class TitleSubtitleView: UIView {
         self.subtitle.text = subtitle
         self.cellType = cellType
         self.delegate = delegate
+        infoImageContainer.isHidden = cellType == .unowned
+        setNeedsLayout()
     }
 
     func getTitle() -> String {
@@ -89,17 +91,24 @@ final class TitleSubtitleView: UIView {
     }
 
     private func performLayout() {
+        let imageSize = CGSize(square: 30)
+        let textRightMargin: CGFloat = infoImageContainer.isHidden ? .zero : imageSize.width
         title.pin
             .topLeft()
-            .sizeToFit()
+            .right()
+            .marginRight(textRightMargin)
+            .sizeToFit(.width)
 
         subtitle.pin
             .below(of: title, aligned: .left)
-            .sizeToFit()
+            .right()
+            .marginRight(textRightMargin)
+            .sizeToFit(.width)
 
         infoImageContainer.pin
-            .after(of: title, aligned: .center)
-            .size(CGSize(square: 30))
+            .right()
+            .vCenter(to: title.edge.vCenter)
+            .size(imageSize)
 
         infoImageView.pin
             .center()

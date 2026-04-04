@@ -17,39 +17,45 @@ struct DetailOrderOptionModel {
         case protection
         case child
         case additionalDriver
+        case unowned
     }
 }
 
 extension DetailOrderOptionModel {
-    static func makeModel() -> [DetailOrderOptionModel] {
-        [
-            DetailOrderOptionModel(
-                image: .shield,
-                title: "100% Защита",
-                subtitle: "тут надо с бека взять цену",
-                type: .protection
-            ),
-            DetailOrderOptionModel(
-                image: .user,
-                title: "Доп. водитель",
-                subtitle: "тут надо с бека взять цену",
-                type: .additionalDriver
-            ),
+    static func makeModel(additionalServices: [AdditionalService]) -> [DetailOrderOptionModel] {
+        var models = additionalServices.map { service -> DetailOrderOptionModel in
+            let subtitle = service.effectivePrice > 0 ? "\(service.effectivePrice) ₽" : "Бесплатно"
+            switch service.serviceTitle {
+            case .additionalDriverTitle:
+                return DetailOrderOptionModel(image: .user, title: service.serviceTitle, subtitle: subtitle, type: .additionalDriver)
+            case .protectionTitle:
+                return DetailOrderOptionModel(image: .shield, title: service.serviceTitle, subtitle: subtitle, type: .protection)
+            default:
+                return DetailOrderOptionModel(image: .file, title: service.serviceTitle, subtitle: subtitle, type: .unowned)
+            }
+        }
+        models.insert(
             DetailOrderOptionModel(
                 image: .child,
                 title: "Детское кресло",
                 subtitle: "Бесплатно",
                 type: .child
-            )
-        ]
+            ),
+            at: .zero)
+        return models
     }
+}
+
+private extension String {
+    static let additionalDriverTitle = "Дополнительный водитель"
+    static let protectionTitle = "Полная защита"
 }
 
 final class DetailOrderOptionsViewController: UIViewController {
     // MARK: - Private Properties
 
     private let coordinator: ICoordinator
-    private let model = DetailOrderOptionModel.makeModel()
+    private var model = [DetailOrderOptionModel]()
     private var selectedOptions = [String]()
 
     // MARK: - UI
@@ -88,6 +94,7 @@ final class DetailOrderOptionsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
+        buildModel()
     }
 
     override func viewDidLayoutSubviews() {
@@ -107,17 +114,18 @@ final class DetailOrderOptionsViewController: UIViewController {
         }
     }
 
+    private func buildModel() {
+        let services = OrderConfirmService.shared.auto?.additionalServices ?? []
+        model = DetailOrderOptionModel.makeModel(additionalServices: services)
+        collectionView.reloadData()
+    }
+
     private func saveChangesInOrderConfirmService() {
         let orderConfirmService = OrderConfirmService.shared
         orderConfirmService.setSelectedOptions(selectedOptions)
     }
 
     private func performLayout() {
-        collectionView.pin
-            .top(view.safeAreaInsets.top)
-            .horizontally()
-            .bottom(view.safeAreaInsets.bottom)
-
         buttonContainerView.pin
             .bottom()
             .horizontally()
@@ -129,6 +137,11 @@ final class DetailOrderOptionsViewController: UIViewController {
             .marginVertical(.buttonVerticalMargin)
             .marginHorizontal(16)
             .height(.buttonHeight)
+        
+        collectionView.pin
+            .top(view.safeAreaInsets.top)
+            .horizontally()
+            .bottom(to: buttonContainerView.edge.top)
     }
 }
 

@@ -64,7 +64,7 @@ final class NetworkManager {
                 if let error = error {
                     completion(.failure(error))
                 } else {
-                    completion(.failure(NSError()))
+                    completion(.failure(NSError(domain: "NetworkManager", code: -1)))
                 }
                 return
             }
@@ -72,8 +72,7 @@ final class NetworkManager {
             if let value = self?.decodeJSON(type: T.self, from: data) {
                 completion(.success(value))
             } else {
-                let error = NSError()
-                completion(.failure(error))
+                completion(.failure(NSError(domain: "NetworkManager", code: -2)))
             }
         }
         dataTask.resume()
@@ -97,7 +96,7 @@ final class NetworkManager {
                 if let value = self?.decodeJSON(type: T.self, from: data) {
                     completion(.success(value))
                 } else {
-                    completion(.failure(NSError()))
+                    completion(.failure(NSError(domain: "NetworkManager", code: -3)))
                 }
             }
         )

@@ -62,6 +62,8 @@ final class DetailOrderInfoBottomSheetViewController: UIViewController {
             text = "Автомобиль будет оборудован детскими креслами в соответсвии с Вашими запросами"
         case .additionalDriver:
             text = "Если управлять автомобилем планируете не только ВЫ, то каждого дополнительно водителя нужно будет указать в договоре"
+        case .unowned:
+            text = "Нет информации по этой услуге"
         }
         label.text = text
         confirmButton.action = { [weak self] in

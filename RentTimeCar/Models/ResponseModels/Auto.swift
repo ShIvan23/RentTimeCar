@@ -10,10 +10,16 @@ import Foundation
 struct AdditionalService: Decodable {
     let serviceTitle: String
     let basePrice: Int
+    let currentBasePrice: Int
+
+    var effectivePrice: Int {
+        basePrice == 0 ? currentBasePrice : basePrice
+    }
 
     enum CodingKeys: String, CodingKey {
         case serviceTitle = "ServiceTitle"
         case basePrice = "BasePrice"
+        case currentBasePrice = "CurrentBasePrice"
     }
 }
 
@@ -78,7 +84,8 @@ struct Auto: Decodable {
         self.classAuto = try container.decode(String.self, forKey: .classAuto)
         self.mileageLimit = try container.decode(Int.self, forKey: .mileageLimit)
         self.fuelType = try container.decode(String.self, forKey: .fuelType)
-        self.additionalServices = try container.decode([AdditionalService].self, forKey: .additionalServices)
+        let allServices = try container.decode([AdditionalService].self, forKey: .additionalServices)
+        self.additionalServices = allServices.filter { !$0.serviceTitle.isExcludedService }
     }
 }
 
@@ -111,4 +118,10 @@ struct File: Decodable {
 extension String {
     static let folderImageValue = "brandImage"
     static let folderBrandValue = "folder"
+
+    fileprivate var isExcludedService: Bool {
+        let excluded: [String] = ["перепробег", "топливо", "повреждения тс", "увеличение скорости", "киловатты"]
+        let lowercased = self.lowercased()
+        return excluded.contains { lowercased.contains($0) }
+    }
 }
