@@ -7,6 +7,16 @@
 
 import Foundation
 
+struct AdditionalService: Decodable {
+    let serviceTitle: String
+    let basePrice: Int
+
+    enum CodingKeys: String, CodingKey {
+        case serviceTitle = "ServiceTitle"
+        case basePrice = "BasePrice"
+    }
+}
+
 struct Auto: Decodable {
     let title: String
     let files: [File]
@@ -17,6 +27,7 @@ struct Auto: Decodable {
     let classAuto: String
     let mileageLimit: Int
     let fuelType: String
+    let additionalServices: [AdditionalService]
 
     enum CodingKeys: String, CodingKey {
         case files = "Files"
@@ -28,6 +39,7 @@ struct Auto: Decodable {
         case classAuto = "AutoClassTitle"
         case mileageLimit = "MileageLimit"
         case fuelType = "FuelType"
+        case additionalServices = "AdditionalServices"
     }
 
     init(
@@ -39,7 +51,8 @@ struct Auto: Decodable {
         motorPower: Int,
         classAuto: String,
         mileageLimit: Int,
-        fuelType: String
+        fuelType: String,
+        additionalServices: [AdditionalService]
     ) {
         self.title = title
         self.files = files
@@ -50,31 +63,34 @@ struct Auto: Decodable {
         self.classAuto = classAuto
         self.mileageLimit = mileageLimit
         self.fuelType = fuelType
+        self.additionalServices = additionalServices
     }
 
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.files = try container.decode([File].self, forKey: .files)
         self.title = try container.decode(String.self, forKey: .title)
-        self.defaultPriceWithDiscountSt = try container.decode(Int.self, forKey: .defaultPriceWithDiscountSt)
+        // DefaultPriceWithDiscountSt приходит как Double (8500.0)
+        self.defaultPriceWithDiscountSt = Int(try container.decode(Double.self, forKey: .defaultPriceWithDiscountSt))
         self.deposit = try container.decode(Int.self, forKey: .deposit)
         self.marka = try container.decode(String.self, forKey: .marka)
         self.motorPower = try container.decode(Int.self, forKey: .motorPower)
         self.classAuto = try container.decode(String.self, forKey: .classAuto)
         self.mileageLimit = try container.decode(Int.self, forKey: .mileageLimit)
         self.fuelType = try container.decode(String.self, forKey: .fuelType)
+        self.additionalServices = try container.decode([AdditionalService].self, forKey: .additionalServices)
     }
 }
 
 struct File: Decodable {
     let url: String?
     let folder: String
-    
+
     private enum CodingKeys: String, CodingKey {
         case url = "url"
         case folder
     }
-    
+
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let folder = try container.decode(String.self, forKey: .folder)
