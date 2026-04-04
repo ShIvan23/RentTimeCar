@@ -102,6 +102,15 @@ final class FilterService {
         }
     }
 
+    func resetDates() {
+        selectedDates = []
+        NotificationCenter.default.post(name: .selectedDatesUpdated, object: nil)
+        searchAutos { autos in
+            self.setFilteredAutos(autos)
+            NotificationCenter.default.post(name: .filteredAutosUpdated, object: nil)
+        }
+    }
+
     func resetAutoType() {
         var newAutoClasses = [String: FilterInfoAuto]()
         autoClassesCodes.forEach {
@@ -134,6 +143,7 @@ final class FilterService {
         }
         autoClassesCodes = newAutoClasses
         sortingAuto = sortingAuto.map { FilterInfoAuto(name: $0.name, isSelected: false) }
+        NotificationCenter.default.post(name: .selectedDatesUpdated, object: nil)
         NotificationCenter.default.post(name: .filteredAutosUpdated, object: nil)
     }
 
