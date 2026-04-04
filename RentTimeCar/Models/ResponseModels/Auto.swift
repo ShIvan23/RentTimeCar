@@ -11,27 +11,30 @@ struct Auto: Decodable {
     let title: String
     let files: [File]
     let defaultPriceWithDiscountSt: Int
+    let deposit: Int
     let marka: String
     let motorPower: Int
     let classAuto: String
     let mileageLimit: Int
     let fuelType: String
-    
+
     enum CodingKeys: String, CodingKey {
         case files = "Files"
         case title = "Title"
         case defaultPriceWithDiscountSt = "DefaultPriceWithDiscountSt"
+        case deposit = "Deposit"
         case marka = "Marka"
         case motorPower = "ModInfoPowerLSValue"
         case classAuto = "AutoClassTitle"
         case mileageLimit = "MileageLimit"
         case fuelType = "FuelType"
     }
-    
+
     init(
         title: String,
         files: [File],
         defaultPriceWithDiscountSt: Int,
+        deposit: Int,
         marka: String,
         motorPower: Int,
         classAuto: String,
@@ -41,18 +44,20 @@ struct Auto: Decodable {
         self.title = title
         self.files = files
         self.defaultPriceWithDiscountSt = defaultPriceWithDiscountSt
+        self.deposit = deposit
         self.marka = marka
         self.motorPower = motorPower
         self.classAuto = classAuto
         self.mileageLimit = mileageLimit
         self.fuelType = fuelType
     }
-    
+
     init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.files = try container.decode([File].self, forKey: .files)
         self.title = try container.decode(String.self, forKey: .title)
         self.defaultPriceWithDiscountSt = try container.decode(Int.self, forKey: .defaultPriceWithDiscountSt)
+        self.deposit = try container.decode(Int.self, forKey: .deposit)
         self.marka = try container.decode(String.self, forKey: .marka)
         self.motorPower = try container.decode(Int.self, forKey: .motorPower)
         self.classAuto = try container.decode(String.self, forKey: .classAuto)

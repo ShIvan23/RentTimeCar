@@ -115,21 +115,29 @@ final class RentSummaryViewController: UIViewController {
     }
 
     private func loadData() {
-        let selectedOptions = OrderConfirmService.shared.selectedOptions
-        let items = RentSummaryService.shared.getRentSummaryItems(selectedOptions: selectedOptions)
-        cells = buildCellModels(from: items)
-        collectionView.reloadData()
-    }
+        let service = OrderConfirmService.shared
+        guard let auto = service.auto else { return }
 
-    private func buildCellModels(from items: [RentItem]) -> [RentSummaryCellModel] {
         var result: [RentSummaryCellModel] = []
-        for (index, item) in items.enumerated() {
-            result.append(.item(item))
-            if index == 0 || index == items.count - 3 {
-                result.append(.separator)
+
+        let baseRent = auto.defaultPriceWithDiscountSt * service.datesCount
+        result.append(.item(RentItem(title: "Аренда", amount: baseRent, icon: .calendar)))
+        result.append(.separator)
+
+        let selectedOptions = service.selectedOptions
+        if !selectedOptions.isEmpty {
+            result.append(.item(RentItem(title: "Дополнительные опции:", amount: 0, icon: .file)))
+            for option in selectedOptions {
+                result.append(.item(RentItem(title: " •  \(option)", amount: 0, icon: nil)))
             }
         }
-        return result
+
+        result.append(.separator)
+        result.append(.item(RentItem(title: "Итого", amount: baseRent, icon: .rublesign)))
+        result.append(.item(RentItem(title: "Депозит", amount: auto.deposit, icon: .rublesignBank)))
+
+        cells = result
+        collectionView.reloadData()
     }
 
     private func layout() {

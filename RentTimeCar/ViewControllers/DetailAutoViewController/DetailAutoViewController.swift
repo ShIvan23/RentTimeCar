@@ -61,6 +61,7 @@ final class DetailAutoViewController: UIViewController {
             title: autoModel.title,
             files: filteredPhotos,
             defaultPriceWithDiscountSt: autoModel.defaultPriceWithDiscountSt,
+            deposit: autoModel.deposit,
             marka: autoModel.marka,
             motorPower: autoModel.motorPower,
             classAuto: autoModel.classAuto,
@@ -120,6 +121,7 @@ final class DetailAutoViewController: UIViewController {
     private func saveChangesInOrderConfirmService() {
         let orderConfirmService = OrderConfirmService.shared
         orderConfirmService.setSelectedDates(filterService.selectedDates)
+        orderConfirmService.setAuto(autoModel)
         guard let firstImageUrl = autoModel.files.first?.url else { return }
         orderConfirmService.setImageUrl(firstImageUrl)
     }
