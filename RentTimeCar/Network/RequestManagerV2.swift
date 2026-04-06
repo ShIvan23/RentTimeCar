@@ -93,7 +93,8 @@ final class RequestManagerV2 {
             assertionFailure("Invalid URL: \(baseURL)/api/upload-images")
             return nil
         }
-        let uploadBody = UploadImagesBody(clientIntegrationId: clientIntegrationId, images: base64Strings)
+        let phone = AuthService.shared.phoneNumber
+        let uploadBody = UploadImagesBody(clientIntegrationId: clientIntegrationId, images: base64Strings, phone: phone)
         guard let body = try? encoder.encode(uploadBody) else { return nil }
         var request = URLRequest(url: url)
         request.httpMethod = Method.post.rawValue
@@ -167,6 +168,7 @@ final class RequestManagerV2 {
 private struct UploadImagesBody: Encodable {
     let clientIntegrationId: String
     let images: [String]
+    let phone: String?
 }
 
 private struct PhoneBody: Encodable {

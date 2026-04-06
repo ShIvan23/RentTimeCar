@@ -34,7 +34,7 @@ final class AuthService {
     private let userDefaults = UserDefaults.standard
     private var observers = NSHashTable<AnyObject>.weakObjects()
     private let rentApiFacade: IRentApiFacade = RentApiFacade()
-    private var phoneNumber: String?
+    private(set) var phoneNumber: String?
 
     // MARK: - Init
 
