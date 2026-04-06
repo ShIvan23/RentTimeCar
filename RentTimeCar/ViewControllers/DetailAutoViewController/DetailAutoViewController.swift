@@ -67,7 +67,8 @@ final class DetailAutoViewController: UIViewController {
             classAuto: autoModel.classAuto,
             mileageLimit: autoModel.mileageLimit,
             fuelType: autoModel.fuelType,
-            additionalServices: autoModel.additionalServices
+            additionalServices: autoModel.additionalServices,
+            itemID: autoModel.itemID
         )
         self.autoModel = currentModel
         self.coordinator = coordinator

@@ -40,6 +40,7 @@ struct Auto: Decodable {
     let mileageLimit: Int
     let fuelType: String
     let additionalServices: [AdditionalService]
+    let itemID: Int
 
     enum CodingKeys: String, CodingKey {
         case files = "Files"
@@ -52,6 +53,7 @@ struct Auto: Decodable {
         case mileageLimit = "MileageLimit"
         case fuelType = "FuelType"
         case additionalServices = "AdditionalServices"
+        case itemId = "ItemID"
     }
 
     init(
@@ -64,7 +66,8 @@ struct Auto: Decodable {
         classAuto: String,
         mileageLimit: Int,
         fuelType: String,
-        additionalServices: [AdditionalService]
+        additionalServices: [AdditionalService],
+        itemID: Int
     ) {
         self.title = title
         self.files = files
@@ -76,6 +79,7 @@ struct Auto: Decodable {
         self.mileageLimit = mileageLimit
         self.fuelType = fuelType
         self.additionalServices = additionalServices
+        self.itemID = itemID
     }
 
     init(from decoder: any Decoder) throws {
@@ -92,6 +96,7 @@ struct Auto: Decodable {
         self.fuelType = try container.decode(String.self, forKey: .fuelType)
         let allServices = try container.decode([AdditionalService].self, forKey: .additionalServices)
         self.additionalServices = allServices.filter { !$0.serviceTitle.isExcludedService }
+        self.itemID = try container.decode(Int.self, forKey: .itemId)
     }
 }
 
