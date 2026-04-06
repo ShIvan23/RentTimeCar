@@ -72,11 +72,17 @@ final class YukassaWebViewController: UIViewController {
 
     private func createPayment() {
         activityIndicator.startAnimating()
-        rentApiFacade.createYukassaPayment(amount: amount, description: paymentDescription) { [weak self] result in
+        let phone = AuthService.shared.phoneNumber ?? ""
+        rentApiFacade.createYukassaPayment(amount: amount, description: paymentDescription, phone: phone) { [weak self] result in
             guard let self else { return }
             DispatchQueue.main.async {
                 switch result {
-                case let .success(url):
+                case let .success(response):
+                    guard let url = URL(string: response.confirmationUrl) else {
+                        self.activityIndicator.stopAnimating()
+                        self.handlePaymentFail()
+                        return
+                    }
                     self.webView.load(URLRequest(url: url))
                 case let .failure(error):
                     print("+++ error createPayment = \(error)")

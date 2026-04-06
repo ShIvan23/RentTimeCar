@@ -27,7 +27,7 @@ protocol IRentApiFacade {
     func getClientRequests(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ClientRequestsResponse>, Error>) -> Void)
     func getClientFines(clientIntegrationId: String, completion: @escaping (Result<ApiResult<FinesResponse>, Error>) -> Void)
     func getAutoCalendar(with input: GetAutoCalendarInput, completion: @escaping (Result<[AutoCalendar], Error>) -> Void)
-    func createYukassaPayment(amount: Int, description: String, completion: @escaping (Result<URL, Error>) -> Void)
+    func createYukassaPayment(amount: Int, description: String, phone: String, completion: @escaping (Result<YookassaPaymentResponse, Error>) -> Void)
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -111,8 +111,9 @@ final class RentApiFacade: IRentApiFacade {
         networkManager.fetch(request: request, completion: completion)
     }
 
-    func createYukassaPayment(amount: Int, description: String, completion: @escaping (Result<URL, Error>) -> Void) {
-        guard let request = YukassaService.shared.makeCreatePaymentRequest(amount: amount, description: description) else { return }
+    func createYukassaPayment(amount: Int, description: String, phone: String, completion: @escaping (Result<YookassaPaymentResponse, Error>) -> Void) {
+        let input = YookassaPaymentInput(amount: amount, description: description, phone: phone)
+        guard let request = YukassaService.shared.makeCreatePaymentRequest(input: input) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
 }

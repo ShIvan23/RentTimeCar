@@ -29,14 +29,12 @@ final class YukassaService {
     /// Формирует URLRequest для создания платежа через собственный бэкенд.
     /// Бэкенд хранит ключи ЮKassa и сам обращается к api.yookassa.ru.
     /// Выполнение запроса делегируется в RentApiFacade → NetworkManager.
-    func makeCreatePaymentRequest(amount: Int, description: String) -> URLRequest? {
-        guard let url = URL(string: baseURL + "/api/payments/yukassa/create") else {
-            assertionFailure("Invalid URL: \(baseURL)/api/payments/yukassa/create")
+    func makeCreatePaymentRequest(input: YookassaPaymentInput) -> URLRequest? {
+        guard let url = URL(string: baseURL + "/api/payments/yookassa/create") else {
+            assertionFailure("Invalid URL: \(baseURL)/api/payments/yookassa/create")
             return nil
         }
-        guard let body = try? JSONEncoder().encode(YukassaCreatePaymentBody(amount: amount, description: description)) else {
-            return nil
-        }
+        guard let body = try? JSONEncoder().encode(input) else { return nil }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -47,14 +45,15 @@ final class YukassaService {
 
 // MARK: - Request body
 
-private struct YukassaCreatePaymentBody: Encodable {
+struct YookassaPaymentInput: Encodable {
     let amount: Int
     let description: String
+    let phone: String
 }
 
 // MARK: - Response model
 
-struct YukassaCreatePaymentResponse: Decodable {
+struct YookassaPaymentResponse: Decodable {
     let confirmationUrl: String
 }
 
