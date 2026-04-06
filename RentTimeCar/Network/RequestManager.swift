@@ -110,6 +110,57 @@ final class RequestManager {
         return request
     }
 
+    func getAutosWithTarifs() -> URLRequest? {
+        guard let baseURL else {
+            assertionFailure("Invalid baseURL")
+            return nil
+        }
+        var request = makeBaseUrl(url: baseURL)
+        let apiBody = ApiBody(
+            apiKey: apiKey,
+            apiVersion: "500",
+            method: "GetAutosWithTarifs",
+            parameters: EmptyModel()
+        )
+        let data = try? encoder.encode(apiBody)
+        request.httpBody = data
+        return request
+    }
+    
+    func getDictValues() -> URLRequest? {
+        guard let baseURL else {
+            assertionFailure("Invalid baseURL")
+            return nil
+        }
+        var request = makeBaseUrl(url: baseURL)
+        let apiBody = ApiBody(
+            apiKey: apiKey,
+            apiVersion: "500",
+            method: "GetDictValues",
+            parameters: SimpleInputDto()
+        )
+        let data = try? encoder.encode(apiBody)
+        request.httpBody = data
+        return request
+    }
+
+    func addRentRequest(with input: AddRentRequestInput) -> URLRequest? {
+        guard let baseURL else {
+            assertionFailure("Invalid baseURL")
+            return nil
+        }
+        var request = makeBaseUrl(url: baseURL)
+        let apiBody = ApiBody(
+            apiKey: apiKey,
+            apiVersion: "0",
+            method: "AddRentRequest",
+            parameters: input
+        )
+        let data = try? encoder.encode(apiBody)
+        request.httpBody = data
+        return request
+    }
+
     func getSmsRequest(for number: String, code: String) -> URLRequest? {
         guard let baseSmsURL = URL(string: baseSmsPath + number + smsQueryMessage + code + smsQueryTest) else {
             assertionFailure("Invalid baseSmsURL")

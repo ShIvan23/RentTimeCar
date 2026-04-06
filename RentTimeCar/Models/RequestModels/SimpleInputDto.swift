@@ -6,3 +6,9 @@
 //
 
 import Foundation
+
+struct SimpleInputDto: Encodable {
+    let LongParamValue = 0
+    let StringParamValue: String = "filials"
+    let BoolParamValue = false
+}
