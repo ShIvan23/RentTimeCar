@@ -85,7 +85,6 @@ final class YukassaWebViewController: UIViewController {
                     }
                     self.webView.load(URLRequest(url: url))
                 case let .failure(error):
-                    print("+++ error createPayment = \(error)")
                     self.activityIndicator.stopAnimating()
                     self.handlePaymentFail()
                 }
@@ -107,7 +106,7 @@ final class YukassaWebViewController: UIViewController {
 
     @objc private func handleClose() {
         coordinator.openPaymentCancelConfirmationBottomSheet { [weak self] in
-            self?.handlePaymentFail()
+            self?.coordinator.popViewController()
         }
     }
 }
