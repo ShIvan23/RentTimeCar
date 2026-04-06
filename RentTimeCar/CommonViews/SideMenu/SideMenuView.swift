@@ -239,7 +239,14 @@ final class SideMenuView: UIView {
 
 extension SideMenuView: NeedSignUpViewDelegate {
     func signUpButtonTapped() {
-        coordinator.openAuthorization()
+        switch authService.authState {
+        case .needAuthorize:
+            coordinator.openAuthorization()
+        case .needRegister:
+            coordinator.openRegistrationViewController()
+        case .onCheck, .fullAccess, .banned:
+            break
+        }
     }
 }
 
