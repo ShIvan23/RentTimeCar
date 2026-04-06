@@ -30,6 +30,7 @@ final class SideMenuView: UIView {
     private let contentView = UIView()
     private let rightActionView = UIView()
     private let needSignUpView = NeedSignUpView()
+    private let headerView = SideMenuHeaderView()
     private let logoutButton = MainButton(title: "Выйти")
     private lazy var bannedView = BannedView(coordinator: coordinator)
     private lazy var sideMenuContentView = SideMenuContentView(
@@ -59,7 +60,7 @@ final class SideMenuView: UIView {
     private func setupView() {
         contentView.backgroundColor = .mainBackground
         addSubviews([contentView, rightActionView])
-        contentView.addSubviews([needSignUpView, bannedView, sideMenuContentView, logoutButton])
+        contentView.addSubviews([needSignUpView, bannedView, sideMenuContentView, headerView, logoutButton])
         setupLogoutButton()
         subscribeToAuthService()
         configureVisibleView(for: AuthService.shared.authState)
@@ -99,6 +100,17 @@ final class SideMenuView: UIView {
             bannedView.isHidden = false
         }
         logoutButton.isHidden = state == .needAuthorize
+        headerView.isHidden = state == .needAuthorize
+        if state != .needAuthorize {
+            let name = [authService.client?.name.firstName, authService.client?.name.lastName]
+                .compactMap { $0 }
+                .filter { !$0.isEmpty }
+                .joined(separator: " ")
+            headerView.configure(
+                phone: authService.phoneNumber,
+                name: name.isEmpty ? nil : name
+            )
+        }
         sideMenuContentView.updateTableView(isUserLogin: state != .needAuthorize)
         setNeedsLayout()
     }
@@ -133,6 +145,11 @@ final class SideMenuView: UIView {
                 .marginTop(safeAreaInsets.top)
                 .bottom(to: needSignUpView.edge.top)
         case .needRegister:
+            headerView.pin
+                .top(safeAreaInsets.top)
+                .horizontally()
+                .sizeToFit(.width)
+
             logoutButton.pin
                 .horizontally(16)
                 .bottom()
@@ -146,11 +163,15 @@ final class SideMenuView: UIView {
                 .sizeToFit(.width)
 
             sideMenuContentView.pin
-                .top()
+                .below(of: headerView)
                 .horizontally()
-                .marginTop(safeAreaInsets.top)
                 .bottom(to: needSignUpView.edge.top)
         case .banned:
+            headerView.pin
+                .top(safeAreaInsets.top)
+                .horizontally()
+                .sizeToFit(.width)
+
             logoutButton.pin
                 .horizontally(16)
                 .bottom()
@@ -163,11 +184,15 @@ final class SideMenuView: UIView {
                 .sizeToFit(.width)
 
             sideMenuContentView.pin
-                .top()
+                .below(of: headerView)
                 .horizontally()
-                .marginTop(safeAreaInsets.top)
                 .bottom(to: bannedView.edge.top)
         case .onCheck, .fullAccess:
+            headerView.pin
+                .top(safeAreaInsets.top)
+                .horizontally()
+                .sizeToFit(.width)
+
             logoutButton.pin
                 .horizontally(16)
                 .bottom()
@@ -175,7 +200,7 @@ final class SideMenuView: UIView {
                 .height(50)
 
             sideMenuContentView.pin
-                .top(pin.safeArea)
+                .below(of: headerView)
                 .horizontally()
                 .bottom(to: logoutButton.edge.top)
         }

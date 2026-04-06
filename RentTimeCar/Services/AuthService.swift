@@ -27,14 +27,14 @@ final class AuthService {
     // MARK: - Internal Properties
 
     private(set) var authState: AuthState
-    private(set) var integrationId: String?
+    private(set) var client: Client?
+    private(set) var phoneNumber: String?
 
     // MARK: - Private Properties
 
     private let userDefaults = UserDefaults.standard
     private var observers = NSHashTable<AnyObject>.weakObjects()
     private let rentApiFacade: IRentApiFacade = RentApiFacade()
-    private(set) var phoneNumber: String?
 
     // MARK: - Init
 
@@ -46,7 +46,6 @@ final class AuthService {
 //        userDefaults.set(nil, forKey: .integrationIdKey)
 
         phoneNumber = userDefaults.string(forKey: .phoneNumberKey)
-        integrationId = userDefaults.string(forKey: .integrationIdKey)
         if let authState = AuthState(rawValue: userDefaults.string(forKey: .authStateKey) ?? "") {
             print("+++ authState id UD = \(authState)")
             self.authState = authState
@@ -81,6 +80,16 @@ final class AuthService {
         userDefaults.set(phoneNumber, forKey: .phoneNumberKey)
     }
 
+    func logout() {
+        authState = .needAuthorize
+        client = nil
+        phoneNumber = nil
+        userDefaults.set(AuthState.needAuthorize.rawValue, forKey: .authStateKey)
+        userDefaults.removeObject(forKey: .integrationIdKey)
+        userDefaults.removeObject(forKey: .phoneNumberKey)
+        invokeAllSubscribers()
+    }
+
     // MARK: - Private Methods
 
     private func checkRegistration(needInvoke: Bool = true) {
@@ -90,9 +99,8 @@ final class AuthService {
             switch result {
             case let .success(clients):
                 print("+++ success clients = \(clients)")
-                let integrationId = clients.result?.clients.first?.integrationId
-                self.integrationId = integrationId
-                userDefaults.set(integrationId, forKey: .integrationIdKey)
+                self.client = clients.result?.clients.first
+                userDefaults.set(self.client?.integrationId, forKey: .integrationIdKey)
                 handleClientRegistration(with: clients.result, needInvoke: needInvoke)
             case let .failure(error):
                 debugPrint("+++ error = \(error)")

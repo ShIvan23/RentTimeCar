@@ -109,7 +109,7 @@ final class ClientItemsViewController: UIViewController {
     }
 
     private func fetchItems() {
-        guard let integrationId = AuthService.shared.integrationId else {
+        guard let integrationId = AuthService.shared.client?.integrationId else {
             emptyLabel.isHidden = false
             return
         }

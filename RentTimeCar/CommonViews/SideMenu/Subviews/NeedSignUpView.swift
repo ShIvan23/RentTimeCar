@@ -79,7 +79,7 @@ final class NeedSignUpView: UIView {
         label.pin
             .top()
             .horizontally()
-            .marginHorizontal(12)
+            .marginHorizontal(16)
             .sizeToFit(.width)
         
         button.pin
