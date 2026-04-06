@@ -86,7 +86,7 @@ final class NeedSignUpView: UIView {
             .below(of: label)
             .marginTop(16)
             .horizontally()
-            .marginHorizontal(12)
+            .marginHorizontal(16)
             .height(50)
     }
 }
