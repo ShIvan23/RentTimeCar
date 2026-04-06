@@ -45,6 +45,7 @@ final class CalendarViewController: UIViewController {
     private func setupCalendar() {
         calendar.delegate = self
         calendar.allowsMultipleSelection = true
+        calendar.placeholderType = .none
         calendar.firstWeekday = 2
         calendar.locale = Locale(identifier: "ru_RU")
         calendar.appearance.headerDateFormat = "LLLL yyyy"
@@ -106,6 +107,10 @@ final class CalendarViewController: UIViewController {
 // MARK: - FSCalendarDelegate
 
 extension CalendarViewController: FSCalendarDelegate {
+    func calendar(_ calendar: FSCalendar, shouldSelect date: Date, at monthPosition: FSCalendarMonthPosition) -> Bool {
+        date >= Calendar.current.startOfDay(for: Date())
+    }
+
     func calendar(_ calendar: FSCalendar, didSelect date: Date, at monthPosition: FSCalendarMonthPosition) {
         if firstDate == nil {
             firstDate = date
