@@ -113,13 +113,6 @@ final class RentApiFacade: IRentApiFacade {
 
     func createYukassaPayment(amount: Int, description: String, completion: @escaping (Result<URL, Error>) -> Void) {
         guard let request = YukassaService.shared.makeCreatePaymentRequest(amount: amount, description: description) else { return }
-        networkManager.fetch(request: request) { (result: Result<YukassaCreatePaymentResponse, Error>) in
-            completion(result.flatMap { response in
-                guard let url = URL(string: response.confirmationUrl) else {
-                    return .failure(YukassaError.missingConfirmationURL)
-                }
-                return .success(url)
-            })
-        }
+        networkManager.fetch(request: request, completion: completion)
     }
 }

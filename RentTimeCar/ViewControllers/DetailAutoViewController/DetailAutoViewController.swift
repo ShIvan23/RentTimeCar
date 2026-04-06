@@ -102,7 +102,8 @@ final class DetailAutoViewController: UIViewController {
         navigationController?.isNavigationBarHidden = false
         configureStackView()
         selectedDateView.addTapGestureClosure { [weak self] in
-            self?.coordinator.openCalendarViewController()
+            guard let self else { return }
+            coordinator.openCalendarViewController(autoId: String(autoModel.itemID))
         }
         setupContinueButton()
         subscribeToNotifications()

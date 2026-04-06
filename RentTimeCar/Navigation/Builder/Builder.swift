@@ -42,9 +42,8 @@ final class Builder {
         return filterViewController
     }
     
-    static func makeCalendarViewController() -> UIViewController {
-        let calendarViewController = CalendarViewController()
-        return calendarViewController
+    static func makeCalendarViewController(autoId: String? = nil) -> UIViewController {
+        CalendarViewController(autoId: autoId, coordinator: Coordinator.shared)
     }
     
     static func makeDetailViewController(with model: Auto) -> UIViewController {
@@ -212,8 +211,8 @@ final class Builder {
         RobokassaWebViewController(coordinator: Coordinator.shared, paymentURL: paymentURL, invId: invId)
     }
 
-    static func makeYukassaWebViewController(paymentURL: URL) -> YukassaWebViewController {
-        YukassaWebViewController(coordinator: Coordinator.shared, paymentURL: paymentURL)
+    static func makeYukassaWebViewController(amount: Int, description: String) -> YukassaWebViewController {
+        YukassaWebViewController(coordinator: Coordinator.shared, amount: amount, description: description)
     }
 
     static func makeSuccessPhotoViewController(image: UIImage, photoStep: RegistrationPhotoStep) -> UIViewController {

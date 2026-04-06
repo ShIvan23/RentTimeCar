@@ -10,11 +10,10 @@ final class YukassaWebViewController: UIViewController {
 
     // MARK: - Properties
 
-    var onSuccess: (() -> Void)?
-    var onFail: (() -> Void)?
-
     private let coordinator: ICoordinator
-    private let paymentURL: URL
+    private let amount: Int
+    private let paymentDescription: String
+    private let rentApiFacade: IRentApiFacade = RentApiFacade()
 
     private lazy var webView: WKWebView = {
         let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
@@ -30,9 +29,10 @@ final class YukassaWebViewController: UIViewController {
 
     // MARK: - Init
 
-    init(coordinator: ICoordinator, paymentURL: URL) {
+    init(coordinator: ICoordinator, amount: Int, description: String) {
         self.coordinator = coordinator
-        self.paymentURL = paymentURL
+        self.amount = amount
+        self.paymentDescription = description
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -47,7 +47,7 @@ final class YukassaWebViewController: UIViewController {
         title = "Оплата"
         view.backgroundColor = .white
         setupViews()
-        loadPaymentPage()
+        createPayment()
     }
 
     override func viewDidLayoutSubviews() {
@@ -70,13 +70,38 @@ final class YukassaWebViewController: UIViewController {
         )
     }
 
-    private func loadPaymentPage() {
-        webView.load(URLRequest(url: paymentURL))
+    private func createPayment() {
+        activityIndicator.startAnimating()
+        rentApiFacade.createYukassaPayment(amount: amount, description: paymentDescription) { [weak self] result in
+            guard let self else { return }
+            DispatchQueue.main.async {
+                switch result {
+                case let .success(url):
+                    self.webView.load(URLRequest(url: url))
+                case let .failure(error):
+                    print("+++ error createPayment = \(error)")
+                    self.activityIndicator.stopAnimating()
+                    self.handlePaymentFail()
+                }
+            }
+        }
+    }
+
+    private func handlePaymentSuccess() {
+        coordinator.openPaymentSuccessBottomSheet { [weak self] in
+            self?.coordinator.popToRootViewController()
+        }
+    }
+
+    private func handlePaymentFail() {
+        coordinator.openPaymentFailBottomSheet { [weak self] in
+            self?.coordinator.popViewController()
+        }
     }
 
     @objc private func handleClose() {
         coordinator.openPaymentCancelConfirmationBottomSheet { [weak self] in
-            self?.onFail?()
+            self?.handlePaymentFail()
         }
     }
 }
@@ -110,14 +135,14 @@ extension YukassaWebViewController: WKNavigationDelegate {
         // ЮKassa перенаправляет на return_url после успешной оплаты.
         if urlString.hasPrefix(YukassaService.returnURL) {
             decisionHandler(.cancel)
-            onSuccess?()
+            handlePaymentSuccess()
             return
         }
 
         // Перенаправление на fail URL (отмена / ошибка).
         if urlString.hasPrefix(YukassaService.failURL) {
             decisionHandler(.cancel)
-            onFail?()
+            handlePaymentFail()
             return
         }
 

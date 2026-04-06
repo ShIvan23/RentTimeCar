@@ -70,28 +70,10 @@ final class RentSummaryViewController: UIViewController {
 
     // MARK: - Private methods (Payment)
     private func proceedToPayment() {
-        let prepayAmount = 5000  // сумма предоплаты в рублях
-
         coordinator.openYukassaPayment(
-            amount: prepayAmount,
+            amount: YukassaService.prepayAmount,
             description: "Предоплата аренды автомобиля"
-        ) { [weak self] in
-            self?.handlePaymentSuccess()
-        } onFail: { [weak self] in
-            self?.handlePaymentFail()
-        }
-    }
-
-    private func handlePaymentSuccess() {
-        coordinator.openPaymentSuccessBottomSheet { [weak self] in
-            self?.coordinator.popToRootViewController()
-        }
-    }
-
-    private func handlePaymentFail() {
-        coordinator.openPaymentFailBottomSheet { [weak self] in
-            self?.coordinator.popViewController()
-        }
+        )
     }
 
     private func tapInfoButton() {

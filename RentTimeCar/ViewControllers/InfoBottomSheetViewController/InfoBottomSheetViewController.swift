@@ -51,6 +51,15 @@ extension InfoBottomSheetModel {
         )
     }
 
+    static func makeAutoCalendarLoadFailModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Не удалось загрузить расписание автомобиля.\n\nПроверьте подключение к интернету и попробуйте ещё раз.",
+            image: .redCross,
+            buttonTitle: "Повторить",
+            onConfirm: onConfirm
+        )
+    }
+
     static func makeOfficeAddressLoadFailModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
         InfoBottomSheetModel(
             text: "Не удалось загрузить адрес офиса.\n\nПроверьте подключение к интернету и попробуйте ещё раз.",

@@ -16,7 +16,7 @@ protocol ICoordinator {
     func openAuthorization()
     func openPDFViewController(pdfFile: PDFViewController.PDFFile)
     func openFilterViewController()
-    func openCalendarViewController()
+    func openCalendarViewController(autoId: String?)
     func openDetailAutoCar(model: Auto)
     func openFullImageViewController(with image: String)
     func openYandexMapController()
@@ -33,7 +33,7 @@ protocol ICoordinator {
     func openAnotherApplication(url: URL)
     func openRentSummaryViewController()
     func openRobokassaPayment(amount: Int, invId: Int, description: String, onSuccess: @escaping (Int) -> Void, onFail: @escaping () -> Void)
-    func openYukassaPayment(amount: Int, description: String, onSuccess: @escaping () -> Void, onFail: @escaping () -> Void)
+    func openYukassaPayment(amount: Int, description: String)
     func openPaymentSuccessBottomSheet(onDismiss: @escaping () -> Void)
     func openPaymentFailBottomSheet(onDismiss: @escaping () -> Void)
     func openPaymentCancelConfirmationBottomSheet(onConfirm: @escaping () -> Void)
@@ -46,6 +46,12 @@ protocol ICoordinator {
     func popToViewController(_ controller: ICoordinatorController)
     func openClientRequestsViewController()
     func openClientFinesViewController()
+}
+
+extension ICoordinator {
+    func openCalendarViewController() {
+        openCalendarViewController(autoId: nil)
+    }
 }
 
 final class Coordinator: NSObject, ICoordinator {
@@ -71,8 +77,8 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.isNavigationBarHidden = false
     }
     
-    func openCalendarViewController() {
-        let calendarViewController = Builder.makeCalendarViewController()
+    func openCalendarViewController(autoId: String? = nil) {
+        let calendarViewController = Builder.makeCalendarViewController(autoId: autoId)
         navigationController?.pushViewController(calendarViewController, animated: true)
         navigationController?.isNavigationBarHidden = false
     }
@@ -166,21 +172,9 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.pushViewController(paymentVC, animated: true)
     }
 
-    func openYukassaPayment(amount: Int, description: String, onSuccess: @escaping () -> Void, onFail: @escaping () -> Void) {
-        RentApiFacade().createYukassaPayment(amount: amount, description: description) { [weak self] result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let url):
-                    let paymentVC = Builder.makeYukassaWebViewController(paymentURL: url)
-                    paymentVC.onSuccess = onSuccess
-                    paymentVC.onFail = onFail
-                    paymentVC.title = "Оплата"
-                    self?.navigationController?.pushViewController(paymentVC, animated: true)
-                case .failure:
-                    onFail()
-                }
-            }
-        }
+    func openYukassaPayment(amount: Int, description: String) {
+        let paymentVC = Builder.makeYukassaWebViewController(amount: amount, description: description)
+        navigationController?.pushViewController(paymentVC, animated: true)
     }
 
     func openPaymentSuccessBottomSheet(onDismiss: @escaping () -> Void) {
