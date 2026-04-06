@@ -23,6 +23,7 @@ final class OrderConfirmService {
     private(set) var returnAddress = ""
     private(set) var selectedServices = [AdditionalService]()
     private(set) var auto: Auto?
+    private(set) var tarifId = ""
 
     var selectedOptions: [String] { selectedServices.map(\.serviceTitle) }
 
@@ -48,5 +49,9 @@ final class OrderConfirmService {
 
     func setSelectedServices(_ services: [AdditionalService]) {
         self.selectedServices = services
+    }
+
+    func setTarifId(_ tarifId: String) {
+        self.tarifId = tarifId
     }
 }

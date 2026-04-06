@@ -125,6 +125,9 @@ final class DetailAutoViewController: UIViewController {
         let orderConfirmService = OrderConfirmService.shared
         orderConfirmService.setSelectedDates(filterService.selectedDates)
         orderConfirmService.setAuto(autoModel)
+        if let tarifId = autoModel.tarifs.first?.id {
+            orderConfirmService.setTarifId(String(tarifId))
+        }
         guard let firstImageUrl = autoModel.files.first?.url else { return }
         orderConfirmService.setImageUrl(firstImageUrl)
     }

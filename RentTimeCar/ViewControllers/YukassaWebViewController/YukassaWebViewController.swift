@@ -93,6 +93,61 @@ final class YukassaWebViewController: UIViewController {
     }
 
     private func handlePaymentSuccess() {
+        sendAddRequest(retries: 3)
+    }
+
+    private func sendAddRequest(retries: Int) {
+        guard let input = makeAddRequestInput() else {
+            handlePaymentFail()
+            return
+        }
+        rentApiFacade.addRequest(with: input) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .success:
+                DispatchQueue.main.async { self.openSuccessBottomSheet() }
+            case .failure:
+                if retries > 0 {
+                    self.sendAddRequest(retries: retries - 1)
+                } else {
+                    DispatchQueue.main.async { self.handlePaymentFail() }
+                }
+            }
+        }
+    }
+
+    private func makeAddRequestInput() -> AddRequestInput? {
+        let order = OrderConfirmService.shared
+        let auth = AuthService.shared
+        guard
+            let integrationId = auth.client?.integrationId,
+            let phone = auth.phoneNumber,
+            let auto = order.auto,
+            let rentFrom = FilterService.shared.selectedDates.first?.convertDateToString(),
+            let rentTo = FilterService.shared.selectedDates.last?.convertDateToString()
+        else { return nil }
+
+        let services = order.selectedServices.map {
+            ServicePriceItem(code: $0.serviceTitle, basePrice: $0.effectivePrice, count: 1)
+        }
+
+        return AddRequestInput(
+            clientIntegrationId: integrationId,
+            clientPhone: phone,
+            rentFromTime: rentFrom,
+            rentToTime: rentTo,
+            tarifId: order.tarifId,
+            autoId: String(auto.itemID),
+            deliveryAddress: order.deliveryAddress.isEmpty ? nil : order.deliveryAddress,
+            returnAddress: order.returnAddress.isEmpty ? nil : order.returnAddress,
+            requestSource: nil,
+            servicesList: services.isEmpty ? nil : services,
+            clientComment: nil,
+            promoCode: nil
+        )
+    }
+
+    private func openSuccessBottomSheet() {
         coordinator.openPaymentSuccessBottomSheet { [weak self] in
             self?.coordinator.popToRootViewController()
         }
