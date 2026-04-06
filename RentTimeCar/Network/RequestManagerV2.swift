@@ -102,6 +102,12 @@ final class RequestManagerV2 {
         return (request, body)
     }
 
+    // MARK: - POST /api/autos/calendar
+
+    func getAutoCalendar(with input: GetAutoCalendarInput) -> URLRequest? {
+        makeRequest(path: "/api/autos/calendar", method: .post, body: input)
+    }
+
     // MARK: - POST /api/requests/add
 
     func addRequest(with input: AddRequestInput) -> URLRequest? {
