@@ -11,6 +11,8 @@
 		718972612E4CF33D00B359C3 /* Nuke in Frameworks */ = {isa = PBXBuildFile; productRef = 718972602E4CF33D00B359C3 /* Nuke */; };
 		718972632E4CF33D00B359C3 /* NukeExtensions in Frameworks */ = {isa = PBXBuildFile; productRef = 718972622E4CF33D00B359C3 /* NukeExtensions */; };
 		718972652E4CF33D00B359C3 /* NukeUI in Frameworks */ = {isa = PBXBuildFile; productRef = 718972642E4CF33D00B359C3 /* NukeUI */; };
+		71927B982EC8F94B0052DB29 /* YandexMapsMobileFull in Frameworks */ = {isa = PBXBuildFile; productRef = 71927B972EC8F94B0052DB29 /* YandexMapsMobileFull */; };
+		7199D2E22E705E3500405617 /* FSCalendar in Frameworks */ = {isa = PBXBuildFile; productRef = 7199D2E12E705E3500405617 /* FSCalendar */; };
 		71C52A5B2E394CF900544682 /* PinLayout in Frameworks */ = {isa = PBXBuildFile; productRef = 71C52A5A2E394CF900544682 /* PinLayout */; };
 /* End PBXBuildFile section */
 
@@ -45,6 +47,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				71C52A5B2E394CF900544682 /* PinLayout in Frameworks */,
+				7199D2E22E705E3500405617 /* FSCalendar in Frameworks */,
+				71927B982EC8F94B0052DB29 /* YandexMapsMobileFull in Frameworks */,
 				718972612E4CF33D00B359C3 /* Nuke in Frameworks */,
 				718972632E4CF33D00B359C3 /* NukeExtensions in Frameworks */,
 				718972652E4CF33D00B359C3 /* NukeUI in Frameworks */,
@@ -96,6 +100,8 @@
 				718972622E4CF33D00B359C3 /* NukeExtensions */,
 				718972642E4CF33D00B359C3 /* NukeUI */,
 				7138F0E72E54DFC80004F013 /* SnapKit */,
+				7199D2E12E705E3500405617 /* FSCalendar */,
+				71927B972EC8F94B0052DB29 /* YandexMapsMobileFull */,
 			);
 			productName = RentTimeCar;
 			productReference = 71B2CBBC2E3811A700BB3E58 /* RentTimeCar.app */;
@@ -129,6 +135,8 @@
 				71C52A592E394CF900544682 /* XCRemoteSwiftPackageReference "PinLayout" */,
 				7189725F2E4CF33D00B359C3 /* XCRemoteSwiftPackageReference "Nuke" */,
 				7138F0E62E54DFC80004F013 /* XCRemoteSwiftPackageReference "SnapKit" */,
+				7199D2E02E705E3500405617 /* XCRemoteSwiftPackageReference "FSCalendar" */,
+				71927B962EC8F94B0052DB29 /* XCRemoteSwiftPackageReference "mapkit-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 71B2CBBD2E3811A700BB3E58 /* Products */;
@@ -168,9 +176,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YF7B94KF69;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RentTimeCar/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -181,6 +191,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.RentTimeCar.rus.RentTimeCar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -196,9 +207,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = YF7B94KF69;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = RentTimeCar/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
+				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -209,6 +222,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_BUNDLE_IDENTIFIER = com.RentTimeCar.rus.RentTimeCar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -376,6 +390,22 @@
 				minimumVersion = 12.8.0;
 			};
 		};
+		71927B962EC8F94B0052DB29 /* XCRemoteSwiftPackageReference "mapkit-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/yandex/mapkit-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.25.0;
+			};
+		};
+		7199D2E02E705E3500405617 /* XCRemoteSwiftPackageReference "FSCalendar" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/WenchaoD/FSCalendar.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.8.4;
+			};
+		};
 		71C52A592E394CF900544682 /* XCRemoteSwiftPackageReference "PinLayout" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/layoutBox/PinLayout.git";
@@ -406,6 +436,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 7189725F2E4CF33D00B359C3 /* XCRemoteSwiftPackageReference "Nuke" */;
 			productName = NukeUI;
+		};
+		71927B972EC8F94B0052DB29 /* YandexMapsMobileFull */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 71927B962EC8F94B0052DB29 /* XCRemoteSwiftPackageReference "mapkit-ios" */;
+			productName = YandexMapsMobileFull;
+		};
+		7199D2E12E705E3500405617 /* FSCalendar */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7199D2E02E705E3500405617 /* XCRemoteSwiftPackageReference "FSCalendar" */;
+			productName = FSCalendar;
 		};
 		71C52A5A2E394CF900544682 /* PinLayout */ = {
 			isa = XCSwiftPackageProductDependency;
