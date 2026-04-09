@@ -39,12 +39,6 @@ final class AuthService {
     // MARK: - Init
 
     private init() {
-        // debug clear
-//        userDefaults.set(nil, forKey: .authStateKey)
-//        userDefaults.set(nil, forKey: .phoneNumberKey)
-//        userDefaults.set(nil, forKey: .isRegisteredKey)
-//        userDefaults.set(nil, forKey: .integrationIdKey)
-
         phoneNumber = userDefaults.string(forKey: .phoneNumberKey)
         if let authState = AuthState(rawValue: userDefaults.string(forKey: .authStateKey) ?? "") {
             print("+++ authState id UD = \(authState)")
