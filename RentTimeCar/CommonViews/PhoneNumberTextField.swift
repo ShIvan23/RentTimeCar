@@ -19,7 +19,8 @@ final class PhoneNumberTextField: UITextField {
         setupTextField()
         delegate = self
     }
-    
+
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -41,14 +42,14 @@ final class PhoneNumberTextField: UITextField {
     func validatePhone() -> Bool {
         guard let text else { return false }
         let cleanedPhone = text.replacingOccurrences(of: "\\D", with: "", options: .regularExpression)
-            
-            // Проверяем длину номера и префикс
-            guard cleanedPhone.count == 10 else { return false }
-            
-            // Проверяем начало номера (7 или 8) и следующую цифру (обычно 9 для мобильных)
-            guard let firstDigit = cleanedPhone.first else { return false }
-            
-            return (firstDigit == "9" || firstDigit == "8")
+
+        // Проверяем длину номера и префикс
+        guard cleanedPhone.count == 10 else { return false }
+
+        // Проверяем начало номера (7 или 8) и следующую цифру (обычно 9 для мобильных)
+        guard let firstDigit = cleanedPhone.first else { return false }
+
+        return (firstDigit == "9" || firstDigit == "8")
     }
     
     // MARK: - Private Methods
