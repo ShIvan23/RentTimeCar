@@ -37,6 +37,14 @@ struct Tarif: Decodable {
     }
 }
 
+struct PrimaryInfo: Decodable {
+    let passengerCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case passengerCount = "PassengerCount"
+    }
+}
+
 struct Auto: Decodable {
     let title: String
     let files: [File]
@@ -50,6 +58,9 @@ struct Auto: Decodable {
     let additionalServices: [AdditionalService]
     let itemID: Int
     let tarifs: [Tarif]
+    let modInfoV3: String
+    let modInfoPrivod: String
+    let primaryInfo: PrimaryInfo
 
     enum CodingKeys: String, CodingKey {
         case files = "Files"
@@ -64,6 +75,9 @@ struct Auto: Decodable {
         case additionalServices = "AdditionalServices"
         case itemId = "ItemID"
         case tarifs = "Tarifs"
+        case modInfoV3 = "ModInfoV3"
+        case modInfoPrivod = "ModInfoPrivod"
+        case primaryInfo = "PrimaryInfo"
     }
 
     init(
@@ -78,7 +92,10 @@ struct Auto: Decodable {
         fuelType: String,
         additionalServices: [AdditionalService],
         itemID: Int,
-        tarifs: [Tarif] = []
+        tarifs: [Tarif],
+        modInfoV3: String,
+        modInfoPrivod: String,
+        primaryInfo: PrimaryInfo
     ) {
         self.title = title
         self.files = files
@@ -92,6 +109,9 @@ struct Auto: Decodable {
         self.additionalServices = additionalServices
         self.itemID = itemID
         self.tarifs = tarifs
+        self.modInfoV3 = modInfoV3
+        self.modInfoPrivod = modInfoPrivod
+        self.primaryInfo = primaryInfo
     }
 
     init(from decoder: any Decoder) throws {
@@ -110,6 +130,9 @@ struct Auto: Decodable {
         self.additionalServices = allServices.filter { !$0.serviceTitle.isExcludedService }
         self.itemID = try container.decode(Int.self, forKey: .itemId)
         self.tarifs = (try? container.decode([Tarif].self, forKey: .tarifs)) ?? []
+        self.modInfoV3 = try container.decode(String.self, forKey: .modInfoV3)
+        self.modInfoPrivod = try container.decode(String.self, forKey: .modInfoPrivod)
+        self.primaryInfo = try container.decode(PrimaryInfo.self, forKey: .primaryInfo)
     }
 }
 

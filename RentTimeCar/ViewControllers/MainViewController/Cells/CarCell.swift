@@ -72,7 +72,7 @@ final class CarCell: UICollectionViewCell {
         titleLabel.text = model.title
         priceLabel.text = "\(model.defaultPriceWithDiscountSt) ₽/сутки"
 
-        guard let urlString = model.files.first(where: { $0.url != nil })?.url,
+        guard let urlString = model.files.first(where: { $0.url != nil && $0.folder == .folderImageValue })?.url,
               let url = URL(string: urlString)
         else {
             return

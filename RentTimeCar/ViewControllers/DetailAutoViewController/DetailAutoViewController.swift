@@ -38,9 +38,11 @@ final class DetailAutoViewController: UIViewController {
     private let stackView = ManualLayoutBasedStackView()
     
     private lazy var detailStackViews = [
-        DetailStackView(image: .filter, text: "\(autoModel.motorPower) л.с."),
-        DetailStackView(image: .calendar, text: "\(autoModel.mileageLimit) км/ч"),
-        DetailStackView(image: .car2, text: autoModel.fuelType)
+        DetailStackView(image: .carEngine, text: autoModel.modInfoV3),
+        DetailStackView(image: .solarEnergy, text: "\(autoModel.motorPower) л.с."),
+        DetailStackView(image: .fuel, text: autoModel.fuelType),
+        DetailStackView(image: .carRepair, text: "\(autoModel.modInfoPrivod)"),
+        DetailStackView(image: .carSeat, text: "\(autoModel.primaryInfo.passengerCount) мест"),
     ]
     
     private lazy var discountView = DiscountView(priceByDay: autoModel.defaultPriceWithDiscountSt)
@@ -68,7 +70,11 @@ final class DetailAutoViewController: UIViewController {
             mileageLimit: autoModel.mileageLimit,
             fuelType: autoModel.fuelType,
             additionalServices: autoModel.additionalServices,
-            itemID: autoModel.itemID
+            itemID: autoModel.itemID,
+            tarifs: autoModel.tarifs,
+            modInfoV3: autoModel.modInfoV3,
+            modInfoPrivod: autoModel.modInfoPrivod,
+            primaryInfo: autoModel.primaryInfo
         )
         self.autoModel = currentModel
         self.coordinator = coordinator
