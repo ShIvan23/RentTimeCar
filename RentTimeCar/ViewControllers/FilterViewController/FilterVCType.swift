@@ -87,15 +87,16 @@ extension FilterVCType {
         result.append(.title("Мощность л.с."))
         let minMotorPower = FilterService.shared.motorPower.min
         let maxMotorPower = FilterService.shared.motorPower.max
+        let minMotorPowerNow = FilterService.shared.selectedMotorPower.min
+        let maxMotorPowerNow = FilterService.shared.selectedMotorPower.max
         result
             .append(
                 .motorPower(
                     FilterValueModel(
                         minValue: minMotorPower,
                         maxValue: maxMotorPower,
-                        // тут надо заменить на актуальные значения
-                        minValueNow: minMotorPower,
-                        maxValueNow: maxMotorPower
+                        minValueNow: minMotorPowerNow,
+                        maxValueNow: maxMotorPowerNow
                     )
                 )
             )

@@ -135,6 +135,8 @@ final class FilterService {
         selectedDates = []
         selectedPrice.min = price.min
         selectedPrice.max = price.max
+        selectedMotorPower.min = motorPower.min
+        selectedMotorPower.max = motorPower.max
         filteredAutos = []
         selectedBrands = []
         var newAutoClasses = [String: FilterInfoAuto]()
@@ -238,6 +240,8 @@ final class FilterService {
             }
             self.motorPower.min = allMotorPowers.min() ?? .zero
             self.motorPower.max = allMotorPowers.max() ?? .zero
+            self.selectedMotorPower.min = self.motorPower.min
+            self.selectedMotorPower.max = self.motorPower.max
         }
     }
 

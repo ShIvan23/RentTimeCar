@@ -126,7 +126,7 @@ struct Auto: Decodable {
         self.classAuto = try container.decode(String.self, forKey: .classAuto)
         self.mileageLimit = try container.decode(Int.self, forKey: .mileageLimit)
         self.fuelType = try container.decode(String.self, forKey: .fuelType)
-        let allServices = try container.decode([AdditionalService].self, forKey: .additionalServices)
+        let allServices = (try? container.decode([AdditionalService].self, forKey: .additionalServices)) ?? []
         self.additionalServices = allServices.filter { !$0.serviceTitle.isExcludedService }
         self.itemID = try container.decode(Int.self, forKey: .itemId)
         self.tarifs = (try? container.decode([Tarif].self, forKey: .tarifs)) ?? []
