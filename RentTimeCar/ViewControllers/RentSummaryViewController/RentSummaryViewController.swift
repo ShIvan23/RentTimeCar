@@ -96,14 +96,23 @@ final class RentSummaryViewController: UIViewController {
         }
     }
 
+    private func discountPercent(for daysCount: Int) -> Int {
+        guard daysCount > 1 else { return 0 }
+        return min(daysCount - 1, 30)
+    }
+
     private func loadData() {
         let service = OrderConfirmService.shared
         guard let auto = service.auto else { return }
 
         var result: [RentSummaryCellModel] = []
 
-        let baseRent = auto.defaultPriceWithDiscountSt * service.datesCount
-        result.append(.item(RentItem(title: "Аренда", amount: baseRent, icon: .calendar)))
+        let daysCount = service.datesCount
+        let discount = discountPercent(for: daysCount)
+        let baseRent = auto.defaultPriceWithDiscountSt * daysCount
+        let discountedRent = Int(Double(baseRent) * (1.0 - Double(discount) / 100.0))
+        let discountText: String? = discount > 0 ? "Скидка \(discount)%" : nil
+        result.append(.item(RentItem(title: "Аренда", amount: discountedRent, icon: .calendar, discountText: discountText)))
         result.append(.separator)
 
         let selectedServices = service.selectedServices
@@ -119,7 +128,7 @@ final class RentSummaryViewController: UIViewController {
         }
 
         result.append(.separator)
-        result.append(.item(RentItem(title: "Итого", amount: baseRent + extrasTotal, icon: .rublesign)))
+        result.append(.item(RentItem(title: "Итого", amount: discountedRent + extrasTotal, icon: .rublesign)))
         result.append(.item(RentItem(title: "Депозит", amount: auto.deposit, icon: .rublesignBank)))
 
         cells = result
@@ -190,8 +199,9 @@ extension RentSummaryViewController: UICollectionViewDelegateFlowLayout {
                         layout collectionViewLayout: UICollectionViewLayout,
                         sizeForItemAt indexPath: IndexPath) -> CGSize {
         switch cells[indexPath.item] {
-        case .item:
-            return CGSize(width: collectionView.bounds.width, height: 44)
+        case .item(let item):
+            let height: CGFloat = item.discountText != nil ? 60 : 44
+            return CGSize(width: collectionView.bounds.width, height: height)
         case .separator:
             return CGSize(width: collectionView.bounds.width, height: 1)
         }

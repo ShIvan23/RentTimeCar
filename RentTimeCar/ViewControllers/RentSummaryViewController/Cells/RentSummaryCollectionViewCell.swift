@@ -20,6 +20,7 @@ struct RentItem {
     let amount: Int
     let icon: UIImage?
     var amountText: String? = nil
+    var discountText: String? = nil
 }
 
 // MARK: - Cell
@@ -37,6 +38,13 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
 
     private let titleLabel = Label(
         numberOfLines: 1,
+        textColor: .secondaryTextColor,
+        textAlignment: .left
+    )
+
+    private let discountLabel = Label(
+        numberOfLines: 1,
+        fontSize: 12,
         textColor: .secondaryTextColor,
         textAlignment: .left
     )
@@ -68,6 +76,8 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
         iconImage.isHidden = true
         titleLabel.text = nil
         valueLabel.text = nil
+        discountLabel.text = nil
+        discountLabel.isHidden = true
     }
 
     // MARK: - Internal Methods
@@ -80,11 +90,13 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
         }
         iconImage.image = item.icon?.withRenderingMode(.alwaysTemplate)
         iconImage.isHidden = item.icon == nil
+        discountLabel.text = item.discountText
+        discountLabel.isHidden = item.discountText == nil
     }
 
     // MARK: - Private Methods
     private func setupViews(){
-        contentView.addSubviews([iconImage, titleLabel, valueLabel])
+        contentView.addSubviews([iconImage, titleLabel, discountLabel, valueLabel])
     }
 
     private func layoutCell() {
@@ -92,15 +104,33 @@ final class RentSummaryCollectionViewCell: UICollectionViewCell {
         let iconSize = CGSize(square: 16)
         let titleLeftInset: CGFloat = 50
 
-        iconImage.pin
-            .size(iconSize)
-            .left(horizontalInset)
-            .vCenter()
+        if !discountLabel.isHidden {
+            titleLabel.pin
+                .left(titleLeftInset)
+                .top(8)
+                .sizeToFit()
 
-        titleLabel.pin
-            .left(titleLeftInset)
-            .vCenter()
-            .sizeToFit()
+            discountLabel.pin
+                .left(titleLeftInset)
+                .below(of: titleLabel)
+                .marginTop(2)
+                .sizeToFit()
+
+            iconImage.pin
+                .size(iconSize)
+                .left(horizontalInset)
+                .vCenter(to: titleLabel.edge.vCenter)
+        } else {
+            titleLabel.pin
+                .left(titleLeftInset)
+                .vCenter()
+                .sizeToFit()
+
+            iconImage.pin
+                .size(iconSize)
+                .left(horizontalInset)
+                .vCenter()
+        }
 
         valueLabel.pin
             .right(horizontalInset)
