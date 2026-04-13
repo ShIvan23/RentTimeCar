@@ -129,8 +129,9 @@ final class FilterView: UIView {
         }
 
         collectionView.reloadData()
+        FilterService.shared.searchAutos { _ in }
     }
-    
+
     @objc
     private func autoTypeUpdated() {
         let autoTypeIndex = filterModel.firstIndex {

@@ -262,12 +262,13 @@ extension CalendarViewController: FSCalendarDelegate {
         }
 
         if firstDate != nil && lastDate != nil {
-            for date in calendar.selectedDates {
-                calendar.deselect(date)
+            for selectedDate in calendar.selectedDates {
+                calendar.deselect(selectedDate)
             }
             lastDate = nil
-            firstDate = nil
-            datesRange = []
+            firstDate = date
+            datesRange = [date]
+            calendar.select(date)
         }
     }
 }
@@ -276,6 +277,7 @@ extension CalendarViewController: FSCalendarDelegate {
 
 extension CalendarViewController: FSCalendarDelegateAppearance {
     func calendar(_ calendar: FSCalendar, appearance: FSCalendarAppearance, titleDefaultColorFor date: Date) -> UIColor? {
+        guard date >= Calendar.current.startOfDay(for: Date()) else { return .secondaryTextColor }
         let dateString = Self.calendarDateFormatter.string(from: date)
         guard let isFree = calendarData[dateString] else { return nil }
         return isFree ? .whiteTextColor : .secondaryTextColor
