@@ -45,6 +45,31 @@ final class RentSummaryViewController: UIViewController {
         title: "Подтвердить и оплатить 5000 ₽"
     )
 
+    private let dimmingView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        view.alpha = 0
+        return view
+    }()
+
+    private let infoTooltipView: UIView = {
+        let view = UIView()
+        view.backgroundColor = .secondaryBackground
+        view.layer.cornerRadius = 8
+        view.layer.borderWidth = 1
+        view.layer.borderColor = UIColor.secondaryTextColor.cgColor
+        view.alpha = 0
+        return view
+    }()
+
+    private let infoTooltipLabel = Label(
+        text: "В случае отказа от аренды предоплата не возвращается. Можно будет перенести аренду на другую дату",
+        numberOfLines: 0,
+        fontSize: 12,
+        textColor: .whiteTextColor,
+        textAlignment: .center
+    )
+
     // MARK: - Init
     init(coordinator: ICoordinator) {
         self.coordinator = coordinator
@@ -77,13 +102,24 @@ final class RentSummaryViewController: UIViewController {
     }
 
     private func tapInfoButton() {
-        print("+++ tapInfoButton RentSummaryVC")
+        UIView.animate(withDuration: 0.2) {
+            self.dimmingView.alpha = 1
+            self.infoTooltipView.alpha = 1
+        }
+    }
+
+    private func hideTooltip() {
+        UIView.animate(withDuration: 0.2) {
+            self.dimmingView.alpha = 0
+            self.infoTooltipView.alpha = 0
+        }
     }
 
     // MARK: - Private methods
     private func setupViews() {
         view.backgroundColor = .mainBackground
-        view.addSubviews([collectionView, prepayTitleLabel, infoButton, prepayValueLabel, continueButton])
+        infoTooltipView.addSubview(infoTooltipLabel)
+        view.addSubviews([collectionView, prepayTitleLabel, infoButton, prepayValueLabel, continueButton, dimmingView, infoTooltipView])
     }
 
     private func setupActions() {
@@ -94,6 +130,13 @@ final class RentSummaryViewController: UIViewController {
         infoButton.action = { [weak self] in
             self?.tapInfoButton()
         }
+
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleDimmingTap))
+        dimmingView.addGestureRecognizer(tapGesture)
+    }
+
+    @objc private func handleDimmingTap() {
+        hideTooltip()
     }
 
     private func discountPercent(for daysCount: Int) -> Int {
@@ -169,6 +212,32 @@ final class RentSummaryViewController: UIViewController {
             .top(view.pin.safeArea.top)
             .horizontally()
             .above(of: prepayTitleLabel)
+
+        dimmingView.pin.all()
+
+        let tooltipHPadding: CGFloat = 12
+        let tooltipVPadding: CGFloat = 6
+        let tooltipSpacing: CGFloat = 8
+        let tooltipMaxWidth = view.bounds.width - horizontalInset * 2
+
+        let labelSize = infoTooltipLabel.sizeThatFits(CGSize(width: tooltipMaxWidth - tooltipHPadding * 2, height: .greatestFiniteMagnitude))
+        infoTooltipLabel.frame.size = labelSize
+
+        let tooltipWidth = min(labelSize.width + tooltipHPadding * 2, tooltipMaxWidth)
+        let tooltipHeight = labelSize.height + tooltipVPadding * 2
+        let idealLeft = infoButton.frame.midX - tooltipWidth / 2
+        let clampedLeft = min(max(idealLeft, horizontalInset), view.bounds.width - horizontalInset - tooltipWidth)
+
+        infoTooltipView.pin
+            .left(clampedLeft)
+            .width(tooltipWidth)
+            .height(tooltipHeight)
+            .bottom(to: infoButton.edge.top)
+            .marginBottom(tooltipSpacing)
+        infoTooltipLabel.pin
+            .horizontally(tooltipHPadding)
+            .vCenter()
+            .sizeToFit()
     }
 }
 
