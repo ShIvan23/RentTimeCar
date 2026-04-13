@@ -9,6 +9,7 @@ import PinLayout
 import UIKit
 
 enum DiscountDays: Int, CaseIterable {
+    case days1 = 1
     case days5 = 5
     case days10 = 10
     case days20 = 20

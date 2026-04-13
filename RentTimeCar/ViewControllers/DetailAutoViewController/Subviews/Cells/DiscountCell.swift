@@ -48,8 +48,10 @@ final class DiscountCell: UICollectionViewCell {
     // MARK: - Internal Methods
     
     func configure(daysCount: Int, priceByDay: Int) {
-        daysCountLabel.text = "\(daysCount) сутки"
-        priceLabel.text = "\(priceByDay * daysCount) ₽/сутки"
+        daysCountLabel.text = "\(daysCount) \(daysCount == 1 ? "сутки" : "суток")"
+        let discountPercent = daysCount == 1 ? 0 : daysCount
+        let price = Int(Double(priceByDay) * Double(100 - discountPercent) / 100.0)
+        priceLabel.text = "\(price) ₽/сутки"
     }
 
     // MARK: - Private Methods
