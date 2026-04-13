@@ -12,15 +12,32 @@ final class MainButton: UIButton {
 
     var action: (() -> Void)?
 
+    // MARK: - Private Properties
+
+    private lazy var activityIndicator: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .medium)
+        indicator.color = .whiteTextColor
+        indicator.hidesWhenStopped = true
+        addSubview(indicator)
+        return indicator
+    }()
+
     // MARK: - Init
 
     init(title: String = "") {
         super.init(frame: .zero)
         setupButton(title: title)
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    // MARK: - Override
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        activityIndicator.center = CGPoint(x: bounds.midX, y: bounds.midY)
     }
 
     // MARK: - Internal Methods
@@ -33,6 +50,16 @@ final class MainButton: UIButton {
     func disable() {
         isEnabled = false
         layer.borderColor = UIColor.disabledMainButtonBorderColor.cgColor
+    }
+
+    func setLoading(_ loading: Bool) {
+        isUserInteractionEnabled = !loading
+        if loading {
+            activityIndicator.startAnimating()
+            setTitle(nil, for: .normal)
+        } else {
+            activityIndicator.stopAnimating()
+        }
     }
 
     // MARK: - Private Methods

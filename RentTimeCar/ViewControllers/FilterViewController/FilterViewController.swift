@@ -345,8 +345,11 @@ extension FilterViewController {
 
 private extension FilterViewController {
     func updateConfirmButton() {
-        filterService.searchAutos { autos in
-            self.updateConfirmButtonTitle(autoCount: autos.count)
+        confirmButton.setLoading(true)
+        filterService.searchAutos { [weak self] autos in
+            guard let self else { return }
+            confirmButton.setLoading(false)
+            updateConfirmButtonTitle(autoCount: autos.count)
         }
     }
 }
