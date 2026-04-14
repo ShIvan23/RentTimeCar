@@ -18,7 +18,7 @@ protocol ICoordinator {
     func openFilterViewController()
     func openCalendarViewController(autoId: String?)
     func openDetailAutoCar(model: Auto)
-    func openFullImageViewController(with image: String)
+    func openFullImageViewController(images: [String], initialIndex: Int)
     func openYandexMapController()
     func openSearchAddressViewController(delegate: SearchAddressViewControllerDelegate)
     func openBottomSheet(type: BottomSheetType)
@@ -88,8 +88,8 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.pushViewController(detailViewController, animated: true)
     }
     
-    func openFullImageViewController(with image: String) {
-        let fullImageViewController = Builder.makeFullImageViewController(with: image)
+    func openFullImageViewController(images: [String], initialIndex: Int) {
+        let fullImageViewController = Builder.makeFullImageViewController(images: images, initialIndex: initialIndex)
         fullImageViewController.modalPresentationStyle = .custom
         fullImageViewController.transitioningDelegate = self
         navigationController?.present(fullImageViewController, animated: true)

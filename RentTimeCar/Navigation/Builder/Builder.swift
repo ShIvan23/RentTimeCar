@@ -52,8 +52,8 @@ final class Builder {
         return detailViewController
     }
     
-    static func makeFullImageViewController(with image: String) -> UIViewController {
-        FullImageViewController(image: image)
+    static func makeFullImageViewController(images: [String], initialIndex: Int) -> UIViewController {
+        FullImageViewController(images: images, initialIndex: initialIndex)
     }
     
     static func makeYandexMapViewController() -> UIViewController {

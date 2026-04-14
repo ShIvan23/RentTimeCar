@@ -320,8 +320,10 @@ extension DetailAutoViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        guard let autoImage = autoModel.files[safe: indexPath.item]?.url else { return }
-        coordinator.openFullImageViewController(with: autoImage)
+        let images = autoModel.files.compactMap { $0.url }
+        guard !images.isEmpty else { return }
+        let index = min(indexPath.item, images.count - 1)
+        coordinator.openFullImageViewController(images: images, initialIndex: index)
     }
 }
 

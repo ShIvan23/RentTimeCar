@@ -32,6 +32,10 @@ final class ImageScrollView: UIScrollView, UIScrollViewDelegate {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func resetZoom() {
+        setZoomScale(minimumZoomScale, animated: false)
+    }
+
     func set(image: String) {
         addSubview(imageZoomView)
         let imageUrl = URL(string: image)
@@ -132,6 +136,30 @@ final class ImageScrollView: UIScrollView, UIScrollViewDelegate {
         return zoomRect
     }
     
+    // MARK: - Gesture
+
+    override func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard gestureRecognizer == panGestureRecognizer,
+              let pan = gestureRecognizer as? UIPanGestureRecognizer else {
+            return super.gestureRecognizerShouldBegin(gestureRecognizer)
+        }
+        let velocity = pan.velocity(in: self)
+        // Вертикальный свайп — не трогаем
+        guard abs(velocity.x) > abs(velocity.y) else {
+            return super.gestureRecognizerShouldBegin(gestureRecognizer)
+        }
+        // При минимальном масштабе горизонтальный свайп уходит во внешний UICollectionView
+        if zoomScale <= minimumZoomScale + 0.01 {
+            return false
+        }
+        // При зуме проверяем край: на краю — тоже уступаем внешнему
+        let atLeftEdge  = contentOffset.x <= 0 && velocity.x > 0
+        let atRightEdge = contentOffset.x >= contentSize.width - bounds.width - 1 && velocity.x < 0
+        if atLeftEdge || atRightEdge { return false }
+
+        return super.gestureRecognizerShouldBegin(gestureRecognizer)
+    }
+
     // MARK: - UIScrollViewDelegate
     
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
