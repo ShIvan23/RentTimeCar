@@ -13,12 +13,7 @@ final class CalendarViewController: UIViewController {
 
     private let calendar = FSCalendar()
     private let selectButton = MainButton(title: "Выбрать")
-    private let activityIndicator: UIActivityIndicatorView = {
-        let indicator = UIActivityIndicatorView(style: .large)
-        indicator.color = .whiteTextColor
-        indicator.hidesWhenStopped = true
-        return indicator
-    }()
+    private let shimmerView = ShimmerView()
 
     // MARK: - Private Properties
 
@@ -84,12 +79,14 @@ final class CalendarViewController: UIViewController {
 
     private func setupView() {
         setupCalendar()
-        view.addSubviews([calendar, selectButton, activityIndicator])
+        view.addSubviews([calendar, selectButton, shimmerView])
         view.backgroundColor = .mainBackground
         setupButtonAction()
         if autoId != nil {
             calendar.isHidden = true
-            activityIndicator.startAnimating()
+            shimmerView.startAnimating()
+        } else {
+            shimmerView.isHidden = true
         }
     }
 
@@ -111,6 +108,7 @@ final class CalendarViewController: UIViewController {
         datesRange = filterService.selectedDates
         firstDate = filterService.selectedDates.first
         lastDate = filterService.selectedDates.last
+        updateClearButton()
     }
 
     private func setupButtonAction() {
@@ -119,6 +117,28 @@ final class CalendarViewController: UIViewController {
             sendSelectedDates()
             navigationController?.popViewController(animated: true)
         }
+    }
+
+    private func updateClearButton() {
+        navigationItem.rightBarButtonItem = datesRange.isEmpty ? nil : clearBarButton
+    }
+
+    private lazy var clearBarButton: UIBarButtonItem = {
+        UIBarButtonItem(
+            title: "Очистить",
+            style: .plain,
+            target: self,
+            action: #selector(clearDates)
+        )
+    }()
+
+    @objc
+    private func clearDates() {
+        calendar.selectedDates.forEach { calendar.deselect($0) }
+        firstDate = nil
+        lastDate = nil
+        datesRange = []
+        updateClearButton()
     }
 
     private func sendSelectedDates() {
@@ -139,8 +159,11 @@ final class CalendarViewController: UIViewController {
             .bottom(to: selectButton.edge.top)
             .marginTop(view.safeAreaInsets.top)
 
-        activityIndicator.pin
-            .center()
+        shimmerView.pin
+            .top()
+            .horizontally()
+            .bottom(to: selectButton.edge.top)
+            .marginTop(view.safeAreaInsets.top)
     }
 
     private func datesRange(from: Date, to: Date) -> [Date] {
@@ -188,18 +211,22 @@ final class CalendarViewController: UIViewController {
         rentApiFacade.getAutoCalendar(with: input) { [weak self] result in
             guard let self else { return }
             DispatchQueue.main.async {
-                self.activityIndicator.stopAnimating()
                 switch result {
                 case let .success(data):
                     data.forEach { self.calendarData[$0.date] = $0.isFree }
                     self.calendar.reloadData()
+                    self.shimmerView.stopAnimating()
+                    self.shimmerView.isHidden = true
                     self.calendar.isHidden = false
                 case .failure:
                     self.loadedMonths.remove(monthKey)
                     let model = InfoBottomSheetModel.makeAutoCalendarLoadFailModel { [weak self] in
                         guard let self else { return }
-                        if calendarWasHidden { self.calendar.isHidden = true }
-                        self.activityIndicator.startAnimating()
+                        if calendarWasHidden {
+                            self.calendar.isHidden = true
+                            self.shimmerView.isHidden = false
+                            self.shimmerView.startAnimating()
+                        }
                         self.fetchAutoCalendar(autoId: autoId, month: month)
                     }
                     self.coordinator.openInfoBottomSheetViewController(model: model)
@@ -224,7 +251,6 @@ extension CalendarViewController: FSCalendarDelegate {
         // Не подгружаем уже загруженный месяц
         let monthKey = Self.monthKeyFormatter.string(from: page)
         guard !loadedMonths.contains(monthKey) else { return }
-        activityIndicator.startAnimating()
         fetchAutoCalendar(autoId: autoId, month: page)
     }
 
@@ -241,6 +267,7 @@ extension CalendarViewController: FSCalendarDelegate {
         if firstDate == nil {
             firstDate = date
             datesRange = [firstDate!]
+            updateClearButton()
             return
         }
 
@@ -249,26 +276,24 @@ extension CalendarViewController: FSCalendarDelegate {
                 calendar.deselect(firstDate!)
                 firstDate = date
                 datesRange = [firstDate!]
+                updateClearButton()
                 return
             }
             let range = datesRange(from: firstDate!, to: date)
             lastDate = range.last
-
-            for date in range {
-                calendar.select(date)
-            }
+            for date in range { calendar.select(date) }
             datesRange = range
+            updateClearButton()
             return
         }
 
         if firstDate != nil && lastDate != nil {
-            for selectedDate in calendar.selectedDates {
-                calendar.deselect(selectedDate)
-            }
+            for selectedDate in calendar.selectedDates { calendar.deselect(selectedDate) }
             lastDate = nil
             firstDate = date
             datesRange = [date]
             calendar.select(date)
+            updateClearButton()
         }
     }
 }

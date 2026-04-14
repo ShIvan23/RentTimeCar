@@ -14,5 +14,6 @@ struct Contact: Decodable {
         case phone
         case telegram
         case whatsapp
+        case max
     }
 }

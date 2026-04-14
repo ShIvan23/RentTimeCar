@@ -150,6 +150,13 @@ final class FilterService {
     }
 
     func searchAutos(completion: @escaping ([Auto]) -> Void) {
+        searchAutos(isFirstAttempt: true, completion: completion)
+    }
+
+    private func searchAutos(isFirstAttempt: Bool, completion: @escaping ([Auto]) -> Void) {
+        if isFirstAttempt {
+            NotificationCenter.default.post(name: .autoSearchStarted, object: nil)
+        }
         let selectedAutoClasses = getSelectedAutosClassesCodes()
         let input = SearchAutoInput(
             dateFrom: selectedDates.first?.convertDateToString() ?? .defaultDate,
@@ -173,7 +180,7 @@ final class FilterService {
                 case .failure:
                     guard self.rentApiFacadeRetriesCount != .zero else { return }
                     self.rentApiFacadeRetriesCount -= 1
-                    self.searchAutos(completion: completion)
+                    self.searchAutos(isFirstAttempt: false, completion: completion)
                 }
             }
         }
@@ -280,4 +287,5 @@ extension Notification.Name {
     static let filteredAutosUpdated = Notification.Name("filteredAutosUpdated")
     static let sortingAutoUpdated = Notification.Name("sortingAutoUpdated")
     static let classAutoUpdated = Notification.Name("classAutoUpdated")
+    static let autoSearchStarted = Notification.Name("autoSearchStarted")
 }

@@ -27,14 +27,8 @@ final class ClientItemsViewController: UIViewController {
         collectionView.delegate = self
         collectionView.register(cell: ClientRequestCell.self)
         collectionView.register(cell: FineCell.self)
+        collectionView.register(cell: ShimmerCarCell.self)
         return collectionView
-    }()
-
-    private let activityIndicator: UIActivityIndicatorView = {
-        let indicator = UIActivityIndicatorView(style: .medium)
-        indicator.color = .whiteTextColor
-        indicator.hidesWhenStopped = true
-        return indicator
     }()
 
     private let emptyLabel: UILabel = {
@@ -52,6 +46,7 @@ final class ClientItemsViewController: UIViewController {
     private let rentApiFacade: IRentApiFacade
     private var requests: [ClientRequest] = []
     private var fines: [FineDto] = []
+    private var isLoading = false
 
     // MARK: - Init
 
@@ -83,7 +78,7 @@ final class ClientItemsViewController: UIViewController {
 
     private func setupView() {
         view.backgroundColor = .mainBackground
-        view.addSubviews([collectionView, activityIndicator, emptyLabel])
+        view.addSubviews([collectionView, emptyLabel])
         navigationController?.isNavigationBarHidden = false
 
         switch mode {
@@ -97,11 +92,6 @@ final class ClientItemsViewController: UIViewController {
     private func performLayout() {
         collectionView.pin.all()
 
-        activityIndicator.pin
-            .hCenter()
-            .vCenter()
-            .sizeToFit()
-
         emptyLabel.pin
             .horizontally(16)
             .vCenter()
@@ -113,7 +103,8 @@ final class ClientItemsViewController: UIViewController {
             emptyLabel.isHidden = false
             return
         }
-        activityIndicator.startAnimating()
+        isLoading = true
+        collectionView.reloadData()
         switch mode {
         case .rents:
             fetchRequests(integrationId: integrationId)
@@ -126,7 +117,7 @@ final class ClientItemsViewController: UIViewController {
         rentApiFacade.getClientRequests(clientIntegrationId: integrationId) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self else { return }
-                self.activityIndicator.stopAnimating()
+                self.isLoading = false
                 switch result {
                 case let .success(response):
                     self.requests = response.result?.requests ?? []
@@ -134,6 +125,7 @@ final class ClientItemsViewController: UIViewController {
                     self.collectionView.reloadData()
                 case .failure:
                     self.emptyLabel.isHidden = false
+                    self.collectionView.reloadData()
                 }
             }
         }
@@ -143,7 +135,7 @@ final class ClientItemsViewController: UIViewController {
         rentApiFacade.getClientFines(clientIntegrationId: integrationId) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self else { return }
-                self.activityIndicator.stopAnimating()
+                self.isLoading = false
                 switch result {
                 case let .success(response):
                     let fines = response.result?.fines ?? []
@@ -152,6 +144,7 @@ final class ClientItemsViewController: UIViewController {
                     self.collectionView.reloadData()
                 case .failure:
                     self.emptyLabel.isHidden = false
+                    self.collectionView.reloadData()
                 }
             }
         }
@@ -162,6 +155,7 @@ final class ClientItemsViewController: UIViewController {
 
 extension ClientItemsViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        if isLoading { return 6 }
         switch mode {
         case .rents: return requests.count
         case .fines: return fines.count
@@ -169,6 +163,10 @@ extension ClientItemsViewController: UICollectionViewDataSource {
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        if isLoading {
+            let cell: ShimmerCarCell = collectionView.dequeueCell(for: indexPath)
+            return cell
+        }
         switch mode {
         case .rents:
             let cell: ClientRequestCell = collectionView.dequeueCell(for: indexPath)
@@ -190,11 +188,16 @@ extension ClientItemsViewController: UICollectionViewDelegateFlowLayout {
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAt indexPath: IndexPath
     ) -> CGSize {
+        let width = collectionView.bounds.width - 32
+        if isLoading {
+            switch mode {
+            case .rents: return CGSize(width: width, height: 96)
+            case .fines: return CGSize(width: width, height: 110)
+            }
+        }
         switch mode {
-        case .rents:
-            return CGSize(width: collectionView.bounds.width - 32, height: 96)
-        case .fines:
-            return CGSize(width: collectionView.bounds.width - 32, height: 110)
+        case .rents: return CGSize(width: width, height: 96)
+        case .fines: return CGSize(width: width, height: 110)
         }
     }
 }

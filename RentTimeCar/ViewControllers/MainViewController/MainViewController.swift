@@ -35,6 +35,7 @@ final class MainViewController: UIViewController {
         collectionView.register(cell: ButtonCell.self)
         collectionView.register(cell: CarCell.self)
         collectionView.register(cell: EmptyCell.self)
+        collectionView.register(cell: ShimmerCarCell.self)
         return collectionView
     }()
     
@@ -80,6 +81,7 @@ final class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
+        showShimmer()
         fetchAutos()
     }
     
@@ -111,9 +113,15 @@ final class MainViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .filteredAutosUpdated, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .sortingAutoUpdated, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .classAutoUpdated, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(onAutoSearchStarted), name: .autoSearchStarted, object: nil)
         AuthService.shared.addObserver(self)
     }
-    
+
+    @objc
+    private func onAutoSearchStarted() {
+        DispatchQueue.main.async { self.showShimmer() }
+    }
+
     @objc
     private func filteredAutosUpdated() {
         DispatchQueue.main.async {
@@ -125,6 +133,11 @@ final class MainViewController: UIViewController {
             }
             self.collectionView.reloadData()
         }
+    }
+
+    private func showShimmer() {
+        cells = [.empty(.emptyCellHeight)] + Array(repeating: .shimmer, count: 5)
+        collectionView.reloadData()
     }
 }
 
@@ -301,6 +314,9 @@ extension MainViewController: UICollectionViewDataSource {
             let cell: CarCell = collectionView.dequeueCell(for: indexPath)
             cell.configure(model: autoModel)
             return cell
+        case .shimmer:
+            let cell: ShimmerCarCell = collectionView.dequeueCell(for: indexPath)
+            return cell
         }
     }
 }
@@ -310,14 +326,10 @@ extension MainViewController: UICollectionViewDataSource {
 extension MainViewController: UICollectionViewDataSourcePrefetching {
     func collectionView(_ collectionView: UICollectionView, prefetchItemsAt indexPaths: [IndexPath]) {
         let urlsForPrefetch: [URL] = indexPaths.compactMap {
-            switch cells[$0.item] {
-            case let .car(autoModel):
-                guard let urlString = autoModel.files.first?.url,
-                      let url = URL(string: urlString) else { return nil }
-                return url
-            default:
-                return nil
-            }
+            guard case let .car(autoModel) = cells[$0.item],
+                  let urlString = autoModel.files.first?.url,
+                  let url = URL(string: urlString) else { return nil }
+            return url
         }
         imagePrefetcher.startPrefetching(with: urlsForPrefetch)
     }
@@ -335,7 +347,9 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
         case .button:
             return CGSize(width: cellWidth, height: 58)
         case .car:
-            return CGSize(width: cellWidth, height: cellWidth * 0.75 )
+            return CGSize(width: cellWidth, height: cellWidth * 0.75)
+        case .shimmer:
+            return CGSize(width: cellWidth, height: cellWidth * 0.75)
         }
     }
     
@@ -353,7 +367,7 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
                 print("+++ show onCheck screen")
                 break
             }
-        case .empty:
+        case .empty, .shimmer:
             break
         }
     }
@@ -454,6 +468,7 @@ extension MainViewController {
         case car(Auto)
         case empty(_ height: CGFloat)
         case button(ButtonType)
+        case shimmer
 
         enum ButtonType: String {
             case authorization = "Войти"
