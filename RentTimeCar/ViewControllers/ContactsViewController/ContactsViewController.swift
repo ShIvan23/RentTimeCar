@@ -154,7 +154,7 @@ extension ContactsViewController: UITableViewDelegate {
         case .whatsapp:
             url = URL(string: "https://api.whatsapp.com/send?phone=\(phone)")
         case .max:
-            url = URL(string: "https://vk.me/+\(phone)")
+            url = URL(string: "https://max.ru/u/\(phone)")
         }
         guard let url else { return }
         coordinator.openAnotherApplication(url: url)
