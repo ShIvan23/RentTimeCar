@@ -69,6 +69,10 @@ final class AuthService {
         checkRegistration()
     }
 
+    func refreshAuthState() {
+        checkRegistration()
+    }
+
     func savePhoneNumber(_ phoneNumber: String) {
         self.phoneNumber = phoneNumber
         userDefaults.set(phoneNumber, forKey: .phoneNumberKey)

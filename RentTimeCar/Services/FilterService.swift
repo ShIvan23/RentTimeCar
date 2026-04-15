@@ -211,6 +211,7 @@ final class FilterService {
 
     private func makeBrands(with model: [Auto]) {
         DispatchQueue.global(qos: .userInteractive).async {
+            self.brands = []
             var brandsSet = Set<String>()
             model.enumerated().forEach { index, item in
                 

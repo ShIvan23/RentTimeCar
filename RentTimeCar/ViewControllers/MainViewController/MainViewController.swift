@@ -47,6 +47,7 @@ final class MainViewController: UIViewController {
     private let filterService = FilterService.shared
     private let authService = AuthService.shared
     private lazy var imagePrefetcher = ImagePrefetcher(pipeline: ImagePipeline.shared)
+    private let refreshControl = UIRefreshControl()
     private var isShowSideMenu = false
     private var collectionViewContentYOffset: CGFloat = .zero
     private var filterViewIsHidden = false {
@@ -99,6 +100,8 @@ final class MainViewController: UIViewController {
         navBarView.delegate = self
         transparentView.isHidden = true
         filterView.isHidden = true
+        refreshControl.addTarget(self, action: #selector(handleRefresh), for: .valueChanged)
+        collectionView.refreshControl = refreshControl
         subscribeToNotification()
     }
     
@@ -120,6 +123,14 @@ final class MainViewController: UIViewController {
     @objc
     private func onAutoSearchStarted() {
         DispatchQueue.main.async { self.showShimmer() }
+    }
+
+    @objc
+    private func handleRefresh() {
+        refreshControl.endRefreshing()
+        showShimmer()
+        authService.refreshAuthState()
+        fetchAutos()
     }
 
     @objc
@@ -153,6 +164,10 @@ extension MainViewController {
     
     private func fetchAutos() {
         rentApiFacade.getAutos { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.refreshControl.endRefreshing()
+            }
             switch result {
             case .success(let model):
                 DispatchQueue.main.async {
