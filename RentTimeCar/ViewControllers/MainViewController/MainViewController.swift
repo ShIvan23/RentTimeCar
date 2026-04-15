@@ -129,6 +129,7 @@ final class MainViewController: UIViewController {
     @objc
     private func handleRefresh() {
         refreshControl.endRefreshing()
+        filterService.resetAllFilters()
         showShimmer()
         authService.refreshAuthState()
         fetchAutos()
