@@ -24,13 +24,11 @@ final class ContactsViewController: UIViewController {
 
     private var contacts = [Contact]()
     private let coordinator: ICoordinator
-    private let rentApiFacade: IRentApiFacade = RentApiFacade()
+    private let contactsService = ContactsService.shared
 
     // MARK: - Init
 
-    init(
-        coordinator: ICoordinator
-    ) {
+    init(coordinator: ICoordinator) {
         self.coordinator = coordinator
         super.init(nibName: nil, bundle: nil)
     }
@@ -85,7 +83,7 @@ final class ContactsViewController: UIViewController {
 
     private func fetchContacts() {
         setErrorViewHidden(true)
-        rentApiFacade.getContacts { [weak self] result in
+        contactsService.getContacts { [weak self] result in
             guard let self else { return }
             DispatchQueue.main.async {
                 switch result {

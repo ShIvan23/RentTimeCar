@@ -84,6 +84,7 @@ final class MainViewController: UIViewController {
         setupView()
         showShimmer()
         fetchAutos()
+        ContactsService.shared.prefetch()
     }
     
     override func viewDidLayoutSubviews() {
