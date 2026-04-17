@@ -140,7 +140,8 @@ final class MainViewController: UIViewController {
         DispatchQueue.main.async {
             let model = self.filterService.filteredAutos
             if model.isEmpty {
-                self.cells = self.mapAutos(with: self.filterService.allAutos)
+                let sorted = self.filterService.allAutos.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
+                self.cells = self.mapAutos(with: sorted)
             } else {
                 self.cells = self.mapAutos(with: model)
             }
@@ -174,7 +175,8 @@ extension MainViewController {
             case .success(let model):
                 DispatchQueue.main.async {
                     guard let self else { return }
-                    self.cells = self.mapAutos(with: model.result ?? [])
+                    let sorted = (model.result ?? []).sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
+                    self.cells = self.mapAutos(with: sorted)
                     self.collectionView.reloadData()
                     self.filterService.setModel(model.result ?? [])
                     self.filterView.isHidden = model.result?.isEmpty ?? true
@@ -198,9 +200,7 @@ extension MainViewController {
     private func mapAutos(with model: [Auto]) -> [CellType] {
         var result = [CellType]()
         guard !model.isEmpty else { return result }
-        result = model.map {
-            .car($0)
-        }
+        result = model.map { .car($0) }
         result.insert(.empty(.emptyCellHeight), at: .zero)
         switch authService.authState {
         case .needAuthorize:

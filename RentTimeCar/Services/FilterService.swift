@@ -196,7 +196,9 @@ final class FilterService {
     }
     
     private func sortIfNeeded(_ autos: [Auto]) -> [Auto] {
-        guard let hasSotingItem = sortingAuto.first(where: { $0.isSelected }) else { return autos }
+        guard let hasSotingItem = sortingAuto.first(where: { $0.isSelected }) else {
+            return autos.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
+        }
         switch hasSotingItem.name {
         case .filterClassText:
             return autos.sorted(by: { $0.classAuto > $1.classAuto })
@@ -205,7 +207,7 @@ final class FilterService {
         case .filterPriceText:
             return autos.sorted(by: { $0.defaultPriceWithDiscountSt < $1.defaultPriceWithDiscountSt })
         default:
-            return autos
+            return autos.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
         }
     }
 
