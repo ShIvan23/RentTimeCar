@@ -99,7 +99,7 @@ private extension CarCell {
         gradientLayer.pin
             .top()
             .horizontally()
-            .height(bounds.height * 0.2)
+            .height(bounds.height * 0.3)
         
         titleLabel.pin
             .top(4)

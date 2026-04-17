@@ -64,7 +64,7 @@ struct Auto: Decodable {
 
     enum CodingKeys: String, CodingKey {
         case files = "Files"
-        case title = "Title"
+        case title = "MarkaModelString"
         case defaultPriceWithDiscountSt = "DefaultPriceWithDiscountSt"
         case deposit = "Deposit"
         case marka = "Marka"

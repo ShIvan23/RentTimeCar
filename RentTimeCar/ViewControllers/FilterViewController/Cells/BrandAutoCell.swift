@@ -15,11 +15,6 @@ final class BrandAutoCell: UICollectionViewCell {
     
     private let imageView = UIImageView()
     
-    private let label = Label(
-        numberOfLines: 1,
-        fontSize: 14
-    )
-    
     // MARK: - Private Properties
     
     private var isSelectedCell = false
@@ -47,7 +42,6 @@ final class BrandAutoCell: UICollectionViewCell {
     
     func configure(with model: FilterBrandAuto) {
         isSelectedCell = model.isSelected
-        label.text = model.name
         updateSelectionCell()
         
         guard let urlString = model.image,
@@ -61,7 +55,7 @@ final class BrandAutoCell: UICollectionViewCell {
     // MARK: - Private Methods
     
     private func setupView() {
-        contentView.addSubviews([imageView, label])
+        contentView.addSubview(imageView)
         contentView.backgroundColor = .mainBackground
         contentView.layer.cornerRadius = 14
         contentView.layer.borderColor = UIColor.lightGray.cgColor
@@ -77,13 +71,7 @@ final class BrandAutoCell: UICollectionViewCell {
     
     private func performLayout() {
         imageView.pin
-            .top()
-            .hCenter()
+            .center()
             .size(CGSize(square: 60))
-        
-        label.pin
-            .below(of: imageView)
-            .horizontally()
-            .sizeToFit(.width)
     }
 }
