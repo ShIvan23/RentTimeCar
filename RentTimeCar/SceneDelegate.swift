@@ -15,9 +15,16 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let scene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: scene)
         window?.overrideUserInterfaceStyle = .dark
-        window?.rootViewController = Builder.makeMainViewController()
         window?.makeKeyAndVisible()
         makeNavBarAppearance()
+        let splash = SplashViewController { [weak self] in
+            guard let self else { return }
+            let main = Builder.makeMainViewController()
+            UIView.transition(with: self.window!, duration: 0.3, options: .transitionCrossDissolve) {
+                self.window?.rootViewController = main
+            }
+        }
+        window?.rootViewController = splash
     }
     
     private func makeNavBarAppearance() {
