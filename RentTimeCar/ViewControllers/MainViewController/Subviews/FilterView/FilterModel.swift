@@ -29,7 +29,7 @@ extension FilterModel {
             FilterModel(
                 type: .filter,
                 image: .filter,
-                text: "Фильтр"
+                text: "Марка авто"
             ),
             FilterModel(
                 type: .date,
