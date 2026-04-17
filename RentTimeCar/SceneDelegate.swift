@@ -17,9 +17,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window?.overrideUserInterfaceStyle = .dark
         window?.makeKeyAndVisible()
         makeNavBarAppearance()
-        let splash = SplashViewController { [weak self] in
+        let rentApiFacade = RentApiFacade()
+        let splash = SplashViewController(rentApiFacade: rentApiFacade) { [weak self] result in
             guard let self else { return }
-            let main = Builder.makeMainViewController()
+            let main = Builder.makeMainViewController(preloadedAutos: result)
             UIView.transition(with: self.window!, duration: 0.3, options: .transitionCrossDissolve) {
                 self.window?.rootViewController = main
             }

@@ -18,11 +18,16 @@ final class SplashViewController: UIViewController {
 
     // MARK: - Private Properties
 
-    private let onFinish: () -> Void
+    private let rentApiFacade: IRentApiFacade
+    private let onFinish: (Result<[Auto], Error>) -> Void
+    private var fetchResult: Result<[Auto], Error>?
+    private var dataReady = false
+    private var timerFired = false
 
     // MARK: - Init
 
-    init(onFinish: @escaping () -> Void) {
+    init(rentApiFacade: IRentApiFacade, onFinish: @escaping (Result<[Auto], Error>) -> Void) {
+        self.rentApiFacade = rentApiFacade
         self.onFinish = onFinish
         super.init(nibName: nil, bundle: nil)
     }
@@ -38,9 +43,9 @@ final class SplashViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .mainBackground
         view.addSubview(logoImageView)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
-            self?.onFinish()
-        }
+        ContactsService.shared.prefetch()
+        startPreload()
+        startTimer()
     }
 
     override func viewDidLayoutSubviews() {
@@ -49,5 +54,35 @@ final class SplashViewController: UIViewController {
             .center()
             .size(CGSize(square: 160))
     }
-}
 
+    // MARK: - Private Methods
+
+    private func startPreload() {
+        rentApiFacade.getAutos { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                switch result {
+                case .success(let model):
+                    self.fetchResult = .success(model.result ?? [])
+                case .failure(let error):
+                    self.fetchResult = .failure(error)
+                }
+                self.dataReady = true
+                self.tryFinish()
+            }
+        }
+    }
+
+    private func startTimer() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
+            guard let self else { return }
+            self.timerFired = true
+            self.tryFinish()
+        }
+    }
+
+    private func tryFinish() {
+        guard timerFired, dataReady, let result = fetchResult else { return }
+        onFinish(result)
+    }
+}

@@ -48,6 +48,7 @@ final class MainViewController: UIViewController {
     private let authService = AuthService.shared
     private lazy var imagePrefetcher = ImagePrefetcher(pipeline: ImagePipeline.shared)
     private let refreshControl = UIRefreshControl()
+    private let preloadedAutos: Result<[Auto], Error>?
     private var isShowSideMenu = false
     private var collectionViewContentYOffset: CGFloat = .zero
     private var filterViewIsHidden = false {
@@ -65,10 +66,12 @@ final class MainViewController: UIViewController {
 
     init(
         coordinator: ICoordinator,
-        rentApiFacade: IRentApiFacade
+        rentApiFacade: IRentApiFacade,
+        preloadedAutos: Result<[Auto], Error>? = nil
     ) {
         self.coordinator = coordinator
         self.rentApiFacade = rentApiFacade
+        self.preloadedAutos = preloadedAutos
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -82,9 +85,15 @@ final class MainViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
-        showShimmer()
-        fetchAutos()
-        ContactsService.shared.prefetch()
+        switch preloadedAutos {
+        case .success(let autos):
+            applyAutos(autos)
+        case .failure:
+            showFetchError()
+        case nil:
+            showShimmer()
+            fetchAutos()
+        }
     }
     
     override func viewDidLayoutSubviews() {
@@ -165,6 +174,30 @@ extension MainViewController {
             .bottom()
     }
     
+    private func showFetchError() {
+        cells = []
+        collectionView.reloadData()
+        let model = InfoBottomSheetModel(
+            text: "Ошибка при загрузке",
+            image: .redCross,
+            buttonTitle: "Повторить",
+            onConfirm: { [weak self] in
+                self?.showShimmer()
+                self?.fetchAutos()
+            }
+        )
+        coordinator.openInfoBottomSheetViewController(model: model)
+    }
+
+    private func applyAutos(_ autos: [Auto]) {
+        let sorted = autos.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
+        cells = mapAutos(with: sorted)
+        collectionView.reloadData()
+        filterService.setModel(autos)
+        filterView.isHidden = autos.isEmpty
+        view.setNeedsLayout()
+    }
+
     private func fetchAutos() {
         rentApiFacade.getAutos { [weak self] result in
             DispatchQueue.main.async {
@@ -175,23 +208,11 @@ extension MainViewController {
             case .success(let model):
                 DispatchQueue.main.async {
                     guard let self else { return }
-                    let sorted = (model.result ?? []).sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
-                    self.cells = self.mapAutos(with: sorted)
-                    self.collectionView.reloadData()
-                    self.filterService.setModel(model.result ?? [])
-                    self.filterView.isHidden = model.result?.isEmpty ?? true
-                    self.view.setNeedsLayout()
+                    self.applyAutos(model.result ?? [])
                 }
             case .failure:
                 DispatchQueue.main.async { [weak self] in
-                    guard let self else { return }
-                    let model = InfoBottomSheetModel(
-                        text: "Ошибка при загрузке",
-                        image: .redCross,
-                        buttonTitle: "Повторить",
-                        onConfirm: { [weak self] in self?.fetchAutos() }
-                    )
-                    self.coordinator.openInfoBottomSheetViewController(model: model)
+                    self?.showFetchError()
                 }
             }
         }

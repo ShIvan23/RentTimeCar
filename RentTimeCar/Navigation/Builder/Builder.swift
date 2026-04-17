@@ -9,12 +9,13 @@ import UIKit
 
 final class Builder {
     
-    static func makeMainViewController() -> UIViewController {
+    static func makeMainViewController(preloadedAutos: Result<[Auto], Error>? = nil) -> UIViewController {
         let coordinator = Coordinator.shared
         let rentApiFacade = RentApiFacade()
         let controller = MainViewController(
             coordinator: coordinator,
-            rentApiFacade: rentApiFacade
+            rentApiFacade: rentApiFacade,
+            preloadedAutos: preloadedAutos
         )
         let navigationController = UINavigationController(rootViewController: controller)
         coordinator.navigationController = navigationController
