@@ -123,6 +123,7 @@ final class DoubledSlider: UIView {
             isInitRightThumbOffset = false
             rightThumbOffset = bounds.width - .defaultThumbOffset * 2
             offsetsForCalculation.max = rightThumbOffset
+            recalculateThumbOffsets()
         }
         track.pin
             .horizontally()
@@ -180,6 +181,16 @@ final class DoubledSlider: UIView {
         delegate?.maxValueDidChange(Int(maximumValue - currentValue))
     }
     
+    private func recalculateThumbOffsets() {
+        let difference = maximumValue - minimumValue
+        guard difference > 0 else { return }
+        let range = offsetsForCalculation.max - offsetsForCalculation.min
+        leftThumbOffset = (minimumValueNow - minimumValue) / difference * range + .defaultThumbOffset
+        rightThumbOffset = offsetsForCalculation.max - (maximumValue - maximumValueNow) / difference * range
+        needUpdateMinValue = false
+        needUpdateMaxValue = false
+    }
+
     private func setupView() {
         addSubviews([track, activeTrack, leftThumb, rightThumb])
         activeTrack.backgroundColor = .whiteTextColor
