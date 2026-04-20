@@ -12,6 +12,10 @@ protocol AuthServiceObserver: AnyObject {
     func post(state: AuthState)
 }
 
+protocol AuthServiceErrorDelegate: AnyObject {
+    func handleAuthError()
+}
+
 enum AuthState: String {
     case needAuthorize
     case needRegister
@@ -34,6 +38,7 @@ final class AuthService {
 
     private let userDefaults = UserDefaults.standard
     private var observers = NSHashTable<AnyObject>.weakObjects()
+    private var errorObservers = NSHashTable<AnyObject>.weakObjects()
     private let rentApiFacade: IRentApiFacade = RentApiFacade()
 
     // MARK: - Init
@@ -47,7 +52,6 @@ final class AuthService {
             print("+++ NOOOO authState id UD. needAuthorize")
             authState = .needAuthorize
         }
-
         guard authState != .needAuthorize else { return }
         
         checkRegistration(needInvoke: false)
@@ -60,13 +64,17 @@ final class AuthService {
             observers.add(observer)
         }
     }
+    
+    func addErrorObserver(_ observer: AuthServiceErrorDelegate) {
+        if !errorObservers.contains(observer) {
+            errorObservers.add(observer)
+        }
+    }
 
     func saveState(authState: AuthState) {
         self.authState = authState
         userDefaults.set(authState.rawValue, forKey: .authStateKey)
-
-        // Если пользователь авторизовался через смс, то нужно проверить, заведена ли карточка на клиента и есть ли его доки в системе
-        checkRegistration()
+        invokeAllSubscribers()
     }
 
     func refreshAuthState() {
@@ -76,6 +84,7 @@ final class AuthService {
     func savePhoneNumber(_ phoneNumber: String) {
         self.phoneNumber = phoneNumber
         userDefaults.set(phoneNumber, forKey: .phoneNumberKey)
+        checkRegistration()
     }
 
     func logout() {
@@ -83,7 +92,6 @@ final class AuthService {
         client = nil
         phoneNumber = nil
         userDefaults.set(AuthState.needAuthorize.rawValue, forKey: .authStateKey)
-        userDefaults.removeObject(forKey: .integrationIdKey)
         userDefaults.removeObject(forKey: .phoneNumberKey)
         invokeAllSubscribers()
     }
@@ -96,18 +104,33 @@ final class AuthService {
             guard let self else { return }
             switch result {
             case let .success(clients):
-                print("+++ success clients = \(clients)")
-                self.client = clients.result?.clients.first
-                userDefaults.set(self.client?.integrationId, forKey: .integrationIdKey)
-                handleClientRegistration(with: clients.result, needInvoke: needInvoke)
-            case let .failure(error):
-                debugPrint("+++ error = \(error)")
+                if clients.result?.clients.isEmpty == true {
+                    addClient(with: phoneNumber)
+                } else {
+                    self.client = clients.result?.clients.first
+                    handleClientRegistration(with: client, needInvoke: needInvoke)
+                }
+            case .failure:
+                invokeAllErrorSubscribers()
             }
         }
     }
     
-    private func handleClientRegistration(with model: Clients?, needInvoke: Bool) {
-        guard let client = model?.clients.first else { return }
+    private func addClient(with phoneNumber: String) {
+        rentApiFacade.addClient(with: phoneNumber) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case let .success(client):
+                self.client = client.result
+                saveState(authState: .needRegister)
+            case .failure:
+                invokeAllErrorSubscribers()
+            }
+        }
+    }
+    
+    private func handleClientRegistration(with model: Client?, needInvoke: Bool) {
+        guard let client = model else { return }
         
         defer {
             if needInvoke {
@@ -142,10 +165,18 @@ final class AuthService {
             }
         }
     }
+    
+    private func invokeAllErrorSubscribers() {
+        DispatchQueue.main.async {
+            self.errorObservers.allObjects.forEach {
+                guard let authServiceErrorObserver = $0 as? AuthServiceErrorDelegate else { return }
+                authServiceErrorObserver.handleAuthError()
+            }
+        }
+    }
 }
 
 private extension String {
     static let authStateKey = "authStateKey"
     static let phoneNumberKey = "phoneNumberKey"
-    static let integrationIdKey = "integrationIdKey"
 }

@@ -165,7 +165,6 @@ extension EnterSmsCodeViewController: EnterCodeViewDelegate {
     func validateCode(_ code: String) {
         guard checkCode == code else { return showToast(with: "Код из смс введен не верно")}
         authService.savePhoneNumber(clearPhoneNumber.cancelPhoneNumberMask())
-        authService.saveState(authState: .needRegister)
         coordinator.popToRootViewController()
     }
 }

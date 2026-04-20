@@ -68,6 +68,15 @@ extension InfoBottomSheetModel {
             onConfirm: onConfirm
         )
     }
+    
+    static func makeAuthFailModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Не удалось войти.\n\nПроверьте подключение к интернету и попробуйте ещё раз.",
+            image: .redCross,
+            buttonTitle: "Понятно",
+            onConfirm: onConfirm
+        )
+    }
 }
 
 final class InfoBottomSheetViewController: UIViewController {

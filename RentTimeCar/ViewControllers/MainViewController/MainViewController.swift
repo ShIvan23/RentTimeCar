@@ -127,7 +127,8 @@ final class MainViewController: UIViewController {
         NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .sortingAutoUpdated, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(filteredAutosUpdated), name: .classAutoUpdated, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(onAutoSearchStarted), name: .autoSearchStarted, object: nil)
-        AuthService.shared.addObserver(self)
+        authService.addObserver(self)
+        authService.addErrorObserver(self)
     }
 
     @objc
@@ -484,6 +485,17 @@ extension MainViewController: AuthServiceObserver {
             }
         }) else { return }
         cells.remove(at: firstButtonCellIndex)
+    }
+}
+
+// MARK: - AuthServiceErrorDelegate
+
+extension MainViewController: AuthServiceErrorDelegate {
+    func handleAuthError() {
+        coordinator.openInfoBottomSheetViewController(
+            model: InfoBottomSheetModel.makeAuthFailModel { [weak self] in
+                self?.authService.refreshAuthState()
+        })
     }
 }
 
