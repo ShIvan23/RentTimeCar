@@ -77,6 +77,15 @@ extension InfoBottomSheetModel {
             onConfirm: onConfirm
         )
     }
+    
+    static func makeFailUploadImagesModel() -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Не удалось отправить фото на проверку.\n\nСвязитесь со службой поддержки.",
+            image: .redCross,
+            buttonTitle: "Хорошо}",
+            onConfirm: {}
+        )
+    }
 }
 
 final class InfoBottomSheetViewController: UIViewController {

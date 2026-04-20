@@ -169,7 +169,10 @@ final class RegistrationViewController: UIViewController {
     }
 
     private func uploadPhotos() {
-        guard let clientIntegrationId = authService.client?.integrationId else { return }
+        guard let clientIntegrationId = authService.client?.integrationId else {
+            coordinator.openInfoBottomSheetViewController(model: InfoBottomSheetModel.makeFailUploadImagesModel())
+            return
+        }
         let images = registrationModelBox.items.compactMap { item -> UIImage? in
             if case let .image(image) = item { return image }
             return nil
