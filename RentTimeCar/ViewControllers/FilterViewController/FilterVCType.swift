@@ -13,6 +13,7 @@ enum FilterVCType {
     case price(FilterValueModel)
     case motorPower(FilterValueModel)
     case classAuto(FilterInfoAuto)
+    case engineType(FilterInfoAuto)
     case separator
     case title(String)
 }
@@ -103,6 +104,15 @@ extension FilterVCType {
         result.append(.separator)
         result.append(.title("Класс"))
         result.append(contentsOf: classesAuto)
+        let selectedEngines = FilterService.shared.selectedModInfoEngines
+        let engineTypes: [FilterVCType] = FilterService.shared.modInfoEngines.map {
+            .engineType(FilterInfoAuto(name: $0.name, isSelected: selectedEngines.contains($0.name)))
+        }
+        if !engineTypes.isEmpty {
+            result.append(.separator)
+            result.append(.title("Тип двигателя"))
+            result.append(contentsOf: engineTypes)
+        }
         result.append(.separator)
         return result
     }

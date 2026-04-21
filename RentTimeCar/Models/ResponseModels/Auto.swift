@@ -61,6 +61,7 @@ struct Auto: Decodable {
     let modInfoV3: String
     let modInfoPrivod: String
     let primaryInfo: PrimaryInfo
+    let modInfoEngine: String?
 
     enum CodingKeys: String, CodingKey {
         case files = "Files"
@@ -78,6 +79,7 @@ struct Auto: Decodable {
         case modInfoV3 = "ModInfoV3"
         case modInfoPrivod = "ModInfoPrivod"
         case primaryInfo = "PrimaryInfo"
+        case modInfoEngine = "ModInfoEngine"
     }
 
     init(
@@ -95,7 +97,8 @@ struct Auto: Decodable {
         tarifs: [Tarif],
         modInfoV3: String,
         modInfoPrivod: String,
-        primaryInfo: PrimaryInfo
+        primaryInfo: PrimaryInfo,
+        modInfoEngine: String?
     ) {
         self.title = title
         self.files = files
@@ -112,6 +115,7 @@ struct Auto: Decodable {
         self.modInfoV3 = modInfoV3
         self.modInfoPrivod = modInfoPrivod
         self.primaryInfo = primaryInfo
+        self.modInfoEngine = modInfoEngine
     }
 
     init(from decoder: any Decoder) throws {
@@ -133,6 +137,7 @@ struct Auto: Decodable {
         self.modInfoV3 = try container.decode(String.self, forKey: .modInfoV3)
         self.modInfoPrivod = try container.decode(String.self, forKey: .modInfoPrivod)
         self.primaryInfo = try container.decode(PrimaryInfo.self, forKey: .primaryInfo)
+        self.modInfoEngine = try? container.decodeIfPresent(String.self, forKey: .modInfoEngine)
     }
 }
 

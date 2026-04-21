@@ -74,7 +74,8 @@ final class DetailAutoViewController: UIViewController {
             tarifs: autoModel.tarifs,
             modInfoV3: autoModel.modInfoV3,
             modInfoPrivod: autoModel.modInfoPrivod,
-            primaryInfo: autoModel.primaryInfo
+            primaryInfo: autoModel.primaryInfo,
+            modInfoEngine: autoModel.modInfoEngine
         )
         self.autoModel = currentModel
         self.coordinator = coordinator

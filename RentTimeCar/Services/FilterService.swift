@@ -19,11 +19,13 @@ final class FilterService {
     private(set) var autoClassesCodes = [String: FilterInfoAuto]()
     private(set) var sortingAuto: [FilterInfoAuto]
 
+    private(set) var modInfoEngines: [FilterInfoAuto] = []
     private(set) var selectedDates = [Date]()
     private(set) var selectedPrice: (min: Int, max: Int) = (.zero, .zero)
     private(set) var selectedMotorPower: (min: Int, max: Int) = (.zero, .zero)
     private(set) var filteredAutos: [Auto] = []
     private(set) var selectedBrands: [String] = []
+    private(set) var selectedModInfoEngines: [String] = []
 
     // MARK: - Private Properties
 
@@ -45,6 +47,7 @@ final class FilterService {
             || selectedPrice.max != price.max
             || !selectedBrands.isEmpty
             || autoClassesCodes.values.contains(where: { $0.isSelected })
+            || !selectedModInfoEngines.isEmpty
     }
     
     func setModel(_ model: [Auto]) {
@@ -52,6 +55,7 @@ final class FilterService {
         makeBrands(with: model)
         makePrices(with: model)
         makeMotorPower(with: model)
+        makeModInfoEngines(with: model)
     }
     
     func setSelectedDates(_ selectedDates: [Date]) {
@@ -71,6 +75,10 @@ final class FilterService {
     func setSelectedMotorPower(min: Int, max: Int) {
         selectedMotorPower.min = min
         selectedMotorPower.max = max
+    }
+
+    func setSelectedModInfoEngines(_ engines: [String]) {
+        selectedModInfoEngines = engines
     }
 
     func updateFilterInfo(for type: BottomSheetType, item: FilterInfoAuto) {
@@ -139,6 +147,8 @@ final class FilterService {
         selectedMotorPower.max = motorPower.max
         filteredAutos = []
         selectedBrands = []
+        selectedModInfoEngines = []
+        modInfoEngines = modInfoEngines.map { FilterInfoAuto(name: $0.name, isSelected: false) }
         var newAutoClasses = [String: FilterInfoAuto]()
         autoClassesCodes.forEach {
             newAutoClasses[$0] = FilterInfoAuto(name: $1.name, isSelected: false)
@@ -175,7 +185,7 @@ final class FilterService {
                 case let .success(model):
                     self.setFilteredAutos(model.result ?? [])
                     NotificationCenter.default.post(name: .filteredAutosUpdated, object: nil)
-                    completion(model.result ?? [])
+                    completion(self.filteredAutos)
                     self.rentApiFacadeRetriesCount = 5
                 case .failure:
                     guard self.rentApiFacadeRetriesCount != .zero else { return }
@@ -196,18 +206,28 @@ final class FilterService {
     }
     
     private func sortIfNeeded(_ autos: [Auto]) -> [Auto] {
+        let filtered: [Auto]
+        if selectedModInfoEngines.isEmpty {
+            filtered = autos
+        } else {
+            let selectedLowercased = selectedModInfoEngines.map { $0.lowercased() }
+            filtered = autos.filter { auto in
+                guard let engine = auto.modInfoEngine else { return false }
+                return selectedLowercased.contains(engine.lowercased())
+            }
+        }
         guard let hasSotingItem = sortingAuto.first(where: { $0.isSelected }) else {
-            return autos.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
+            return filtered.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
         }
         switch hasSotingItem.name {
         case .filterClassText:
-            return autos.sorted(by: { $0.classAuto > $1.classAuto })
+            return filtered.sorted(by: { $0.classAuto > $1.classAuto })
         case .filterBrandText:
-            return autos.sorted(by: { $0.marka < $1.marka })
+            return filtered.sorted(by: { $0.marka < $1.marka })
         case .filterPriceText:
-            return autos.sorted(by: { $0.defaultPriceWithDiscountSt < $1.defaultPriceWithDiscountSt })
+            return filtered.sorted(by: { $0.defaultPriceWithDiscountSt < $1.defaultPriceWithDiscountSt })
         default:
-            return autos.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
+            return filtered.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
         }
     }
 
@@ -252,6 +272,23 @@ final class FilterService {
             self.motorPower.max = allMotorPowers.max() ?? .zero
             self.selectedMotorPower.min = self.motorPower.min
             self.selectedMotorPower.max = self.motorPower.max
+        }
+    }
+
+    private func makeModInfoEngines(with model: [Auto]) {
+        DispatchQueue.global(qos: .userInteractive).async {
+            var seen = Set<String>()
+            var engines: [FilterInfoAuto] = []
+            model.forEach { auto in
+                guard let engine = auto.modInfoEngine, !engine.isEmpty else { return }
+                let key = engine.lowercased()
+                if !seen.contains(key) {
+                    seen.insert(key)
+                    let capitalized = engine.prefix(1).uppercased() + engine.dropFirst()
+                    engines.append(FilterInfoAuto(name: capitalized))
+                }
+            }
+            self.modInfoEngines = engines.sorted { $0.name < $1.name }
         }
     }
 

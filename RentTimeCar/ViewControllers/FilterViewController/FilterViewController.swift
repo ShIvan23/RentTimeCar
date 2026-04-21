@@ -84,11 +84,7 @@ final class FilterViewController: UIViewController {
         buttonContainerView.addSubview(confirmButton)
         buttonContainerView.backgroundColor = .secondaryBackground
         model = FilterVCType.makeDefaultModel()
-        if filterService.hasFilters {
-            updateConfirmButtonTitle(autoCount: filterService.filteredAutos.count)
-        } else {
-            updateConfirmButtonTitle(autoCount: model.count)
-        }
+        updateConfirmButton()
         
         confirmButton.action = { [weak self] in
             guard let self else { return }
@@ -183,6 +179,10 @@ extension FilterViewController: UICollectionViewDataSource {
             let cell: FilterClassCell = collectionView.dequeueCell(for: indexPath)
             cell.configure(with: classModel)
             return cell
+        case let .engineType(engineModel):
+            let cell: FilterClassCell = collectionView.dequeueCell(for: indexPath)
+            cell.configure(with: engineModel)
+            return cell
         }
     }
 }
@@ -217,6 +217,15 @@ extension FilterViewController: UICollectionViewDelegateFlowLayout {
                 width: attributedStringSize.width + .filterClassCellHorizontalMargin * 2,
                 height: attributedStringSize.height + .filterClassCellVerticalMargin * 2
             )
+        case let .engineType(engineModel):
+            let attributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.openSans(fontSize: 16) ?? .systemFont(ofSize: 16),
+            ]
+            let attributedStringSize = NSAttributedString(string: engineModel.name, attributes: attributes).size()
+            return CGSize(
+                width: attributedStringSize.width + .filterClassCellHorizontalMargin * 2,
+                height: attributedStringSize.height + .filterClassCellVerticalMargin * 2
+            )
         }
     }
     
@@ -228,6 +237,15 @@ extension FilterViewController: UICollectionViewDelegateFlowLayout {
             return
         case .separator, .title, .motorPower, .price:
             break
+        case let .engineType(engineModel):
+            let updated = FilterInfoAuto(name: engineModel.name, isSelected: !engineModel.isSelected)
+            model[indexPath.item] = .engineType(updated)
+            collectionView.reloadData()
+            let selectedEngines = model.compactMap { item -> String? in
+                guard case let .engineType(engine) = item, engine.isSelected else { return nil }
+                return engine.name
+            }
+            filterService.setSelectedModInfoEngines(selectedEngines)
         case let .brandAuto(brandAutoModel):
             let brandAutoModel = FilterBrandAuto(
                 name: brandAutoModel.name,
