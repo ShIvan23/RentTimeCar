@@ -82,6 +82,20 @@ extension EnterCodeView: CodeTextFieldDelegate {
         nextTextField.becomeFirstResponder()
     }
 
+    func didEnterNumberInFilledField(_ textField: CodeTextField, digit: String) {
+        guard let currentTextFieldIndex = codeTextFieldsPool.firstIndex(where: { $0 === textField }),
+              let nextTextField = codeTextFieldsPool[safe: currentTextFieldIndex + 1],
+              nextTextField.text?.isEmpty == true else { return }
+        nextTextField.text = digit
+        didEnterNumber(nextTextField)
+    }
+
+    func didDeleteNumber(_ textField: CodeTextField) {
+        guard let currentTextFieldIndex = codeTextFieldsPool.firstIndex(where: { $0 === textField }),
+              let previousTextField = codeTextFieldsPool[safe: currentTextFieldIndex - 1] else { return }
+        previousTextField.becomeFirstResponder()
+    }
+
     func didAutofillCode(_ code: String) {
         let digits = code.filter(\.isNumber)
         for (index, field) in codeTextFieldsPool.enumerated() {

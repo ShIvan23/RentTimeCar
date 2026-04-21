@@ -9,6 +9,8 @@ import UIKit
 
 protocol CodeTextFieldDelegate: AnyObject {
     func didEnterNumber(_ textField: CodeTextField)
+    func didEnterNumberInFilledField(_ textField: CodeTextField, digit: String)
+    func didDeleteNumber(_ textField: CodeTextField)
     func didAutofillCode(_ code: String)
 }
 
@@ -30,6 +32,14 @@ final class CodeTextField: UITextField {
     }
 
     // MARK: - Override
+
+    override func deleteBackward() {
+        if text?.isEmpty == false {
+            text = ""
+        } else {
+            codeDelegate?.didDeleteNumber(self)
+        }
+    }
 
     // text position
     override func editingRect(forBounds bounds: CGRect) -> CGRect {
@@ -66,7 +76,10 @@ extension CodeTextField: UITextFieldDelegate {
             codeDelegate?.didAutofillCode(string)
             return false
         }
-        guard textField.text == "" else { return false }
+        guard textField.text == "" else {
+            codeDelegate?.didEnterNumberInFilledField(self, digit: string)
+            return false
+        }
         textField.text = string
         codeDelegate?.didEnterNumber(self)
         return textField.text?.isEmpty == true
