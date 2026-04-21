@@ -485,6 +485,7 @@ extension MainViewController: AuthServiceObserver {
             }
         }) else { return }
         cells.remove(at: firstButtonCellIndex)
+        collectionView.reloadData()
     }
 }
 

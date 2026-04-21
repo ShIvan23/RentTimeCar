@@ -133,6 +133,7 @@ final class AuthService {
         guard let client = model else { return }
         
         defer {
+            userDefaults.set(authState.rawValue, forKey: .authStateKey)
             if needInvoke {
                 invokeAllSubscribers()
             }
