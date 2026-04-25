@@ -15,12 +15,19 @@ final class ClientItemsViewController: UIViewController {
         case fines
     }
 
+    // MARK: - Private Types
+
+    private struct RentSection {
+        let title: String
+        let requests: [ClientRequest]
+    }
+
     // MARK: - UI
 
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.minimumLineSpacing = 12
-        layout.sectionInset = UIEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
+        layout.sectionInset = UIEdgeInsets(top: 8, left: 16, bottom: 16, right: 16)
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .mainBackground
         collectionView.dataSource = self
@@ -28,6 +35,11 @@ final class ClientItemsViewController: UIViewController {
         collectionView.register(cell: ClientRequestCell.self)
         collectionView.register(cell: FineCell.self)
         collectionView.register(cell: ShimmerCarCell.self)
+        collectionView.register(
+            SectionHeaderView.self,
+            forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
+            withReuseIdentifier: SectionHeaderView.reuseIdentifier
+        )
         return collectionView
     }()
 
@@ -44,7 +56,7 @@ final class ClientItemsViewController: UIViewController {
     private let mode: Mode
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
-    private var requests: [ClientRequest] = []
+    private var sections: [RentSection] = []
     private var fines: [FineDto] = []
     private var isLoading = false
 
@@ -120,8 +132,9 @@ final class ClientItemsViewController: UIViewController {
                 self.isLoading = false
                 switch result {
                 case let .success(response):
-                    self.requests = response.result?.requests ?? []
-                    self.emptyLabel.isHidden = !self.requests.isEmpty
+                    let requests = response.result?.requests ?? []
+                    self.sections = self.makeSections(from: requests)
+                    self.emptyLabel.isHidden = !requests.isEmpty
                     self.collectionView.reloadData()
                 case .failure:
                     self.emptyLabel.isHidden = false
@@ -149,16 +162,40 @@ final class ClientItemsViewController: UIViewController {
             }
         }
     }
+
+    private func makeSections(from requests: [ClientRequest]) -> [RentSection] {
+        let active = requests.filter { !$0.isCompleted }
+        let completed = requests.filter { $0.isCompleted }
+        var result: [RentSection] = []
+        if !active.isEmpty {
+            result.append(RentSection(title: "Активные", requests: active))
+        }
+        if !completed.isEmpty {
+            result.append(RentSection(title: "Завершенные", requests: completed))
+        }
+        return result
+    }
 }
 
 // MARK: - UICollectionViewDataSource
 
 extension ClientItemsViewController: UICollectionViewDataSource {
+    func numberOfSections(in collectionView: UICollectionView) -> Int {
+        if isLoading { return 1 }
+        switch mode {
+        case .rents: return max(sections.count, 1)
+        case .fines: return 1
+        }
+    }
+
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if isLoading { return 6 }
         switch mode {
-        case .rents: return requests.count
-        case .fines: return fines.count
+        case .rents:
+            guard !sections.isEmpty else { return 0 }
+            return sections[section].requests.count
+        case .fines:
+            return fines.count
         }
     }
 
@@ -170,13 +207,32 @@ extension ClientItemsViewController: UICollectionViewDataSource {
         switch mode {
         case .rents:
             let cell: ClientRequestCell = collectionView.dequeueCell(for: indexPath)
-            cell.configure(with: requests[indexPath.item])
+            cell.configure(with: sections[indexPath.section].requests[indexPath.item])
             return cell
         case .fines:
             let cell: FineCell = collectionView.dequeueCell(for: indexPath)
             cell.configure(with: fines[indexPath.item])
             return cell
         }
+    }
+
+    func collectionView(
+        _ collectionView: UICollectionView,
+        viewForSupplementaryElementOfKind kind: String,
+        at indexPath: IndexPath
+    ) -> UICollectionReusableView {
+        guard kind == UICollectionView.elementKindSectionHeader,
+              mode == .rents,
+              !sections.isEmpty else {
+            return UICollectionReusableView()
+        }
+        let header = collectionView.dequeueReusableSupplementaryView(
+            ofKind: kind,
+            withReuseIdentifier: SectionHeaderView.reuseIdentifier,
+            for: indexPath
+        ) as? SectionHeaderView
+        header?.configure(with: sections[indexPath.section].title)
+        return header ?? UICollectionReusableView()
     }
 }
 
@@ -191,13 +247,23 @@ extension ClientItemsViewController: UICollectionViewDelegateFlowLayout {
         let width = collectionView.bounds.width - 32
         if isLoading {
             switch mode {
-            case .rents: return CGSize(width: width, height: 96)
+            case .rents: return CGSize(width: width, height: 100)
             case .fines: return CGSize(width: width, height: 110)
             }
         }
         switch mode {
-        case .rents: return CGSize(width: width, height: 96)
+        case .rents: return CGSize(width: width, height: 100)
         case .fines: return CGSize(width: width, height: 110)
         }
     }
+
+    func collectionView(
+        _ collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        referenceSizeForHeaderInSection section: Int
+    ) -> CGSize {
+        guard mode == .rents, !sections.isEmpty else { return .zero }
+        return CGSize(width: collectionView.bounds.width, height: 36)
+    }
 }
+

@@ -3,6 +3,8 @@
 //  RentTimeCar
 //
 
+import Nuke
+import NukeExtensions
 import PinLayout
 import UIKit
 
@@ -10,48 +12,60 @@ final class ClientRequestCell: UICollectionViewCell {
 
     // MARK: - UI
 
+    private let carImageView: UIImageView = {
+        let iv = UIImageView()
+        iv.contentMode = .scaleAspectFill
+        iv.clipsToBounds = true
+        iv.layer.cornerRadius = 12
+        iv.layer.maskedCorners = [.layerMinXMinYCorner, .layerMinXMaxYCorner]
+        iv.backgroundColor = .secondaryBackground
+        return iv
+    }()
+
+    private let carNameLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 15, weight: .semibold)
+        label.textColor = .whiteTextColor
+        label.numberOfLines = 1
+        return label
+    }()
+
+    private let dateFromLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 13)
+        label.textColor = .secondaryTextColor
+        return label
+    }()
+
+    private let dateToLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 13)
+        label.textColor = .secondaryTextColor
+        return label
+    }()
+
+    private let statusBadgeView: UIView = {
+        let view = UIView()
+        view.layer.cornerRadius = 12
+        view.layer.maskedCorners = [.layerMaxXMinYCorner, .layerMaxXMaxYCorner]
+        view.clipsToBounds = true
+        return view
+    }()
+
+    private let statusLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 13, weight: .medium)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.transform = CGAffineTransform(rotationAngle: .pi / 2)
+        return label
+    }()
+
     private let containerView: UIView = {
         let view = UIView()
         view.backgroundColor = .secondaryBackground
         view.layer.cornerRadius = 12
         return view
-    }()
-
-    private let numberLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 16, weight: .semibold)
-        label.textColor = .whiteTextColor
-        return label
-    }()
-
-    private let serviceLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 14)
-        label.textColor = .secondaryTextColor
-        return label
-    }()
-
-    private let dateLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 13)
-        label.textColor = .secondaryTextColor
-        return label
-    }()
-
-    private let statusLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 13)
-        label.textColor = .enabledMainButtonBorderColor
-        label.textAlignment = .right
-        return label
-    }()
-
-    private let currentStepLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 13)
-        label.textColor = .secondaryTextColor
-        label.textAlignment = .right
-        return label
     }()
 
     // MARK: - Init
@@ -75,54 +89,94 @@ final class ClientRequestCell: UICollectionViewCell {
     // MARK: - Internal Methods
 
     func configure(with model: ClientRequest) {
-        numberLabel.text = model.number
-        serviceLabel.text = model.service
-        statusLabel.text = model.approvalStatus
-        currentStepLabel.text = model.currentStep
-        dateLabel.text = String(model.creationDate.prefix(10))
+        let info = model.rentInfo
+        carNameLabel.text = info?.autoTitle ?? model.service
+
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm, dd.MM.yy"
+        dateFromLabel.text = info?.dateFrom.map { "От: \(formatter.string(from: $0))" } ?? "От: —"
+        dateToLabel.text = info?.dateTo.map { "До: \(formatter.string(from: $0))" } ?? "До: —"
+
+        statusLabel.text = model.currentStep
+        configureStatusBadge(for: model.currentStep)
+        loadCarImage(autoId: info?.autoId)
     }
 
     // MARK: - Private Methods
 
     private func setupView() {
         contentView.addSubview(containerView)
-        containerView.addSubviews([numberLabel, serviceLabel, dateLabel, statusLabel, currentStepLabel])
+        containerView.addSubviews([carImageView, carNameLabel, dateFromLabel, dateToLabel, statusBadgeView])
+        statusBadgeView.addSubview(statusLabel)
+    }
+
+    private func configureStatusBadge(for step: String) {
+        let cancelledSteps = ["Отмена", "Отклонено", "Отклонён"]
+        let completedSteps = ["Завершена", "Завершён", "Закрыт"]
+        if cancelledSteps.contains(where: { step.localizedCaseInsensitiveContains($0) }) {
+            statusBadgeView.backgroundColor = UIColor(red: 0.85, green: 0.25, blue: 0.25, alpha: 1)
+        } else if completedSteps.contains(where: { step.localizedCaseInsensitiveContains($0) }) {
+            statusBadgeView.backgroundColor = UIColor(red: 0.3, green: 0.65, blue: 0.35, alpha: 1)
+        } else {
+            statusBadgeView.backgroundColor = .enabledMainButtonBorderColor
+        }
+    }
+
+    private func loadCarImage(autoId: Int?) {
+        carImageView.image = .carPlaceholder
+        guard let autoId else { return }
+        let auto = FilterService.shared.allAutos.first { $0.itemID == autoId }
+        guard let urlString = auto?.files.first(where: { $0.url != nil && $0.folder == .folderImageValue })?.url,
+              let url = URL(string: urlString) else { return }
+        let options = ImageLoadingOptions(placeholder: .carPlaceholder, transition: .fadeIn(duration: 0.3))
+        NukeExtensions.loadImage(with: url, options: options, into: carImageView)
     }
 
     private func performLayout() {
         containerView.pin.all()
 
-        numberLabel.pin
-            .top(16)
-            .left(16)
-            .width(containerView.bounds.width / 2 - 16)
-            .sizeToFit(.width)
+        let badgeWidth: CGFloat = 44
+        let imageWidth: CGFloat = 120
+
+        carImageView.pin
+            .left()
+            .top()
+            .bottom()
+            .width(imageWidth)
+
+        statusBadgeView.pin
+            .right()
+            .top()
+            .bottom()
+            .width(badgeWidth)
 
         statusLabel.pin
-            .top(16)
-            .right(16)
-            .width(containerView.bounds.width / 2 - 16)
+            .center()
+            .width(containerView.bounds.height - 16)
+            .height(badgeWidth)
+
+        let contentLeft = imageWidth + 12
+        let contentRight = badgeWidth + 12
+        let contentWidth = containerView.bounds.width - contentLeft - contentRight
+
+        carNameLabel.pin
+            .top(14)
+            .left(contentLeft)
+            .width(contentWidth)
             .sizeToFit(.width)
 
-        serviceLabel.pin
-            .below(of: numberLabel)
+        dateFromLabel.pin
+            .below(of: carNameLabel)
             .marginTop(8)
-            .left(16)
-            .right(16)
+            .left(contentLeft)
+            .width(contentWidth)
             .sizeToFit(.width)
 
-        dateLabel.pin
-            .below(of: serviceLabel)
-            .marginTop(6)
-            .left(16)
-            .width(containerView.bounds.width / 2 - 16)
-            .sizeToFit(.width)
-
-        currentStepLabel.pin
-            .below(of: serviceLabel)
-            .marginTop(6)
-            .right(16)
-            .width(containerView.bounds.width / 2 - 16)
+        dateToLabel.pin
+            .below(of: dateFromLabel)
+            .marginTop(4)
+            .left(contentLeft)
+            .width(contentWidth)
             .sizeToFit(.width)
     }
 }
