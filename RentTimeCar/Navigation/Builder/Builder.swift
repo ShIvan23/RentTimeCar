@@ -47,6 +47,10 @@ final class Builder {
         CalendarViewController(autoId: autoId, coordinator: Coordinator.shared)
     }
     
+    static func makeRentDetailViewController(request: ClientRequest) -> UIViewController {
+        RentDetailViewController(request: request, coordinator: Coordinator.shared)
+    }
+
     static func makeDetailViewController(with model: Auto) -> UIViewController {
         let coordinator = Coordinator.shared
         let detailViewController = DetailAutoViewController(autoModel: model, coordinator: coordinator)

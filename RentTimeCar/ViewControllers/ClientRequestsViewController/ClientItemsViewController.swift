@@ -164,8 +164,12 @@ final class ClientItemsViewController: UIViewController {
     }
 
     private func makeSections(from requests: [ClientRequest]) -> [RentSection] {
-        let active = requests.filter { !$0.isCompleted }
-        let completed = requests.filter { $0.isCompleted }
+        let hiddenSteps = ["Данные клиента"]
+        let filtered = requests.filter { req in
+            !hiddenSteps.contains(where: { req.currentStep.localizedCaseInsensitiveContains($0) })
+        }
+        let active = filtered.filter { !$0.isCompleted }
+        let completed = filtered.filter { $0.isCompleted }
         var result: [RentSection] = []
         if !active.isEmpty {
             result.append(RentSection(title: "Активные", requests: active))
@@ -239,6 +243,11 @@ extension ClientItemsViewController: UICollectionViewDataSource {
 // MARK: - UICollectionViewDelegateFlowLayout
 
 extension ClientItemsViewController: UICollectionViewDelegateFlowLayout {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        guard mode == .rents, !sections.isEmpty else { return }
+        let request = sections[indexPath.section].requests[indexPath.item]
+        coordinator.openRentDetailViewController(request: request)
+    }
     func collectionView(
         _ collectionView: UICollectionView,
         layout collectionViewLayout: UICollectionViewLayout,

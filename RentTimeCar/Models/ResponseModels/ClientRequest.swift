@@ -96,6 +96,8 @@ struct ClientRentInfo {
     let autoTitle: String?
     let dateFrom: Date?
     let dateTo: Date?
+    let deliveryAddress: String?
+    let territory: String?
 
     init(jsonString: String) {
         guard let data = jsonString.data(using: .utf8),
@@ -104,6 +106,8 @@ struct ClientRentInfo {
             autoTitle = nil
             dateFrom = nil
             dateTo = nil
+            deliveryAddress = nil
+            territory = nil
             return
         }
         autoId = raw.auto?.autoId
@@ -115,6 +119,9 @@ struct ClientRentInfo {
         formatter.dateFormat = "dd.MM.yyyy HH:mm:ss"
         dateFrom = formatter.date(from: raw.dateFrom ?? "")
         dateTo = formatter.date(from: raw.dateTo ?? "")
+        let address = raw.deliveryAddress?.result?.trimmingCharacters(in: .whitespaces)
+        deliveryAddress = (address?.isEmpty == false) ? address : nil
+        territory = raw.usingTerritoryDict?.values.joined(separator: " ")
     }
 }
 
@@ -122,11 +129,15 @@ private struct ClientRentInfoResponse: Decodable {
     let auto: ClientRentAutoInfo?
     let dateFrom: String?
     let dateTo: String?
+    let deliveryAddress: ClientDeliveryAddress?
+    let usingTerritoryDict: [String: String]?
 
     enum CodingKeys: String, CodingKey {
         case auto = "Auto"
         case dateFrom = "DateFrom"
         case dateTo = "DateTo"
+        case deliveryAddress = "DeliveryAddress"
+        case usingTerritoryDict = "UsingTerritoryDict"
     }
 }
 
@@ -137,5 +148,13 @@ private struct ClientRentAutoInfo: Decodable {
     enum CodingKeys: String, CodingKey {
         case autoId = "AutoId"
         case autoTitle = "AutoTitle"
+    }
+}
+
+private struct ClientDeliveryAddress: Decodable {
+    let result: String?
+
+    enum CodingKeys: String, CodingKey {
+        case result = "result"
     }
 }

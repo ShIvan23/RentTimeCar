@@ -46,6 +46,7 @@ protocol ICoordinator {
     func popToViewController(_ controller: ICoordinatorController)
     func openClientRequestsViewController()
     func openClientFinesViewController()
+    func openRentDetailViewController(request: ClientRequest)
 }
 
 extension ICoordinator {
@@ -242,6 +243,12 @@ final class Coordinator: NSObject, ICoordinator {
     func openClientFinesViewController() {
         let vc = Builder.makeClientItemsViewController(mode: .fines)
         vc.title = "Мои штрафы"
+        navigationController?.pushViewController(vc, animated: true)
+        navigationController?.isNavigationBarHidden = false
+    }
+
+    func openRentDetailViewController(request: ClientRequest) {
+        let vc = Builder.makeRentDetailViewController(request: request)
         navigationController?.pushViewController(vc, animated: true)
         navigationController?.isNavigationBarHidden = false
     }
