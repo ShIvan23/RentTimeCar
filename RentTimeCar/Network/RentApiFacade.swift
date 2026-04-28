@@ -27,6 +27,7 @@ protocol IRentApiFacade {
     func getClientRequests(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ClientRequestsResponse>, Error>) -> Void)
     func getClientFines(clientIntegrationId: String, completion: @escaping (Result<ApiResult<FinesResponse>, Error>) -> Void)
     func getAutoCalendar(with input: GetAutoCalendarInput, completion: @escaping (Result<[AutoCalendar], Error>) -> Void)
+    func getActInfo(clientIntegrationId: String, objectId: String, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void)
     func createYukassaPayment(amount: Int, description: String, phone: String, completion: @escaping (Result<YookassaPaymentResponse, Error>) -> Void)
 }
 
@@ -108,6 +109,11 @@ final class RentApiFacade: IRentApiFacade {
 
     func getAutoCalendar(with input: GetAutoCalendarInput, completion: @escaping (Result<[AutoCalendar], Error>) -> Void) {
         guard let request = requestManager.getAutoCalendar(with: input) else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+
+    func getActInfo(clientIntegrationId: String, objectId: String, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void) {
+        guard let request = requestManager.getActInfo(clientIntegrationId: clientIntegrationId, objectId: objectId, objectDescriptorLong: objectDescriptorLong) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
 

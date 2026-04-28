@@ -48,7 +48,7 @@ final class Builder {
     }
     
     static func makeRentDetailViewController(request: ClientRequest) -> UIViewController {
-        RentDetailViewController(request: request, coordinator: Coordinator.shared)
+        RentDetailViewController(request: request, coordinator: Coordinator.shared, rentApiFacade: RentApiFacade())
     }
 
     static func makeDetailViewController(with model: Auto) -> UIViewController {

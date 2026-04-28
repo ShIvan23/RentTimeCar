@@ -14,6 +14,7 @@ final class RentDetailViewController: UIViewController {
 
     private let request: ClientRequest
     private let coordinator: ICoordinator
+    private let rentApiFacade: IRentApiFacade
     private var isInfoTabSelected = true
 
     // MARK: - UI — Header card
@@ -162,9 +163,10 @@ final class RentDetailViewController: UIViewController {
 
     // MARK: - Init
 
-    init(request: ClientRequest, coordinator: ICoordinator) {
+    init(request: ClientRequest, coordinator: ICoordinator, rentApiFacade: IRentApiFacade) {
         self.request = request
         self.coordinator = coordinator
+        self.rentApiFacade = rentApiFacade
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -215,6 +217,7 @@ final class RentDetailViewController: UIViewController {
 
         infoTabButton.addTarget(self, action: #selector(infoTabTapped), for: .touchUpInside)
         paymentTabButton.addTarget(self, action: #selector(paymentTabTapped), for: .touchUpInside)
+        actReturnButton.addTarget(self, action: #selector(actReturnTapped), for: .touchUpInside)
 
         updateTabSelection()
     }
@@ -315,6 +318,24 @@ final class RentDetailViewController: UIViewController {
         guard isInfoTabSelected else { return }
         isInfoTabSelected = false
         updateTabSelection()
+    }
+
+    @objc private func actReturnTapped() {
+        guard let integrationId = AuthService.shared.client?.integrationId else { return }
+        rentApiFacade.getActInfo(
+            clientIntegrationId: integrationId,
+            objectId: request.number,
+            objectDescriptorLong: 2
+        ) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case let .success(response):
+                    print("ActInfo response: \(response)")
+                case let .failure(error):
+                    print("ActInfo error: \(error)")
+                }
+            }
+        }
     }
 
     // MARK: - Layout

@@ -33,7 +33,7 @@ final class ClientItemsViewController: UIViewController {
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.register(cell: ClientRequestCell.self)
-        collectionView.register(cell: FineCell.self)
+        collectionView.register(cell: FineGroupCell.self)
         collectionView.register(cell: ShimmerCarCell.self)
         collectionView.register(
             SectionHeaderView.self,
@@ -57,7 +57,8 @@ final class ClientItemsViewController: UIViewController {
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
     private var sections: [RentSection] = []
-    private var fines: [FineDto] = []
+    private var fineGroups: [FineGroup] = []
+    private var expandedGroupIndices: Set<Int> = []
     private var isLoading = false
 
     // MARK: - Init
@@ -152,14 +153,32 @@ final class ClientItemsViewController: UIViewController {
                 switch result {
                 case let .success(response):
                     let fines = response.result?.fines ?? []
-                    self.fines = fines
-                    self.emptyLabel.isHidden = !fines.isEmpty
+                    self.fineGroups = self.makeFineGroups(from: fines)
+                    self.expandedGroupIndices = []
+                    self.emptyLabel.isHidden = !self.fineGroups.isEmpty
                     self.collectionView.reloadData()
                 case .failure:
                     self.emptyLabel.isHidden = false
                     self.collectionView.reloadData()
                 }
             }
+        }
+    }
+
+    private func makeFineGroups(from fines: [FineDto]) -> [FineGroup] {
+        var dict: [String: [FineDto]] = [:]
+        for fine in fines {
+            let key = fine.contractNumber ?? fine.vehicle ?? fine.vehicleGibddNumber ?? "other"
+            dict[key, default: []].append(fine)
+        }
+        return dict.map { _, groupFines in
+            FineGroup(
+                vehicle: groupFines.first?.vehicle,
+                contractNumber: groupFines.first?.contractNumber,
+                fines: groupFines.sorted { ($0.violationDate ?? .distantPast) < ($1.violationDate ?? .distantPast) }
+            )
+        }.sorted {
+            ($0.fines.first?.violationDate ?? .distantPast) > ($1.fines.first?.violationDate ?? .distantPast)
         }
     }
 
@@ -199,7 +218,7 @@ extension ClientItemsViewController: UICollectionViewDataSource {
             guard !sections.isEmpty else { return 0 }
             return sections[section].requests.count
         case .fines:
-            return fines.count
+            return fineGroups.count
         }
     }
 
@@ -214,8 +233,19 @@ extension ClientItemsViewController: UICollectionViewDataSource {
             cell.configure(with: sections[indexPath.section].requests[indexPath.item])
             return cell
         case .fines:
-            let cell: FineCell = collectionView.dequeueCell(for: indexPath)
-            cell.configure(with: fines[indexPath.item])
+            let cell: FineGroupCell = collectionView.dequeueCell(for: indexPath)
+            let index = indexPath.item
+            let isExpanded = expandedGroupIndices.contains(index)
+            cell.configure(group: fineGroups[index], isExpanded: isExpanded)
+            cell.onToggle = { [weak self] in
+                guard let self else { return }
+                if self.expandedGroupIndices.contains(index) {
+                    self.expandedGroupIndices.remove(index)
+                } else {
+                    self.expandedGroupIndices.insert(index)
+                }
+                self.collectionView.reloadItems(at: [indexPath])
+            }
             return cell
         }
     }
@@ -255,14 +285,15 @@ extension ClientItemsViewController: UICollectionViewDelegateFlowLayout {
     ) -> CGSize {
         let width = collectionView.bounds.width - 32
         if isLoading {
-            switch mode {
-            case .rents: return CGSize(width: width, height: 100)
-            case .fines: return CGSize(width: width, height: 110)
-            }
+            return CGSize(width: width, height: 100)
         }
         switch mode {
         case .rents: return CGSize(width: width, height: 100)
-        case .fines: return CGSize(width: width, height: 110)
+        case .fines:
+            let index = indexPath.item
+            let isExpanded = expandedGroupIndices.contains(index)
+            let count = fineGroups[index].fines.count
+            return CGSize(width: width, height: FineGroupCell.height(fineCount: count, isExpanded: isExpanded))
         }
     }
 
