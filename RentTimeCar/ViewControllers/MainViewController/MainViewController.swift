@@ -96,6 +96,11 @@ final class MainViewController: UIViewController {
         }
     }
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: false)
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         performLayout()
@@ -263,7 +268,6 @@ extension MainViewController {
 
 extension MainViewController {
     private func layoutNavBarView() {
-        navigationController?.isNavigationBarHidden = true
         let navigationBarFrame = navigationController?.navigationBar.frame ?? .zero
         navBarView.pin
             .top(view.safeAreaInsets.top)

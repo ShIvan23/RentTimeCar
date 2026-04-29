@@ -52,6 +52,12 @@ final class FullImageViewController: UIViewController {
         return btn
     }()
 
+    private lazy var dismissPan: UIPanGestureRecognizer = {
+        let pan = UIPanGestureRecognizer(target: self, action: #selector(handleDismissPan))
+        pan.delegate = self
+        return pan
+    }()
+
     // MARK: - Init
 
     init(images: [String], initialIndex: Int = 0) {
@@ -71,6 +77,7 @@ final class FullImageViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .black
         view.addSubviews([collectionView, pageControl, backButton])
+        view.addGestureRecognizer(dismissPan)
     }
 
     override func viewDidLayoutSubviews() {
@@ -105,6 +112,49 @@ final class FullImageViewController: UIViewController {
     @objc private func backButtonAction() {
         dismiss(animated: true)
     }
+
+    @objc private func handleDismissPan(_ gesture: UIPanGestureRecognizer) {
+        let translation = gesture.translation(in: view)
+        let velocity = gesture.velocity(in: view)
+
+        switch gesture.state {
+        case .changed:
+            let dy = max(0, translation.y)
+            view.transform = CGAffineTransform(translationX: 0, y: dy)
+            view.alpha = max(0.4, 1 - dy / 400)
+        case .ended, .cancelled:
+            if translation.y > 120 || velocity.y > 700 {
+                animateDismiss()
+            } else {
+                UIView.animate(withDuration: 0.35, delay: 0, usingSpringWithDamping: 0.75, initialSpringVelocity: 1) {
+                    self.view.transform = .identity
+                    self.view.alpha = 1
+                }
+            }
+        default:
+            break
+        }
+    }
+
+    private func animateDismiss() {
+        UIView.animate(withDuration: 0.25, animations: {
+            self.view.transform = CGAffineTransform(translationX: 0, y: self.view.bounds.height)
+            self.view.alpha = 0
+        }) { _ in
+            self.dismiss(animated: false)
+        }
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+
+extension FullImageViewController: UIGestureRecognizerDelegate {
+    func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        guard gestureRecognizer === dismissPan,
+              let pan = gestureRecognizer as? UIPanGestureRecognizer else { return true }
+        let v = pan.velocity(in: view)
+        return v.y > 0 && abs(v.y) > abs(v.x)
+    }
 }
 
 // MARK: - UICollectionViewDataSource
@@ -117,6 +167,9 @@ extension FullImageViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: ImageGalleryCell = collectionView.dequeueCell(for: indexPath)
         cell.configure(with: images[indexPath.item])
+        cell.imageScrollView.onDismissFlick = { [weak self] in
+            self?.animateDismiss()
+        }
         return cell
     }
 }

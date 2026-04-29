@@ -82,6 +82,11 @@ final class ClientItemsViewController: UIViewController {
         fetchItems()
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         performLayout()
@@ -92,7 +97,6 @@ final class ClientItemsViewController: UIViewController {
     private func setupView() {
         view.backgroundColor = .mainBackground
         view.addSubviews([collectionView, emptyLabel])
-        navigationController?.isNavigationBarHidden = false
 
         switch mode {
         case .rents:
@@ -121,8 +125,20 @@ final class ClientItemsViewController: UIViewController {
         switch mode {
         case .rents:
             fetchRequests(integrationId: integrationId)
+            fetchOld()
         case .fines:
             fetchFines(integrationId: integrationId)
+        }
+    }
+    
+    private func fetchOld() {
+        guard let integrationId = AuthService.shared.client?.integrationId else {
+            emptyLabel.isHidden = false
+            return
+        }
+        guard let request = RequestManager().getClientRequests(with: integrationId) else { return }
+        NetworkManager().fetch(request: request) { (result: Result<EmptyResponse, Error>) in
+            print("+++ result")
         }
     }
 
@@ -133,7 +149,7 @@ final class ClientItemsViewController: UIViewController {
                 self.isLoading = false
                 switch result {
                 case let .success(response):
-                    let requests = response.result?.requests ?? []
+                    let requests = response.result ?? []
                     self.sections = self.makeSections(from: requests)
                     self.emptyLabel.isHidden = !requests.isEmpty
                     self.collectionView.reloadData()

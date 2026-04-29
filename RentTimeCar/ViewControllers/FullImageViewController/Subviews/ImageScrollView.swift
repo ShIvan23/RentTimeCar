@@ -10,6 +10,9 @@ import UIKit
 
 final class ImageScrollView: UIScrollView, UIScrollViewDelegate {
 
+    // Вызывается когда пользователь отрывает палец у дна зумированного фото с velocity вниз
+    var onDismissFlick: (() -> Void)?
+
     private let imageZoomView = UIImageView()
     
     private lazy var zoomingTap: UITapGestureRecognizer = {
@@ -144,7 +147,26 @@ final class ImageScrollView: UIScrollView, UIScrollViewDelegate {
             return super.gestureRecognizerShouldBegin(gestureRecognizer)
         }
         let velocity = pan.velocity(in: self)
-        // Вертикальный свайп — не трогаем
+
+        // Вертикальный свайп вниз: уступаем родителю для dismiss
+        if velocity.y > 0 && abs(velocity.y) > abs(velocity.x) {
+            let isAtMinZoom = zoomScale <= minimumZoomScale + 0.01
+            if isAtMinZoom {
+                return false  // не зумировано → dismiss
+            }
+            let contentOverflows = contentSize.height > bounds.height + 1
+            let atBottom = contentOffset.y >= contentSize.height - bounds.height - 1
+            if !contentOverflows || atBottom {
+                return false  // достигли низа зумированного контента → dismiss
+            }
+            // Сильно зумировано, не внизу: быстрый флик всё равно уходит на dismiss
+            if velocity.y > 800 {
+                return false
+            }
+            return super.gestureRecognizerShouldBegin(gestureRecognizer)
+        }
+
+        // Горизонтальный свайп — не трогаем вертикальное
         guard abs(velocity.x) > abs(velocity.y) else {
             return super.gestureRecognizerShouldBegin(gestureRecognizer)
         }
@@ -152,7 +174,7 @@ final class ImageScrollView: UIScrollView, UIScrollViewDelegate {
         if zoomScale <= minimumZoomScale + 0.01 {
             return false
         }
-        // При зуме проверяем край: на краю — тоже уступаем внешнему
+        // При зуме проверяем горизонтальный край
         let atLeftEdge  = contentOffset.x <= 0 && velocity.x > 0
         let atRightEdge = contentOffset.x >= contentSize.width - bounds.width - 1 && velocity.x < 0
         if atLeftEdge || atRightEdge { return false }
@@ -161,12 +183,21 @@ final class ImageScrollView: UIScrollView, UIScrollViewDelegate {
     }
 
     // MARK: - UIScrollViewDelegate
-    
+
     func viewForZooming(in scrollView: UIScrollView) -> UIView? {
         return imageZoomView
     }
-    
+
     func scrollViewDidZoom(_ scrollView: UIScrollView) {
         centerImage()
+    }
+
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        // Непрерывный жест долистал до дна → триггерим dismiss
+        let vel = panGestureRecognizer.velocity(in: self).y
+        guard vel > 500 else { return }
+        let maxOffsetY = max(0, contentSize.height - bounds.height)
+        guard contentOffset.y >= maxOffsetY - 2 else { return }
+        onDismissFlick?()
     }
 }
