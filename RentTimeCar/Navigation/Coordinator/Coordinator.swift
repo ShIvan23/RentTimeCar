@@ -47,6 +47,8 @@ protocol ICoordinator {
     func openClientRequestsViewController()
     func openClientFinesViewController()
     func openRentDetailViewController(request: ClientRequest)
+    func openFineDetailViewController(fine: FineDto)
+    func openFinePhotosViewController(images: [String])
 }
 
 extension ICoordinator {
@@ -249,6 +251,18 @@ final class Coordinator: NSObject, ICoordinator {
 
     func openRentDetailViewController(request: ClientRequest) {
         let vc = Builder.makeRentDetailViewController(request: request)
+        navigationController?.pushViewController(vc, animated: true)
+        navigationController?.isNavigationBarHidden = false
+    }
+
+    func openFineDetailViewController(fine: FineDto) {
+        let vc = Builder.makeFineDetailViewController(fine: fine)
+        navigationController?.pushViewController(vc, animated: true)
+        navigationController?.isNavigationBarHidden = false
+    }
+
+    func openFinePhotosViewController(images: [String]) {
+        let vc = Builder.makeFinePhotosViewController(images: images)
         navigationController?.pushViewController(vc, animated: true)
         navigationController?.isNavigationBarHidden = false
     }

@@ -246,6 +246,9 @@ extension ClientItemsViewController: UICollectionViewDataSource {
                 }
                 self.collectionView.reloadItems(at: [indexPath])
             }
+            cell.onFineTap = { [weak self] fine in
+                self?.coordinator.openFineDetailViewController(fine: fine)
+            }
             return cell
         }
     }

@@ -51,6 +51,14 @@ final class Builder {
         RentDetailViewController(request: request, coordinator: Coordinator.shared, rentApiFacade: RentApiFacade())
     }
 
+    static func makeFineDetailViewController(fine: FineDto) -> UIViewController {
+        FineDetailViewController(fine: fine, coordinator: Coordinator.shared)
+    }
+
+    static func makeFinePhotosViewController(images: [String]) -> UIViewController {
+        FinePhotosViewController(images: images, coordinator: Coordinator.shared)
+    }
+
     static func makeDetailViewController(with model: Auto) -> UIViewController {
         let coordinator = Coordinator.shared
         let detailViewController = DetailAutoViewController(autoModel: model, coordinator: coordinator)

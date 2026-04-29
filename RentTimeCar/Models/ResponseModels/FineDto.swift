@@ -13,6 +13,25 @@ struct FinesResponse: Decodable {
     }
 }
 
+struct FineContractDto: Decodable {
+    let dateFrom: Date?
+    let dateTo: Date?
+
+    enum CodingKeys: String, CodingKey {
+        case dateFrom = "DateFrom"
+        case dateTo = "DateTo"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd.MM.yyyy HH:mm:ss"
+        formatter.locale = Locale(identifier: "ru_RU")
+        dateFrom = try container.decodeIfPresent(String.self, forKey: .dateFrom).flatMap { formatter.date(from: $0) }
+        dateTo = try container.decodeIfPresent(String.self, forKey: .dateTo).flatMap { formatter.date(from: $0) }
+    }
+}
+
 struct FineDto: Decodable {
     let id: Int64
     let creationDate: Date?
@@ -38,6 +57,7 @@ struct FineDto: Decodable {
     let discountEffectTitle: String?
     let discountEffectCountDays: Int
     let location: String?
+    let contract: FineContractDto?
 
     enum CodingKeys: String, CodingKey {
         case id = "Id"
@@ -64,6 +84,7 @@ struct FineDto: Decodable {
         case discountEffectTitle = "DiscountEffectTitle"
         case discountEffectCountDays = "DiscountEffectCountDays"
         case location = "Location"
+        case contract = "Contract"
     }
 
     init(from decoder: Decoder) throws {
@@ -90,6 +111,7 @@ struct FineDto: Decodable {
         discountEffectTitle = try container.decodeIfPresent(String.self, forKey: .discountEffectTitle)
         discountEffectCountDays = try container.decode(Int.self, forKey: .discountEffectCountDays)
         location = try container.decodeIfPresent(String.self, forKey: .location)
+        contract = try container.decodeIfPresent(FineContractDto.self, forKey: .contract)
 
         let formatter = DateFormatter()
         formatter.dateFormat = "dd.MM.yyyy HH:mm:ss"

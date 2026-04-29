@@ -53,9 +53,10 @@ final class FineGroupCell: UICollectionViewCell {
         isExpanded ? headerHeight + separatorH + rowHeight * CGFloat(fineCount) : headerHeight
     }
 
-    // MARK: - Callback
+    // MARK: - Callbacks
 
     var onToggle: (() -> Void)?
+    var onFineTap: ((FineDto) -> Void)?
 
     // MARK: - Private state
 
@@ -180,6 +181,7 @@ final class FineGroupCell: UICollectionViewCell {
             for fine in group.fines {
                 let row = FineRowView()
                 row.configure(fine: fine, formatter: Self.numberFormatter)
+                row.onTap = { [weak self] in self?.onFineTap?(fine) }
                 containerView.addSubview(row)
                 fineRows.append(row)
             }
@@ -210,10 +212,13 @@ final class FineGroupCell: UICollectionViewCell {
             paidIconView, sumDateLabel, chevronImageView,
             separatorView
         ])
-        containerView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapped)))
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tapped(_:)))
+        containerView.addGestureRecognizer(tap)
     }
 
-    @objc private func tapped() {
+    @objc private func tapped(_ gesture: UITapGestureRecognizer) {
+        let y = gesture.location(in: containerView).y
+        guard y < Self.headerHeight else { return }
         onToggle?()
     }
 
@@ -280,6 +285,8 @@ final class FineGroupCell: UICollectionViewCell {
 
 private final class FineRowView: UIView {
 
+    var onTap: (() -> Void)?
+
     private let checkIconView: UIImageView = {
         let iv = UIImageView()
         iv.contentMode = .scaleAspectFit
@@ -323,9 +330,12 @@ private final class FineRowView: UIView {
     override init(frame: CGRect) {
         super.init(frame: frame)
         addSubviews([checkIconView, sumLabel, dateLabel, arrowImageView, bottomSeparator])
+        addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapped)))
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    @objc private func tapped() { onTap?() }
 
     func configure(fine: FineDto, formatter: NumberFormatter) {
         let isPaid = fine.gibddStatus == .paid
