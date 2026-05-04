@@ -16,6 +16,7 @@ final class RentDetailViewController: UIViewController {
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
     private var isInfoTabSelected = true
+    private var hasLoadedPayments = false
 
     // MARK: - UI — Header card
 
@@ -139,17 +140,31 @@ final class RentDetailViewController: UIViewController {
         return b
     }()
 
-    // MARK: - UI — Payment content (placeholder)
+    // MARK: - UI — Payment content
 
-    private let paymentPlaceholderLabel: UILabel = {
+    private let paymentLoadingIndicator: UIActivityIndicatorView = {
+        let ai = UIActivityIndicatorView(style: .medium)
+        ai.color = .secondaryTextColor
+        ai.hidesWhenStopped = true
+        return ai
+    }()
+
+    private let paymentErrorLabel: UILabel = {
         let l = UILabel()
-        l.text = "Расчеты"
-        l.font = .systemFont(ofSize: 15)
+        l.font = .systemFont(ofSize: 14)
         l.textColor = .secondaryTextColor
         l.textAlignment = .center
+        l.numberOfLines = 0
         l.isHidden = true
         return l
     }()
+
+    private let paymentContainerView: UIView = {
+        let v = UIView()
+        v.isHidden = true
+        return v
+    }()
+    private var paymentContentViews: [UIView] = []
 
     // MARK: - UI — Bottom button
 
@@ -209,7 +224,9 @@ final class RentDetailViewController: UIViewController {
             territoryTileView,
             mileageTileView,
             actReturnButton,
-            paymentPlaceholderLabel
+            paymentLoadingIndicator,
+            paymentErrorLabel,
+            paymentContainerView
         ])
         headerCardView.addSubviews([carImageView, carNameLabel, dateFromLabel, dateToLabel])
 
@@ -295,7 +312,10 @@ final class RentDetailViewController: UIViewController {
         territoryTileView.isHidden = !isInfoTabSelected
         mileageTileView.isHidden = !isInfoTabSelected
         actReturnButton.isHidden = !isInfoTabSelected
-        paymentPlaceholderLabel.isHidden = isInfoTabSelected
+        let showPaymentContent = !isInfoTabSelected
+        paymentLoadingIndicator.isHidden = !showPaymentContent || !paymentLoadingIndicator.isAnimating
+        paymentErrorLabel.isHidden = !showPaymentContent || paymentErrorLabel.text == nil
+        paymentContainerView.isHidden = !showPaymentContent || paymentContentViews.isEmpty
         view.setNeedsLayout()
     }
 
@@ -311,6 +331,84 @@ final class RentDetailViewController: UIViewController {
         guard isInfoTabSelected else { return }
         isInfoTabSelected = false
         updateTabSelection()
+        if !hasLoadedPayments {
+            fetchMoneyInfo()
+        }
+    }
+
+    private func fetchMoneyInfo() {
+        guard let integrationId = AuthService.shared.client?.integrationId else { return }
+        paymentLoadingIndicator.startAnimating()
+        paymentLoadingIndicator.isHidden = false
+        paymentErrorLabel.isHidden = true
+        paymentContainerView.isHidden = true
+        view.setNeedsLayout()
+
+        rentApiFacade.getContractMoneyInfo(
+            clientIntegrationId: integrationId,
+            objectId: contract.id
+        ) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.hasLoadedPayments = true
+                self.paymentLoadingIndicator.stopAnimating()
+                switch result {
+                case let .success(response):
+                    if let info = response.result {
+                        self.configurePaymentContent(info)
+                    } else {
+                        self.paymentErrorLabel.text = "Нет данных"
+                        self.paymentErrorLabel.isHidden = false
+                    }
+                case .failure:
+                    self.paymentErrorLabel.text = "Не удалось загрузить данные"
+                    self.paymentErrorLabel.isHidden = false
+                }
+                self.view.setNeedsLayout()
+            }
+        }
+    }
+
+    private func configurePaymentContent(_ info: ContractMoneyInfoResponse) {
+        paymentContentViews.forEach { $0.removeFromSuperview() }
+        paymentContentViews = []
+
+        let fmt = moneyFormatter()
+
+        let summaryRows: [PaymentSummaryCardView.Row] = [
+            .init(title: "Итого начислено", value: fmt(info.moneyInfo.servicesTotalSum), highlighted: false),
+            .init(title: "Оплачено", value: fmt(info.moneyInfo.servicesTotalPaydPaysSum), highlighted: false),
+            info.moneyInfo.finesBalance != 0
+                ? .init(title: "Баланс штрафов", value: fmt(info.moneyInfo.finesBalance), highlighted: true)
+                : nil,
+            .init(title: "Депозит", value: fmt(info.moneyInfo.depositBalance), highlighted: false)
+        ].compactMap { $0 }
+        paymentContentViews.append(PaymentSummaryCardView(rows: summaryRows))
+
+        if !info.operations.isEmpty {
+            let opsLabel = UILabel()
+            opsLabel.text = "Операции"
+            opsLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+            opsLabel.textColor = .whiteTextColor
+            paymentContentViews.append(opsLabel)
+            info.operations.forEach { paymentContentViews.append(OperationCardView(operation: $0)) }
+        }
+
+        paymentContentViews.forEach { paymentContainerView.addSubview($0) }
+        paymentContainerView.isHidden = false
+        view.setNeedsLayout()
+    }
+
+    private func moneyFormatter() -> (Decimal) -> String {
+        let fmt = NumberFormatter()
+        fmt.numberStyle = .decimal
+        fmt.groupingSeparator = "\u{202F}"
+        fmt.maximumFractionDigits = 2
+        fmt.minimumFractionDigits = 0
+        return { decimal in
+            let str = fmt.string(from: decimal as NSDecimalNumber) ?? "0"
+            return "\(str) ₽"
+        }
     }
 
     @objc private func actReturnTapped() {
@@ -472,11 +570,37 @@ final class RentDetailViewController: UIViewController {
 
             contentView.pin.wrapContent(.vertically, padding: PEdgeInsets(top: 0, left: 0, bottom: 24, right: 0))
         } else {
-            paymentPlaceholderLabel.pin
-                .below(of: tabContainerView)
-                .marginTop(40)
-                .horizontally(hInset)
-                .sizeToFit(.width)
+            if paymentLoadingIndicator.isAnimating {
+                paymentLoadingIndicator.pin
+                    .below(of: tabContainerView)
+                    .marginTop(40)
+                    .hCenter()
+                    .sizeToFit()
+            }
+
+            if !paymentErrorLabel.isHidden {
+                paymentErrorLabel.pin
+                    .below(of: tabContainerView)
+                    .marginTop(40)
+                    .horizontally(hInset)
+                    .sizeToFit(.width)
+            }
+
+            if !paymentContainerView.isHidden {
+                paymentContainerView.pin
+                    .below(of: tabContainerView)
+                    .marginTop(16)
+                    .horizontally(hInset)
+
+                let cardWidth = paymentContainerView.bounds.width
+                var yOffset: CGFloat = 0
+                for view in paymentContentViews {
+                    let h = view.sizeThatFits(CGSize(width: cardWidth, height: .infinity)).height
+                    view.pin.top(yOffset).horizontally().height(h)
+                    yOffset += h + 12
+                }
+                paymentContainerView.pin.height(max(yOffset - 12, 0))
+            }
 
             contentView.pin.wrapContent(.vertically, padding: PEdgeInsets(top: 0, left: 0, bottom: 24, right: 0))
         }
