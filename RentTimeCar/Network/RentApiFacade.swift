@@ -25,6 +25,7 @@ protocol IRentApiFacade {
     )
     func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
     func getClientRequests(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ClientRequestsResponse>, Error>) -> Void)
+    func getClientContracts(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ContractsResponse>, Error>) -> Void)
     func getClientFines(clientIntegrationId: String, completion: @escaping (Result<ApiResult<FinesResponse>, Error>) -> Void)
     func getAutoCalendar(with input: GetAutoCalendarInput, completion: @escaping (Result<[AutoCalendar], Error>) -> Void)
     func getActInfo(clientIntegrationId: String, objectId: String, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void)
@@ -97,8 +98,8 @@ final class RentApiFacade: IRentApiFacade {
         networkManager.fetch(request: request, completion: completion)
     }
 
-    func getClientRequests(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ClientRequestsResponse>, Error>) -> Void) {
-        guard let request = requestManager.getClientRequests(clientIntegrationId: clientIntegrationId) else { return }
+    func getClientContracts(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ContractsResponse>, Error>) -> Void) {
+        guard let request = requestManager.getClientContracts(clientIntegrationId: clientIntegrationId) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
 

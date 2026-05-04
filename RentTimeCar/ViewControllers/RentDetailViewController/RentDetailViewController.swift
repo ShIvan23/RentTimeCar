@@ -12,7 +12,7 @@ final class RentDetailViewController: UIViewController {
 
     // MARK: - Private Properties
 
-    private let request: ClientRequest
+    private let contract: ContractDto
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
     private var isInfoTabSelected = true
@@ -163,8 +163,8 @@ final class RentDetailViewController: UIViewController {
 
     // MARK: - Init
 
-    init(request: ClientRequest, coordinator: ICoordinator, rentApiFacade: IRentApiFacade) {
-        self.request = request
+    init(contract: ContractDto, coordinator: ICoordinator, rentApiFacade: IRentApiFacade) {
+        self.contract = contract
         self.coordinator = coordinator
         self.rentApiFacade = rentApiFacade
         super.init(nibName: nil, bundle: nil)
@@ -223,61 +223,54 @@ final class RentDetailViewController: UIViewController {
     }
 
     private func configure() {
-        let info = request.rentInfo
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm, dd.MM.yy"
 
-        carNameLabel.text = info?.autoTitle ?? request.service
-        dateFromLabel.text = info?.dateFrom.map { "От: \(formatter.string(from: $0))" } ?? "От: —"
-        dateToLabel.text = info?.dateTo.map { "До: \(formatter.string(from: $0))" } ?? "До: —"
+        carNameLabel.text = contract.carTitle ?? contract.vehicle ?? "Автомобиль"
+        dateFromLabel.text = "От: \(formatter.string(from: contract.dateFrom))"
+        dateToLabel.text = "До: \(formatter.string(from: contract.dateTo))"
 
         configureStatus()
-        configureInfoContent(info: info)
-        loadCarImage(autoId: info?.autoId)
+        configureInfoContent()
+        loadCarImage(vehicleId: Int(contract.vehicleId))
     }
 
     private func configureStatus() {
-        let step = request.currentStep
-        let cancelledSteps = ["Отмена", "Отклонено"]
-        let completedSteps = ["Завершена", "Завершён", "Закрыт"]
+        statusIconLabel.text = "◉"
+        statusTextLabel.text = contract.statusTitle
 
-        if completedSteps.contains(where: { step.localizedCaseInsensitiveContains($0) }) {
-            statusIconLabel.text = "✓"
-            statusTextLabel.text = "Аренда завершена"
-            let color = UIColor(red: 0.3, green: 0.65, blue: 0.35, alpha: 1)
-            statusIconLabel.textColor = color
-            statusTextLabel.textColor = color
-        } else if cancelledSteps.contains(where: { step.localizedCaseInsensitiveContains($0) }) {
-            statusIconLabel.text = "✕"
-            statusTextLabel.text = "Аренда отменена"
-            let color = UIColor(red: 0.85, green: 0.25, blue: 0.25, alpha: 1)
-            statusIconLabel.textColor = color
-            statusTextLabel.textColor = color
-        } else {
-            statusIconLabel.text = "◉"
-            statusTextLabel.text = step.isEmpty ? "В процессе" : step
-            statusIconLabel.textColor = .enabledMainButtonBorderColor
-            statusTextLabel.textColor = .enabledMainButtonBorderColor
+        let color: UIColor
+        switch contract.contractState {
+        case .opened, .extended, .extendedOpened, .realisation:
+            color = .systemGreen
+        case .closed, .extendedClosed, .komissionClose, .sold, .archivedDogovor:
+            color = .secondaryTextColor
+        case .terminated, .defolt, .komissionCanceled:
+            color = .systemRed
+        case .readyToSign, .reserved:
+            color = .systemOrange
+        default:
+            color = .enabledMainButtonBorderColor
         }
+        statusIconLabel.textColor = color
+        statusTextLabel.textColor = color
     }
 
-    private func configureInfoContent(info: ClientRentInfo?) {
-        deliveryAddressLabel.text = info?.deliveryAddress ?? "Адрес уточняется"
+    private func configureInfoContent() {
+        let address = contract.deliveryAddress?.displayAddress
+        deliveryAddressLabel.text = (address?.isEmpty == false) ? address : "Адрес уточняется"
 
-        let auto = info?.autoId.flatMap { id in
-            FilterService.shared.allAutos.first { $0.itemID == id }
-        }
+        let vehicleId = Int(contract.vehicleId)
+        let auto = FilterService.shared.allAutos.first { $0.itemID == vehicleId }
         let mileageText = auto.map { "\($0.mileageLimit) км" } ?? "—"
-        let territoryText = info?.territory ?? "—"
 
-        territoryTileView.configure(title: "Территория аренды", value: territoryText)
+        territoryTileView.configure(title: "Территория аренды", value: contract.allowedLocation ?? "—")
         mileageTileView.configure(title: "Лимит пробега", value: mileageText)
     }
 
-    private func loadCarImage(autoId: Int?) {
+    private func loadCarImage(vehicleId: Int) {
         carImageView.image = .carPlaceholder
-        guard let autoId else { return }
-        let auto = FilterService.shared.allAutos.first { $0.itemID == autoId }
+        let auto = FilterService.shared.allAutos.first { $0.itemID == vehicleId }
         guard let urlString = auto?.files.first(where: { $0.url != nil && $0.folder == .folderImageValue })?.url,
               let url = URL(string: urlString) else { return }
         let options = ImageLoadingOptions(placeholder: .carPlaceholder, transition: .fadeIn(duration: 0.3))
@@ -324,7 +317,7 @@ final class RentDetailViewController: UIViewController {
         guard let integrationId = AuthService.shared.client?.integrationId else { return }
         rentApiFacade.getActInfo(
             clientIntegrationId: integrationId,
-            objectId: request.number,
+            objectId: contract.contractNumber ?? String(contract.id),
             objectDescriptorLong: 2
         ) { result in
             DispatchQueue.main.async {

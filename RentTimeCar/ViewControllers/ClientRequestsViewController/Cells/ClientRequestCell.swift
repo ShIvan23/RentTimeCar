@@ -88,18 +88,17 @@ final class ClientRequestCell: UICollectionViewCell {
 
     // MARK: - Internal Methods
 
-    func configure(with model: ClientRequest) {
-        let info = model.rentInfo
-        carNameLabel.text = info?.autoTitle ?? model.service
+    func configure(with model: ContractDto) {
+        carNameLabel.text = model.carTitle ?? model.vehicle ?? "Автомобиль"
 
         let formatter = DateFormatter()
         formatter.dateFormat = "HH:mm, dd.MM.yy"
-        dateFromLabel.text = info?.dateFrom.map { "От: \(formatter.string(from: $0))" } ?? "От: —"
-        dateToLabel.text = info?.dateTo.map { "До: \(formatter.string(from: $0))" } ?? "До: —"
+        dateFromLabel.text = "От: \(formatter.string(from: model.dateFrom))"
+        dateToLabel.text = "До: \(formatter.string(from: model.dateTo))"
 
-        statusLabel.text = model.currentStep
-        configureStatusBadge(for: model.currentStep)
-        loadCarImage(autoId: info?.autoId)
+        statusLabel.text = model.statusTitle
+        configureStatusBadge(state: model.contractState)
+        loadCarImage(vehicleId: Int(model.vehicleId))
     }
 
     // MARK: - Private Methods
@@ -110,22 +109,26 @@ final class ClientRequestCell: UICollectionViewCell {
         statusBadgeView.addSubview(statusLabel)
     }
 
-    private func configureStatusBadge(for step: String) {
-        let cancelledSteps = ["Отмена", "Отклонено", "Отклонён"]
-        let completedSteps = ["Завершена", "Завершён", "Закрыт"]
-        if cancelledSteps.contains(where: { step.localizedCaseInsensitiveContains($0) }) {
-            statusBadgeView.backgroundColor = UIColor(red: 0.85, green: 0.25, blue: 0.25, alpha: 1)
-        } else if completedSteps.contains(where: { step.localizedCaseInsensitiveContains($0) }) {
-            statusBadgeView.backgroundColor = UIColor(red: 0.3, green: 0.65, blue: 0.35, alpha: 1)
-        } else {
-            statusBadgeView.backgroundColor = .enabledMainButtonBorderColor
+    private func configureStatusBadge(state: DogovorState) {
+        let color: UIColor
+        switch state {
+        case .opened, .extended, .extendedOpened, .realisation:
+            color = UIColor(red: 0.2, green: 0.6, blue: 0.9, alpha: 1)
+        case .closed, .extendedClosed, .komissionClose, .sold, .archivedDogovor:
+            color = UIColor(red: 0.3, green: 0.65, blue: 0.35, alpha: 1)
+        case .terminated, .defolt, .komissionCanceled:
+            color = UIColor(red: 0.85, green: 0.25, blue: 0.2, alpha: 1)
+        case .readyToSign, .reserved:
+            color = UIColor(red: 0.9, green: 0.6, blue: 0.1, alpha: 1)
+        default:
+            color = .enabledMainButtonBorderColor
         }
+        statusBadgeView.backgroundColor = color
     }
 
-    private func loadCarImage(autoId: Int?) {
+    private func loadCarImage(vehicleId: Int) {
         carImageView.image = .carPlaceholder
-        guard let autoId else { return }
-        let auto = FilterService.shared.allAutos.first { $0.itemID == autoId }
+        let auto = FilterService.shared.allAutos.first { $0.itemID == vehicleId }
         guard let urlString = auto?.files.first(where: { $0.url != nil && $0.folder == .folderImageValue })?.url,
               let url = URL(string: urlString) else { return }
         let options = ImageLoadingOptions(placeholder: .carPlaceholder, transition: .fadeIn(duration: 0.3))

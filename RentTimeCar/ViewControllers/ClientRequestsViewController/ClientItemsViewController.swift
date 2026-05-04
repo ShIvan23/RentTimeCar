@@ -19,7 +19,7 @@ final class ClientItemsViewController: UIViewController {
 
     private struct RentSection {
         let title: String
-        let requests: [ClientRequest]
+        let requests: [ContractDto]
     }
 
     // MARK: - UI
@@ -125,31 +125,19 @@ final class ClientItemsViewController: UIViewController {
         switch mode {
         case .rents:
             fetchRequests(integrationId: integrationId)
-            fetchOld()
         case .fines:
             fetchFines(integrationId: integrationId)
         }
     }
-    
-    private func fetchOld() {
-        guard let integrationId = AuthService.shared.client?.integrationId else {
-            emptyLabel.isHidden = false
-            return
-        }
-        guard let request = RequestManager().getClientRequests(with: integrationId) else { return }
-        NetworkManager().fetch(request: request) { (result: Result<EmptyResponse, Error>) in
-            print("+++ result")
-        }
-    }
 
     private func fetchRequests(integrationId: String) {
-        rentApiFacade.getClientRequests(clientIntegrationId: integrationId) { [weak self] result in
+        rentApiFacade.getClientContracts(clientIntegrationId: integrationId) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self else { return }
                 self.isLoading = false
                 switch result {
                 case let .success(response):
-                    let requests = response.result ?? []
+                    let requests = response.result?.contracts ?? []
                     self.sections = self.makeSections(from: requests)
                     self.emptyLabel.isHidden = !requests.isEmpty
                     self.collectionView.reloadData()
@@ -198,13 +186,9 @@ final class ClientItemsViewController: UIViewController {
         }
     }
 
-    private func makeSections(from requests: [ClientRequest]) -> [RentSection] {
-        let hiddenSteps = ["Данные клиента"]
-        let filtered = requests.filter { req in
-            !hiddenSteps.contains(where: { req.currentStep.localizedCaseInsensitiveContains($0) })
-        }
-        let active = filtered.filter { !$0.isCompleted }
-        let completed = filtered.filter { $0.isCompleted }
+    private func makeSections(from contracts: [ContractDto]) -> [RentSection] {
+        let active = contracts.filter { !$0.isCompleted }
+        let completed = contracts.filter { $0.isCompleted }
         var result: [RentSection] = []
         if !active.isEmpty {
             result.append(RentSection(title: "Активные", requests: active))
@@ -294,8 +278,8 @@ extension ClientItemsViewController: UICollectionViewDataSource {
 extension ClientItemsViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         guard mode == .rents, !sections.isEmpty else { return }
-        let request = sections[indexPath.section].requests[indexPath.item]
-        coordinator.openRentDetailViewController(request: request)
+        let contract = sections[indexPath.section].requests[indexPath.item]
+        coordinator.openRentDetailViewController(contract: contract)
     }
     func collectionView(
         _ collectionView: UICollectionView,

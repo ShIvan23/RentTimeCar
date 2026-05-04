@@ -46,7 +46,7 @@ protocol ICoordinator {
     func popToViewController(_ controller: ICoordinatorController)
     func openClientRequestsViewController()
     func openClientFinesViewController()
-    func openRentDetailViewController(request: ClientRequest)
+    func openRentDetailViewController(contract: ContractDto)
     func openFineDetailViewController(fine: FineDto)
     func openFinePhotosViewController(images: [String])
 }
@@ -249,8 +249,8 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.isNavigationBarHidden = false
     }
 
-    func openRentDetailViewController(request: ClientRequest) {
-        let vc = Builder.makeRentDetailViewController(request: request)
+    func openRentDetailViewController(contract: ContractDto) {
+        let vc = Builder.makeRentDetailViewController(contract: contract)
         navigationController?.pushViewController(vc, animated: true)
         navigationController?.isNavigationBarHidden = false
     }

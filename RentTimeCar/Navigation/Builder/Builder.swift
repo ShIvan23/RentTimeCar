@@ -47,8 +47,8 @@ final class Builder {
         CalendarViewController(autoId: autoId, coordinator: Coordinator.shared)
     }
     
-    static func makeRentDetailViewController(request: ClientRequest) -> UIViewController {
-        RentDetailViewController(request: request, coordinator: Coordinator.shared, rentApiFacade: RentApiFacade())
+    static func makeRentDetailViewController(contract: ContractDto) -> UIViewController {
+        RentDetailViewController(contract: contract, coordinator: Coordinator.shared, rentApiFacade: RentApiFacade())
     }
 
     static func makeFineDetailViewController(fine: FineDto) -> UIViewController {
