@@ -136,7 +136,7 @@ final class RequestManagerV2 {
 
     // MARK: - POST /api/contracts/money-info
 
-    func getContractMoneyInfo(clientIntegrationId: String, objectId: Int64) -> URLRequest? {
+    func getContractMoneyInfo(clientIntegrationId: String, objectId: Int) -> URLRequest? {
         makeRequest(
             path: "/api/contracts/money-info",
             method: .post,
@@ -146,7 +146,7 @@ final class RequestManagerV2 {
 
     // MARK: - POST /api/acts/info
 
-    func getActInfo(clientIntegrationId: String, objectId: String, objectDescriptorLong: Int) -> URLRequest? {
+    func getActInfo(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int) -> URLRequest? {
         makeRequest(
             path: "/api/acts/info",
             method: .post,
@@ -216,13 +216,13 @@ private struct ClientIntegrationBody: Encodable {
 
 private struct GetActInfoBody: Encodable {
     let clientIntegrationId: String
-    let objectId: String
+    let objectId: Int
     let objectDescriptorLong: Int
 }
 
 private struct ContractMoneyInfoBody: Encodable {
     let clientIntegrationId: String
-    let objectId: Int64
+    let objectId: Int
 }
 
 /// Vapor-сервер ожидает camelCase ключи, в отличие от SearchAutoInput,

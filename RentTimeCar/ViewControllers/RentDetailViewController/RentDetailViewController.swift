@@ -415,8 +415,8 @@ final class RentDetailViewController: UIViewController {
         guard let integrationId = AuthService.shared.client?.integrationId else { return }
         rentApiFacade.getActInfo(
             clientIntegrationId: integrationId,
-            objectId: contract.contractNumber ?? String(contract.id),
-            objectDescriptorLong: 2
+            objectId: contract.id,
+            objectDescriptorLong: 1
         ) { result in
             DispatchQueue.main.async {
                 switch result {

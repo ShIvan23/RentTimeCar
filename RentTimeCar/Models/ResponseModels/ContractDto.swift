@@ -59,7 +59,7 @@ struct ContractAddressDto: Decodable {
 }
 
 struct ContractDto: Decodable {
-    let id: Int64
+    let id: Int
     let dateFrom: Date
     let dateTo: Date
     let vehicle: String?
@@ -102,7 +102,7 @@ struct ContractDto: Decodable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
 
-        id = try container.decode(Int64.self, forKey: .id)
+        id = try container.decode(Int.self, forKey: .id)
         vehicle = try container.decodeIfPresent(String.self, forKey: .vehicle)
         vehicleId = try container.decode(Int64.self, forKey: .vehicleId)
         allowedLocation = try container.decodeIfPresent(String.self, forKey: .allowedLocation)
