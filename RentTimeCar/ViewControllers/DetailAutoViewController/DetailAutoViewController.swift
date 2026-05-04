@@ -107,6 +107,12 @@ final class DetailAutoViewController: UIViewController {
         buttonContainerView.addSubview(continueButton)
         buttonContainerView.backgroundColor = .secondaryBackground
         navigationController?.isNavigationBarHidden = false
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "square.and.arrow.up"),
+            style: .plain,
+            target: self,
+            action: #selector(shareTapped)
+        )
         configureStackView()
         selectedDateView.addTapGestureClosure { [weak self] in
             guard let self else { return }
@@ -156,6 +162,51 @@ final class DetailAutoViewController: UIViewController {
 
     private func subscribeToNotifications() {
         NotificationCenter.default.addObserver(self, selector: #selector(selectedDatesUpdated), name: .selectedDatesUpdated, object: nil)
+    }
+
+    @objc
+    private func shareTapped() {
+        let currentIndex: Int = {
+            let width = imagesCollectionView.bounds.width
+            guard width > 0 else { return 0 }
+            return Int(round(imagesCollectionView.contentOffset.x / width))
+        }()
+
+        let fmt = NumberFormatter()
+        fmt.numberStyle = .decimal
+        fmt.groupingSeparator = "\u{202F}"
+        let priceStr = fmt.string(from: autoModel.defaultPriceWithDiscountSt as NSNumber) ?? "\(autoModel.defaultPriceWithDiscountSt)"
+        let details = [
+            autoModel.modInfoV3,
+            "\(autoModel.motorPower) л.с.",
+            autoModel.fuelType,
+            autoModel.modInfoPrivod,
+            "\(autoModel.primaryInfo.passengerCount) мест"
+        ].filter { !$0.isEmpty }.joined(separator: " · ")
+
+        let text = """
+        \(autoModel.title)
+        \(details)
+        от \(priceStr) ₽/сутки
+        """
+
+        guard let urlString = autoModel.files[safe: currentIndex]?.url,
+              let url = URL(string: urlString) else {
+            present(UIActivityViewController(activityItems: [text], applicationActivities: nil), animated: true)
+            return
+        }
+
+        ImagePipeline.shared.loadImage(with: url) { [weak self] result in
+            guard let self else { return }
+            let items: [Any]
+            if case let .success(response) = result {
+                items = [response.image, text]
+            } else {
+                items = [text]
+            }
+            let vc = UIActivityViewController(activityItems: items, applicationActivities: nil)
+            self.present(vc, animated: true)
+        }
     }
 
     @objc
