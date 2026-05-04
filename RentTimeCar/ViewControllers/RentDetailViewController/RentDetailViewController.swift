@@ -416,7 +416,7 @@ final class RentDetailViewController: UIViewController {
         rentApiFacade.getActInfo(
             clientIntegrationId: integrationId,
             objectId: contract.id,
-            objectDescriptorLong: 1
+            objectDescriptorLong: 2
         ) { result in
             DispatchQueue.main.async {
                 switch result {
