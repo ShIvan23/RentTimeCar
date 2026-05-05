@@ -49,6 +49,21 @@ final class NetworkManager {
         fetch(request: request, retries: 2, completion: completion)
     }
 
+    func fetchData(request: URLRequest, completion: @escaping (Result<Data, Error>) -> Void) {
+        let dataTask = JSONTask(request: request) { data, _, error in
+            if let error {
+                completion(.failure(error))
+                return
+            }
+            guard let data else {
+                completion(.failure(NSError(domain: "NetworkManager", code: -1)))
+                return
+            }
+            completion(.success(data))
+        }
+        dataTask.resume()
+    }
+
     private func fetch<T: Decodable>(request: URLRequest, retries: Int, completion: @escaping (Result<T, Error>) -> Void) {
         let dataTask = JSONTask(request: request) { [weak self] data, response, error in
             if let error = error as NSError?,

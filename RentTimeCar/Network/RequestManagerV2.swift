@@ -146,14 +146,30 @@ final class RequestManagerV2 {
 
     // MARK: - POST /api/acts/info
 
-    func getActInfo(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int) -> URLRequest? {
+    func getActInfo(
+        clientIntegrationId: String,
+        objectId: Int,
+        objectDescriptorLong: Int,
+        contractNumber: String,
+        contractDate: String,
+        renterName: String,
+        renterPassport: String,
+        renterPhone: String,
+        carInfo: String
+    ) -> URLRequest? {
         makeRequest(
             path: "/api/acts/info",
             method: .post,
             body: GetActInfoBody(
                 clientIntegrationId: clientIntegrationId,
                 objectId: objectId,
-                objectDescriptorLong: objectDescriptorLong
+                objectDescriptorLong: objectDescriptorLong,
+                contractNumber: contractNumber,
+                contractDate: contractDate,
+                renterName: renterName,
+                renterPassport: renterPassport,
+                renterPhone: renterPhone,
+                carInfo: carInfo
             )
         )
     }
@@ -218,6 +234,12 @@ private struct GetActInfoBody: Encodable {
     let clientIntegrationId: String
     let objectId: Int
     let objectDescriptorLong: Int
+    let contractNumber: String
+    let contractDate: String
+    let renterName: String
+    let renterPassport: String
+    let renterPhone: String
+    let carInfo: String
 }
 
 private struct ContractMoneyInfoBody: Encodable {

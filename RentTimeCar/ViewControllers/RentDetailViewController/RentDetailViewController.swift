@@ -412,16 +412,33 @@ final class RentDetailViewController: UIViewController {
     }
 
     @objc private func actReturnTapped() {
-        guard let integrationId = AuthService.shared.client?.integrationId else { return }
+        let auth = AuthService.shared
+        guard let client = auth.client else { return }
+
+        let dateFmt = DateFormatter()
+        dateFmt.dateFormat = "dd.MM.yyyy"
+
+        let renterName = "\(client.name.lastName) \(client.name.firstName)"
+            .trimmingCharacters(in: .whitespaces)
+        let renterPassport = "\(client.passport.series) \(client.passport.number)"
+            .trimmingCharacters(in: .whitespaces)
+
         rentApiFacade.getActInfo(
-            clientIntegrationId: integrationId,
+            clientIntegrationId: client.integrationId,
             objectId: contract.id,
-            objectDescriptorLong: 2
-        ) { result in
+            objectDescriptorLong: 2,
+            contractNumber: contract.contractNumber ?? "",
+            contractDate: dateFmt.string(from: contract.dateFrom),
+            renterName: renterName,
+            renterPassport: renterPassport,
+            renterPhone: auth.phoneNumber ?? "",
+            carInfo: contract.vehicle ?? ""
+        ) { [weak self] result in
             DispatchQueue.main.async {
+                guard let self else { return }
                 switch result {
-                case let .success(response):
-                    print("ActInfo response: \(response)")
+                case let .success(data):
+                    self.coordinator.openPDFViewController(pdfFile: .data(data))
                 case let .failure(error):
                     print("ActInfo error: \(error)")
                 }

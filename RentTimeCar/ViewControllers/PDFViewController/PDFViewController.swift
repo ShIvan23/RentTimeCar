@@ -12,6 +12,7 @@ final class PDFViewController: UIViewController {
     enum PDFFile {
         case personalData
         case privacyPolicy
+        case data(Data)
     }
     
     private let pdfFile: PDFFile
@@ -46,6 +47,9 @@ final class PDFViewController: UIViewController {
             url = Bundle.main.url(forResource: "Personal data", withExtension: "pdf")
         case .privacyPolicy:
             url = Bundle.main.url(forResource: "Privacy policy", withExtension: "pdf")
+        case .data(let pdfData):
+            pdfView.document = PDFDocument(data: pdfData)
+            return
         }
         guard let url else {
             assertionFailure("No url for pdf file")
