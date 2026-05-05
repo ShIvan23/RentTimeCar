@@ -32,6 +32,7 @@ protocol IRentApiFacade {
     func getAutoCalendar(with input: GetAutoCalendarInput, completion: @escaping (Result<[AutoCalendar], Error>) -> Void)
     func getActInfo(clientIntegrationId: String, objectId: String, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void)
     func getActInfo(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void)
+    func getActSignState(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, completion: @escaping (Result<ActSignStateResponse, Error>) -> Void)
     func getActInfo(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, contractNumber: String, contractDate: String, renterName: String, renterPassport: String, renterPhone: String, carInfo: String, completion: @escaping (Result<Data, Error>) -> Void)
     func createYukassaPayment(amount: Int, description: String, phone: String, completion: @escaping (Result<YookassaPaymentResponse, Error>) -> Void)
 }
@@ -125,6 +126,8 @@ final class RentApiFacade: IRentApiFacade {
     func getActInfo(clientIntegrationId: String, objectId: String, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void) {
     func getActInfo(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void) {
         guard let request = requestManager.getActInfo(clientIntegrationId: clientIntegrationId, objectId: objectId, objectDescriptorLong: objectDescriptorLong) else { return }
+    func getActSignState(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, completion: @escaping (Result<ActSignStateResponse, Error>) -> Void) {
+        guard let request = requestManager.getActSignState(clientIntegrationId: clientIntegrationId, objectId: objectId, objectDescriptorLong: objectDescriptorLong) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
 

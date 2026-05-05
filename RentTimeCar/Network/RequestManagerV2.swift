@@ -144,6 +144,20 @@ final class RequestManagerV2 {
         )
     }
 
+    // MARK: - POST /api/acts/sign-state
+
+    func getActSignState(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int) -> URLRequest? {
+        makeRequest(
+            path: "/api/acts/sign-state",
+            method: .post,
+            body: ActSignStateBody(
+                clientIntegrationId: clientIntegrationId,
+                objectId: objectId,
+                objectDescriptorLong: objectDescriptorLong
+            )
+        )
+    }
+
     // MARK: - POST /api/acts/info
 
     func getActInfo(
@@ -228,6 +242,12 @@ private struct SmsBody: Encodable {
 
 private struct ClientIntegrationBody: Encodable {
     let clientIntegrationId: String
+}
+
+private struct ActSignStateBody: Encodable {
+    let clientIntegrationId: String
+    let objectId: Int
+    let objectDescriptorLong: Int
 }
 
 private struct GetActInfoBody: Encodable {

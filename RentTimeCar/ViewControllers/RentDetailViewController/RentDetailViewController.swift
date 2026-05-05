@@ -171,6 +171,7 @@ final class RentDetailViewController: UIViewController {
     private let bottomContainerView: UIView = {
         let v = UIView()
         v.backgroundColor = .secondaryBackground
+        v.isHidden = true
         return v
     }()
 
@@ -250,6 +251,7 @@ final class RentDetailViewController: UIViewController {
         configureStatus()
         configureInfoContent()
         loadCarImage(vehicleId: Int(contract.vehicleId))
+        fetchActSignState()
     }
 
     private func configureStatus() {
@@ -333,6 +335,23 @@ final class RentDetailViewController: UIViewController {
         updateTabSelection()
         if !hasLoadedPayments {
             fetchMoneyInfo()
+        }
+    }
+
+    private func fetchActSignState() {
+        guard let integrationId = AuthService.shared.client?.integrationId else { return }
+        rentApiFacade.getActSignState(
+            clientIntegrationId: integrationId,
+            objectId: contract.id,
+            objectDescriptorLong: 2
+        ) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if case let .success(response) = result, response.needsSignature {
+                    self.bottomContainerView.isHidden = false
+                    self.view.setNeedsLayout()
+                }
+            }
         }
     }
 
@@ -461,10 +480,11 @@ final class RentDetailViewController: UIViewController {
             .horizontally(hInset)
             .height(50)
 
-        scrollView.pin
-            .top(view.pin.safeArea)
-            .horizontally()
-            .above(of: bottomContainerView)
+        if bottomContainerView.isHidden {
+            scrollView.pin.top(view.pin.safeArea).horizontally().bottom()
+        } else {
+            scrollView.pin.top(view.pin.safeArea).horizontally().above(of: bottomContainerView)
+        }
 
         contentView.pin.top().horizontally()
 
