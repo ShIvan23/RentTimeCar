@@ -166,6 +166,21 @@ final class RentDetailViewController: UIViewController {
     }()
     private var paymentContentViews: [UIView] = []
 
+    // MARK: - UI — Loading overlay
+
+    private let loadingOverlayView: UIView = {
+        let v = UIView()
+        v.backgroundColor = UIColor.black.withAlphaComponent(0.45)
+        v.isHidden = true
+        return v
+    }()
+
+    private let overlaySpinner: UIActivityIndicatorView = {
+        let ai = UIActivityIndicatorView(style: .large)
+        ai.color = .white
+        return ai
+    }()
+
     // MARK: - UI — Bottom button
 
     private let bottomContainerView: UIView = {
@@ -210,8 +225,9 @@ final class RentDetailViewController: UIViewController {
         view.backgroundColor = .mainBackground
         navigationController?.isNavigationBarHidden = false
 
-        view.addSubviews([scrollView, bottomContainerView])
+        view.addSubviews([scrollView, bottomContainerView, loadingOverlayView])
         bottomContainerView.addSubview(signButton)
+        loadingOverlayView.addSubview(overlaySpinner)
         scrollView.addSubview(contentView)
 
         contentView.addSubviews([
@@ -442,6 +458,8 @@ final class RentDetailViewController: UIViewController {
         let renterPassport = "\(client.passport.series) \(client.passport.number)"
             .trimmingCharacters(in: .whitespaces)
 
+        showLoadingOverlay()
+
         rentApiFacade.getActInfo(
             clientIntegrationId: client.integrationId,
             objectId: contract.id,
@@ -455,11 +473,18 @@ final class RentDetailViewController: UIViewController {
         ) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self else { return }
+                self.hideLoadingOverlay()
                 switch result {
                 case let .success(data):
                     self.coordinator.openPDFViewController(pdfFile: .data(data))
-                case let .failure(error):
-                    print("ActInfo error: \(error)")
+                case .failure:
+                    let model = InfoBottomSheetModel(
+                        text: "Не удалось загрузить акт возврата.\n\nПроверьте подключение к интернету и попробуйте ещё раз.",
+                        image: .redCross,
+                        buttonTitle: "Понятно",
+                        onConfirm: {}
+                    )
+                    self.coordinator.openInfoBottomSheetViewController(model: model)
                 }
             }
         }
@@ -643,6 +668,23 @@ final class RentDetailViewController: UIViewController {
         }
 
         scrollView.contentSize = contentView.frame.size
+
+        loadingOverlayView.pin.all()
+        overlaySpinner.pin.center()
+    }
+
+    // MARK: - Loading overlay
+
+    private func showLoadingOverlay() {
+        loadingOverlayView.isHidden = false
+        overlaySpinner.startAnimating()
+        actReturnButton.isEnabled = false
+    }
+
+    private func hideLoadingOverlay() {
+        loadingOverlayView.isHidden = true
+        overlaySpinner.stopAnimating()
+        actReturnButton.isEnabled = true
     }
 }
 
