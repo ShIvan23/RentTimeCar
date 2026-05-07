@@ -8,7 +8,8 @@ import NukeExtensions
 import PinLayout
 import UIKit
 
-final class RentDetailViewController: UIViewController {
+final class RentDetailViewController: UIViewController, ToastViewShowable {
+    var showingToast: ToastView?
 
     // MARK: - Private Properties
 
@@ -252,6 +253,7 @@ final class RentDetailViewController: UIViewController {
         infoTabButton.addTarget(self, action: #selector(infoTabTapped), for: .touchUpInside)
         paymentTabButton.addTarget(self, action: #selector(paymentTabTapped), for: .touchUpInside)
         actReturnButton.addTarget(self, action: #selector(actReturnTapped), for: .touchUpInside)
+        signButton.action = { [weak self] in self?.signButtonTapped() }
 
         updateTabSelection()
     }
@@ -480,6 +482,35 @@ final class RentDetailViewController: UIViewController {
                 case .failure:
                     let model = InfoBottomSheetModel(
                         text: "Не удалось загрузить акт возврата.\n\nПроверьте подключение к интернету и попробуйте ещё раз.",
+                        image: .redCross,
+                        buttonTitle: "Понятно",
+                        onConfirm: {}
+                    )
+                    self.coordinator.openInfoBottomSheetViewController(model: model)
+                }
+            }
+        }
+    }
+
+    private func signButtonTapped() {
+        guard let integrationId = AuthService.shared.client?.integrationId else { return }
+        showLoadingOverlay()
+        rentApiFacade.acceptAct(
+            clientIntegrationId: integrationId,
+            objectId: contract.id,
+            signDate: Date()
+        ) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.hideLoadingOverlay()
+                switch result {
+                case .success:
+                    self.bottomContainerView.isHidden = true
+                    self.view.setNeedsLayout()
+                    self.showToast(with: "Акт успешно подписан")
+                case .failure:
+                    let model = InfoBottomSheetModel(
+                        text: "Не удалось подписать акт.\n\nПроверьте подключение к интернету и попробуйте ещё раз.",
                         image: .redCross,
                         buttonTitle: "Понятно",
                         onConfirm: {}

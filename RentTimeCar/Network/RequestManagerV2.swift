@@ -164,6 +164,29 @@ final class RequestManagerV2 {
         )
     }
 
+    // MARK: - POST /api/acts/accept
+
+    func acceptAct(clientIntegrationId: String, objectId: Int, signDate: Date?) -> URLRequest? {
+        let signDateString: String?
+        if let signDate {
+            let fmt = DateFormatter()
+            fmt.dateFormat = "dd.MM.yyyy HH:mm:ss"
+            fmt.locale = Locale(identifier: "ru_RU")
+            signDateString = fmt.string(from: signDate)
+        } else {
+            signDateString = nil
+        }
+        return makeRequest(
+            path: "/api/acts/accept",
+            method: .post,
+            body: AcceptActBody(
+                clientIntegrationId: clientIntegrationId,
+                objectId: objectId,
+                signDate: signDateString
+            )
+        )
+    }
+
     // MARK: - POST /api/acts/info
 
     func getActInfo(
@@ -248,6 +271,12 @@ private struct SmsBody: Encodable {
 
 private struct ClientIntegrationBody: Encodable {
     let clientIntegrationId: String
+}
+
+private struct AcceptActBody: Encodable {
+    let clientIntegrationId: String
+    let objectId: Int
+    let signDate: String?
 }
 
 private struct ActSignStateBody: Encodable {
