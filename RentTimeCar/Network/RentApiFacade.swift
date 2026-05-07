@@ -24,14 +24,11 @@ protocol IRentApiFacade {
         completion: @escaping (Result<Void, Error>) -> Void
     )
     func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
-    func getClientRequests(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ClientRequestsResponse>, Error>) -> Void)
-    func getContractMoneyInfo(clientIntegrationId: String, objectId: Int64, completion: @escaping (Result<ApiResult<ContractMoneyInfoResponse>, Error>) -> Void)
     func getContractMoneyInfo(clientIntegrationId: String, objectId: Int, completion: @escaping (Result<ApiResult<ContractMoneyInfoResponse>, Error>) -> Void)
     func getClientContracts(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ContractsResponse>, Error>) -> Void)
     func getClientFines(clientIntegrationId: String, completion: @escaping (Result<ApiResult<FinesResponse>, Error>) -> Void)
     func getAutoCalendar(with input: GetAutoCalendarInput, completion: @escaping (Result<[AutoCalendar], Error>) -> Void)
-    func getActInfo(clientIntegrationId: String, objectId: String, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void)
-    func getActInfo(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void)
+    func getAutoUsedIntervals(with input: GetAutoUsedIntervalsInput, completion: @escaping (Result<ApiResult<[UsedInterval]>, Error>) -> Void)
     func getActSignState(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, completion: @escaping (Result<ActSignStateResponse, Error>) -> Void)
     func getActInfo(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, contractNumber: String, contractDate: String, renterName: String, renterPassport: String, renterPhone: String, carInfo: String, completion: @escaping (Result<Data, Error>) -> Void)
     func createYukassaPayment(amount: Int, description: String, phone: String, completion: @escaping (Result<YookassaPaymentResponse, Error>) -> Void)
@@ -123,9 +120,11 @@ final class RentApiFacade: IRentApiFacade {
         networkManager.fetch(request: request, completion: completion)
     }
 
-    func getActInfo(clientIntegrationId: String, objectId: String, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void) {
-    func getActInfo(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, completion: @escaping (Result<ApiResult<ActInfoResponse>, Error>) -> Void) {
-        guard let request = requestManager.getActInfo(clientIntegrationId: clientIntegrationId, objectId: objectId, objectDescriptorLong: objectDescriptorLong) else { return }
+    func getAutoUsedIntervals(with input: GetAutoUsedIntervalsInput, completion: @escaping (Result<ApiResult<[UsedInterval]>, Error>) -> Void) {
+        guard let request = requestManager.getAutoUsedIntervals(with: input) else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+
     func getActSignState(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, completion: @escaping (Result<ActSignStateResponse, Error>) -> Void) {
         guard let request = requestManager.getActSignState(clientIntegrationId: clientIntegrationId, objectId: objectId, objectDescriptorLong: objectDescriptorLong) else { return }
         networkManager.fetch(request: request, completion: completion)

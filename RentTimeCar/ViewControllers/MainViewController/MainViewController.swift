@@ -42,6 +42,7 @@ final class MainViewController: UIViewController {
     // MARK: - Private Properties
     
     private var cells: [CellType] = []
+    private var autoStatuses: [Int: AutoAvailabilityStatus] = [:]
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
     private let filterService = FilterService.shared
@@ -197,11 +198,42 @@ extension MainViewController {
 
     private func applyAutos(_ autos: [Auto]) {
         let sorted = autos.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
+        autoStatuses = [:]
         cells = mapAutos(with: sorted)
         collectionView.reloadData()
         filterService.setModel(autos)
         filterView.isHidden = autos.isEmpty
         view.setNeedsLayout()
+        sorted.forEach { fetchUsedIntervals(for: $0) }
+    }
+
+    private func fetchUsedIntervals(for auto: Auto) {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd.MM.yyyy HH:mm:ss"
+        formatter.locale = Locale(identifier: "ru_RU")
+
+        let now = Date()
+        guard let monthLater = Calendar.current.date(byAdding: .month, value: 1, to: now) else { return }
+
+        let input = GetAutoUsedIntervalsInput(
+            objectId: String(auto.itemID),
+            dateFrom: formatter.string(from: now),
+            dateTo: formatter.string(from: monthLater)
+        )
+
+        rentApiFacade.getAutoUsedIntervals(with: input) { [weak self] result in
+            guard let self, case .success(let apiResult) = result else { return }
+            let intervals = apiResult.result ?? []
+            let status = AutoAvailabilityStatus.compute(from: intervals, now: now, monthLater: monthLater)
+            DispatchQueue.main.async {
+                self.autoStatuses[auto.itemID] = status
+                guard let index = self.cells.firstIndex(where: {
+                    if case .car(let a) = $0 { return a.itemID == auto.itemID }
+                    return false
+                }) else { return }
+                self.collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
+            }
+        }
     }
 
     private func fetchAutos() {
@@ -355,7 +387,7 @@ extension MainViewController: UICollectionViewDataSource {
             return cell
         case let .car(autoModel):
             let cell: CarCell = collectionView.dequeueCell(for: indexPath)
-            cell.configure(model: autoModel)
+            cell.configure(model: autoModel, status: autoStatuses[autoModel.itemID])
             return cell
         case .shimmer:
             let cell: ShimmerCarCell = collectionView.dequeueCell(for: indexPath)

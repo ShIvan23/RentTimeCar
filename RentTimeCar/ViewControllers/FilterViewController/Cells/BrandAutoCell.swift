@@ -16,8 +16,9 @@ final class BrandAutoCell: UICollectionViewCell {
     private let imageView = UIImageView()
     
     // MARK: - Private Properties
-    
+
     private var isSelectedCell = false
+    private var currentImageURL: URL?
     
     // MARK: - Init
     
@@ -43,13 +44,21 @@ final class BrandAutoCell: UICollectionViewCell {
     func configure(with model: FilterBrandAuto) {
         isSelectedCell = model.isSelected
         updateSelectionCell()
-        
-        guard let urlString = model.image,
-              let url = URL(string: urlString) else {
+
+        guard let urlString = model.image, let url = URL(string: urlString) else {
+            currentImageURL = nil
             imageView.image = nil
             return
         }
+        guard url != currentImageURL else { return }
+        currentImageURL = url
         NukeExtensions.loadImage(with: url, into: imageView)
+    }
+
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        currentImageURL = nil
+        imageView.image = nil
     }
     
     // MARK: - Private Methods

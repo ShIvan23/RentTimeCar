@@ -108,6 +108,12 @@ final class RequestManagerV2 {
         makeRequest(path: "/api/autos/calendar", method: .post, body: input)
     }
 
+    // MARK: - POST /api/autos/used-intervals
+
+    func getAutoUsedIntervals(with input: GetAutoUsedIntervalsInput) -> URLRequest? {
+        makeRequest(path: "/api/autos/used-intervals", method: .post, body: input)
+    }
+
     // MARK: - POST /api/requests/add
 
     func addRequest(with input: AddRequestInput) -> URLRequest? {
