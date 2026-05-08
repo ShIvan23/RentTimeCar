@@ -56,6 +56,8 @@ enum AutoAvailabilityStatus {
             }
         }
 
-        return chainEnd >= monthLater ? .longTermRent : .freeFrom(chainEnd)
+        guard chainEnd < monthLater else { return .longTermRent }
+        let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: chainEnd) ?? chainEnd
+        return .freeFrom(nextDay)
     }
 }
