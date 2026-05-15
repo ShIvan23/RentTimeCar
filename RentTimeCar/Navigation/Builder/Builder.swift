@@ -220,10 +220,6 @@ final class Builder {
         return vc
     }
 
-    static func makeRobokassaWebViewController(paymentURL: URL, invId: Int) -> RobokassaWebViewController {
-        RobokassaWebViewController(coordinator: Coordinator.shared, paymentURL: paymentURL, invId: invId)
-    }
-
     static func makeYukassaWebViewController(amount: Int, description: String) -> YukassaWebViewController {
         YukassaWebViewController(coordinator: Coordinator.shared, amount: amount, description: description)
     }
