@@ -28,20 +28,15 @@ final class Label: UILabel {
     }
     
     override func sizeThatFits(_ size: CGSize) -> CGSize {
-        guard let text else { return .zero }
-        let textSize = (text as NSString).size(withAttributes: [.font: font])
-        guard size != .zero else { return textSize }
-        
-        if textSize.width < size.width {
-            return textSize
-        } else {
-            let numberOfLines = (textSize.width / size.width).rounded(.up)
-            let result = CGSize(
-                width: size.width,
-                height: textSize.height * numberOfLines
-            )
-            return result
-        }
+        guard let text, !text.isEmpty else { return .zero }
+        let constraintSize = CGSize(width: size.width, height: .greatestFiniteMagnitude)
+        let rect = (text as NSString).boundingRect(
+            with: constraintSize,
+            options: [.usesLineFragmentOrigin, .usesFontLeading],
+            attributes: [.font: font as Any],
+            context: nil
+        )
+        return CGSize(width: ceil(rect.width), height: ceil(rect.height))
     }
     
     private func setupLabel(

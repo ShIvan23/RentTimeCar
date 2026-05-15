@@ -9,9 +9,19 @@ import Foundation
 
 struct Clients: Decodable {
     let clients: [Client]
-    
+    let featureFlags: FeatureFlags?
+
     enum CodingKeys: String, CodingKey {
         case clients = "Clients"
+        case featureFlags = "FeatureFlags"
+    }
+}
+
+struct FeatureFlags: Decodable {
+    let hidePayments: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case hidePayments = "HidePayments"
     }
 }
 

@@ -104,6 +104,7 @@ final class AuthService {
             guard let self else { return }
             switch result {
             case let .success(clients):
+                FeatureFlagService.shared.apply(clients.result?.featureFlags)
                 if clients.result?.clients.isEmpty == true {
                     addClient(with: phoneNumber)
                 } else {

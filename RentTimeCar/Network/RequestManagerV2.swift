@@ -21,11 +21,15 @@ final class RequestManagerV2 {
     // MARK: - POST /api/clients/get
 
     func getClients(with phoneNumber: String) -> URLRequest? {
-        makeRequest(
+        var request = makeRequest(
             path: "/api/clients/get",
             method: .post,
             body: PhoneBody(phoneNumber: phoneNumber)
         )
+        if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+            request?.addValue(version, forHTTPHeaderField: "App-Version")
+        }
+        return request
     }
 
     // MARK: - GET /api/autos

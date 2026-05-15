@@ -252,6 +252,7 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
 
         infoTabButton.addTarget(self, action: #selector(infoTabTapped), for: .touchUpInside)
         paymentTabButton.addTarget(self, action: #selector(paymentTabTapped), for: .touchUpInside)
+        paymentTabButton.isHidden = FeatureFlagService.shared.hidePayments
         actReturnButton.addTarget(self, action: #selector(actReturnTapped), for: .touchUpInside)
         signButton.action = { [weak self] in self?.signButtonTapped() }
 

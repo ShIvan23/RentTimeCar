@@ -142,7 +142,7 @@ final class CalendarViewController: UIViewController {
     }
 
     private func sendSelectedDates() {
-        FilterService.shared.setSelectedDates(datesRange)
+        filterService.setSelectedDates(datesRange)
     }
 
     private func performLayout() {
