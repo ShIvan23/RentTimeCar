@@ -130,6 +130,16 @@ final class RequestManagerV2 {
         makeRequest(path: "/api/contracts/create", method: .post, body: input)
     }
 
+    // MARK: - POST /api/contracts/pay-sum
+
+    func payContractSum(clientIntegrationId: String, contractId: String, sum: Decimal) -> URLRequest? {
+        makeRequest(
+            path: "/api/contracts/pay-sum",
+            method: .post,
+            body: PayContractSumBody(clientIntegrationId: clientIntegrationId, contractId: contractId, sum: sum)
+        )
+    }
+
     // MARK: - POST /api/contracts/get
 
     func getClientContracts(clientIntegrationId: String) -> URLRequest? {
@@ -310,6 +320,12 @@ private struct GetActInfoBody: Encodable {
 private struct ContractMoneyInfoBody: Encodable {
     let clientIntegrationId: String
     let objectId: Int
+}
+
+private struct PayContractSumBody: Encodable {
+    let clientIntegrationId: String
+    let contractId: String
+    let sum: Decimal
 }
 
 /// Vapor-сервер ожидает camelCase ключи, в отличие от SearchAutoInput,

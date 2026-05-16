@@ -137,6 +137,7 @@ final class RentSummaryViewController: UIViewController {
                 case let .success(response):
                     let contractId = response.result?.longParamValue2
                     self.contractId = contractId
+                    self.sendAddRequest(retries: 5)
                     self.openPayment(contractId: contractId)
                 case .failure:
                     let model = InfoBottomSheetModel.makeCreateContractFailModel(onConfirm: {})
@@ -162,6 +163,50 @@ final class RentSummaryViewController: UIViewController {
         coordinator.openYukassaPayment(
             amount: YukassaService.prepayAmount,
             description: description
+        )
+    }
+
+    private func sendAddRequest(retries: Int) {
+        guard let input = makeAddRequestInput() else { return }
+        rentApiFacade.addRequest(with: input) { [weak self] result in
+            guard let self else { return }
+            switch result {
+            case .success:
+                break
+            case .failure:
+                if retries > 0 {
+                    self.sendAddRequest(retries: retries - 1)
+                }
+            }
+        }
+    }
+
+    private func makeAddRequestInput() -> AddRequestInput? {
+        guard
+            let integrationId = authService.client?.integrationId,
+            let phone = authService.phoneNumber,
+            let auto = orderConfirmService.auto,
+            let rentFrom = filterService.selectedDates.first?.convertDateToString(),
+            let rentTo = filterService.selectedDates.last?.convertDateToString()
+        else { return nil }
+
+        let services = orderConfirmService.selectedServices.map {
+            ServicePriceItem(code: $0.serviceTitle, basePrice: $0.effectivePrice, count: 1)
+        }
+
+        return AddRequestInput(
+            clientIntegrationId: integrationId,
+            clientPhone: phone,
+            rentFromTime: rentFrom,
+            rentToTime: rentTo,
+            tarifId: orderConfirmService.tarifId,
+            autoId: String(auto.itemID),
+            deliveryAddress: orderConfirmService.deliveryAddress.isEmpty ? nil : orderConfirmService.deliveryAddress,
+            returnAddress: orderConfirmService.returnAddress.isEmpty ? nil : orderConfirmService.returnAddress,
+            requestSource: nil,
+            servicesList: services.isEmpty ? nil : services,
+            clientComment: nil,
+            promoCode: nil
         )
     }
 
