@@ -124,6 +124,12 @@ final class RequestManagerV2 {
         makeRequest(path: "/api/requests/add", method: .post, body: input)
     }
 
+    // MARK: - POST /api/contracts/create
+
+    func createContract(with input: CreateContractInput) -> URLRequest? {
+        makeRequest(path: "/api/contracts/create", method: .post, body: input)
+    }
+
     // MARK: - POST /api/contracts/get
 
     func getClientContracts(clientIntegrationId: String) -> URLRequest? {

@@ -8,6 +8,15 @@
 import Foundation
 
 extension Date {
+    // Returns date formatted as "dd.MM.yyyy HH:mm:ss" in the device's local timezone,
+    // as required by /api/contracts/create.
+    func toContractDateString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd.MM.yyyy HH:mm:ss"
+        formatter.timeZone = .current
+        return formatter.string(from: self)
+    }
+
     func convertDateToString() -> String
     {
         let dateFormatter = DateFormatter()

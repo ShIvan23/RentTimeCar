@@ -24,6 +24,7 @@ protocol IRentApiFacade {
         completion: @escaping (Result<Void, Error>) -> Void
     )
     func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
+    func createContract(with input: CreateContractInput, completion: @escaping (Result<ApiResult<SimpleOutputDto>, Error>) -> Void)
     func getContractMoneyInfo(clientIntegrationId: String, objectId: Int, completion: @escaping (Result<ApiResult<ContractMoneyInfoResponse>, Error>) -> Void)
     func getClientContracts(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ContractsResponse>, Error>) -> Void)
     func getClientFines(clientIntegrationId: String, completion: @escaping (Result<ApiResult<FinesResponse>, Error>) -> Void)
@@ -98,6 +99,11 @@ final class RentApiFacade: IRentApiFacade {
 
     func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void) {
         guard let request = requestManager.addRequest(with: input) else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+
+    func createContract(with input: CreateContractInput, completion: @escaping (Result<ApiResult<SimpleOutputDto>, Error>) -> Void) {
+        guard let request = requestManager.createContract(with: input) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
 

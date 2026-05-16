@@ -12,6 +12,10 @@ final class RentSummaryViewController: UIViewController {
 
     // MARK: - Private properties
     private let coordinator: ICoordinator
+    private let rentApiFacade: IRentApiFacade
+    private let authService: AuthService = .shared
+    private let orderConfirmService: OrderConfirmService = .shared
+    private let filterService: FilterService = .shared
     private var cells: [RentSummaryCellModel] = []
 
     private lazy var collectionView: UICollectionView = {
@@ -52,6 +56,19 @@ final class RentSummaryViewController: UIViewController {
         return view
     }()
 
+    private let loadingOverlayView: UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black.withAlphaComponent(0.45)
+        view.isHidden = true
+        return view
+    }()
+
+    private let overlaySpinner: UIActivityIndicatorView = {
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .white
+        return indicator
+    }()
+
     private let infoTooltipView: UIView = {
         let view = UIView()
         view.backgroundColor = .secondaryBackground
@@ -71,8 +88,9 @@ final class RentSummaryViewController: UIViewController {
     )
 
     // MARK: - Init
-    init(coordinator: ICoordinator) {
+    init(coordinator: ICoordinator, rentApiFacade: IRentApiFacade) {
         self.coordinator = coordinator
+        self.rentApiFacade = rentApiFacade
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -95,9 +113,61 @@ final class RentSummaryViewController: UIViewController {
 
     // MARK: - Private methods (Payment)
     private func proceedToPayment() {
-        coordinator.openYukassaPayment(
-            amount: YukassaService.prepayAmount,
-            description: "Предоплата аренды автомобиля"
+        continueButton.isEnabled = false
+        loadingOverlayView.isHidden = false
+        overlaySpinner.startAnimating()
+        guard let input = makeCreateContractInput() else {
+            continueButton.isEnabled = true
+            loadingOverlayView.isHidden = true
+            overlaySpinner.stopAnimating()
+            return
+        }
+        rentApiFacade.createContract(with: input) { [weak self] result in
+            guard let self else { return }
+            DispatchQueue.main.async {
+                self.continueButton.isEnabled = true
+                self.loadingOverlayView.isHidden = true
+                self.overlaySpinner.stopAnimating()
+                switch result {
+                case let .success(response):
+                    let client = self.authService.client
+                    let clientName = [client?.name.firstName, client?.name.lastName]
+                        .compactMap { $0 }
+                        .filter { !$0.isEmpty }
+                        .joined(separator: " ")
+                    var description = "Предоплата аренды автомобиля"
+                    if let contractId = response.result?.longParamValue2 {
+                        description += " №\(contractId)"
+                    }
+                    if !clientName.isEmpty {
+                        description += " — \(clientName)"
+                    }
+                    self.coordinator.openYukassaPayment(
+                        amount: YukassaService.prepayAmount,
+                        description: description
+                    )
+                case .failure:
+                    let model = InfoBottomSheetModel.makeCreateContractFailModel(onConfirm: {})
+                    self.coordinator.openInfoBottomSheetViewController(model: model)
+                }
+            }
+        }
+    }
+
+    private func makeCreateContractInput() -> CreateContractInput? {
+        guard
+            let auto = orderConfirmService.auto,
+            let rentFrom = filterService.selectedDates.first?.toContractDateString(),
+            let rentTo = filterService.selectedDates.last?.toContractDateString()
+        else { return nil }
+        return CreateContractInput(
+            rentFromTime: rentFrom,
+            rentToTime: rentTo,
+            tarifId: orderConfirmService.tarifId,
+            autoId: String(auto.itemID),
+            clientIntegrationId: authService.client?.integrationId,
+            clientPhone: authService.phoneNumber,
+            clientComment: orderConfirmService.selectedServices.isEmpty ? nil : orderConfirmService.selectedServices.map(\.serviceTitle).joined(separator: ", ")
         )
     }
 
@@ -119,7 +189,8 @@ final class RentSummaryViewController: UIViewController {
     private func setupViews() {
         view.backgroundColor = .mainBackground
         infoTooltipView.addSubview(infoTooltipLabel)
-        view.addSubviews([collectionView, prepayTitleLabel, infoButton, prepayValueLabel, continueButton, dimmingView, infoTooltipView])
+        loadingOverlayView.addSubview(overlaySpinner)
+        view.addSubviews([collectionView, prepayTitleLabel, infoButton, prepayValueLabel, continueButton, dimmingView, infoTooltipView, loadingOverlayView])
     }
 
     private func setupActions() {
@@ -145,12 +216,11 @@ final class RentSummaryViewController: UIViewController {
     }
 
     private func loadData() {
-        let service = OrderConfirmService.shared
-        guard let auto = service.auto else { return }
+        guard let auto = orderConfirmService.auto else { return }
 
         var result: [RentSummaryCellModel] = []
 
-        let daysCount = service.datesCount
+        let daysCount = orderConfirmService.datesCount
         let discount = discountPercent(for: daysCount)
         let baseRent = auto.defaultPriceWithDiscountSt * daysCount
         let discountedRent = Int(Double(baseRent) * (1.0 - Double(discount) / 100.0))
@@ -158,7 +228,7 @@ final class RentSummaryViewController: UIViewController {
         result.append(.item(RentItem(title: "Аренда", amount: discountedRent, icon: .calendar, discountText: discountText)))
         result.append(.separator)
 
-        let selectedServices = service.selectedServices
+        let selectedServices = orderConfirmService.selectedServices
         var extrasTotal = 0
         if !selectedServices.isEmpty {
             result.append(.item(RentItem(title: "Дополнительные опции:", amount: 0, icon: .file)))
@@ -214,6 +284,8 @@ final class RentSummaryViewController: UIViewController {
             .above(of: prepayTitleLabel)
 
         dimmingView.pin.all()
+        loadingOverlayView.pin.all()
+        overlaySpinner.pin.center()
 
         let tooltipHPadding: CGFloat = 12
         let tooltipVPadding: CGFloat = 6

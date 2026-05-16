@@ -78,6 +78,15 @@ extension InfoBottomSheetModel {
         )
     }
     
+    static func makeCreateContractFailModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Не удалось создать договор аренды.\n\nПроверьте подключение к интернету и попробуйте ещё раз.",
+            image: .redCross,
+            buttonTitle: "Понятно",
+            onConfirm: onConfirm
+        )
+    }
+
     static func makeFailUploadImagesModel() -> InfoBottomSheetModel {
         InfoBottomSheetModel(
             text: "Не удалось отправить фото на проверку.\n\nСвязитесь со службой поддержки.",

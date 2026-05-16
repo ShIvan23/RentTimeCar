@@ -147,7 +147,10 @@ final class Builder {
     
     static func makeRentSummaryViewController() -> UIViewController {
         let coordinator = Coordinator.shared
-        let rentSummaryViewController = RentSummaryViewController(coordinator: coordinator)
+        let rentSummaryViewController = RentSummaryViewController(
+            coordinator: coordinator,
+            rentApiFacade: RentApiFacade()
+        )
         return rentSummaryViewController
     }
 

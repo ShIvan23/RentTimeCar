@@ -192,6 +192,8 @@ extension YukassaWebViewController: WKNavigationDelegate {
             return
         }
 
+        print("+++ WebView navigating to: \(urlString)")
+
         // ЮKassa перенаправляет на return_url после успешной оплаты.
         if urlString.hasPrefix(YukassaService.returnURL) {
             decisionHandler(.cancel)
