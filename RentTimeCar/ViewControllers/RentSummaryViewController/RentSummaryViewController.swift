@@ -16,6 +16,7 @@ final class RentSummaryViewController: UIViewController {
     private let authService: AuthService = .shared
     private let orderConfirmService: OrderConfirmService = .shared
     private let filterService: FilterService = .shared
+    private var contractId: Int? = nil
     private var cells: [RentSummaryCellModel] = []
 
     private lazy var collectionView: UICollectionView = {
@@ -113,6 +114,10 @@ final class RentSummaryViewController: UIViewController {
 
     // MARK: - Private methods (Payment)
     private func proceedToPayment() {
+        if let contractId {
+            openPayment(contractId: contractId)
+            return
+        }
         continueButton.isEnabled = false
         loadingOverlayView.isHidden = false
         overlaySpinner.startAnimating()
@@ -130,28 +135,34 @@ final class RentSummaryViewController: UIViewController {
                 self.overlaySpinner.stopAnimating()
                 switch result {
                 case let .success(response):
-                    let client = self.authService.client
-                    let clientName = [client?.name.firstName, client?.name.lastName]
-                        .compactMap { $0 }
-                        .filter { !$0.isEmpty }
-                        .joined(separator: " ")
-                    var description = "Предоплата аренды автомобиля"
-                    if let contractId = response.result?.longParamValue2 {
-                        description += " №\(contractId)"
-                    }
-                    if !clientName.isEmpty {
-                        description += " — \(clientName)"
-                    }
-                    self.coordinator.openYukassaPayment(
-                        amount: YukassaService.prepayAmount,
-                        description: description
-                    )
+                    let contractId = response.result?.longParamValue2
+                    self.contractId = contractId
+                    self.openPayment(contractId: contractId)
                 case .failure:
                     let model = InfoBottomSheetModel.makeCreateContractFailModel(onConfirm: {})
                     self.coordinator.openInfoBottomSheetViewController(model: model)
                 }
             }
         }
+    }
+
+    private func openPayment(contractId: Int?) {
+        let client = authService.client
+        let clientName = [client?.name.firstName, client?.name.lastName]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+        var description = "Предоплата аренды автомобиля"
+        if let contractId {
+            description += " №\(contractId)"
+        }
+        if !clientName.isEmpty {
+            description += " — \(clientName)"
+        }
+        coordinator.openYukassaPayment(
+            amount: YukassaService.prepayAmount,
+            description: description
+        )
     }
 
     private func makeCreateContractInput() -> CreateContractInput? {
