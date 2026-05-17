@@ -32,7 +32,7 @@ protocol ICoordinator {
     func popToRootViewController()
     func openAnotherApplication(url: URL)
     func openRentSummaryViewController()
-    func openYukassaPayment(amount: Int, description: String)
+    func openYukassaPayment(amount: Int, description: String, contractId: Int?)
     func openPaymentSuccessBottomSheet(onDismiss: @escaping () -> Void)
     func openPaymentFailBottomSheet(onDismiss: @escaping () -> Void)
     func openPaymentCancelConfirmationBottomSheet(onConfirm: @escaping () -> Void)
@@ -165,8 +165,8 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.pushViewController(rentSummaryViewController, animated: true)
     }
 
-    func openYukassaPayment(amount: Int, description: String) {
-        let paymentVC = Builder.makeYukassaWebViewController(amount: amount, description: description)
+    func openYukassaPayment(amount: Int, description: String, contractId: Int?) {
+        let paymentVC = Builder.makeYukassaWebViewController(amount: amount, description: description, contractId: contractId)
         navigationController?.pushViewController(paymentVC, animated: true)
     }
 

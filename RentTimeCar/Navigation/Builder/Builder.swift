@@ -223,8 +223,8 @@ final class Builder {
         return vc
     }
 
-    static func makeYukassaWebViewController(amount: Int, description: String) -> YukassaWebViewController {
-        YukassaWebViewController(coordinator: Coordinator.shared, amount: amount, description: description)
+    static func makeYukassaWebViewController(amount: Int, description: String, contractId: Int?) -> YukassaWebViewController {
+        YukassaWebViewController(coordinator: Coordinator.shared, amount: amount, description: description, contractId: contractId)
     }
 
     static func makeSuccessPhotoViewController(image: UIImage, photoStep: RegistrationPhotoStep) -> UIViewController {

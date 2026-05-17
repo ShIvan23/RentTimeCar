@@ -25,7 +25,7 @@ protocol IRentApiFacade {
     )
     func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
     func createContract(with input: CreateContractInput, completion: @escaping (Result<ApiResult<SimpleOutputDto>, Error>) -> Void)
-    func payContractSum(clientIntegrationId: String, contractId: String, sum: Decimal, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
+    func payContractSum(clientIntegrationId: String, contractId: String, sum: Decimal, completion: @escaping (Result<ApiResult<PayContractSumResponse>, Error>) -> Void)
     func getContractMoneyInfo(clientIntegrationId: String, objectId: Int, completion: @escaping (Result<ApiResult<ContractMoneyInfoResponse>, Error>) -> Void)
     func getClientContracts(clientIntegrationId: String, completion: @escaping (Result<ApiResult<ContractsResponse>, Error>) -> Void)
     func getClientFines(clientIntegrationId: String, completion: @escaping (Result<ApiResult<FinesResponse>, Error>) -> Void)
@@ -108,7 +108,7 @@ final class RentApiFacade: IRentApiFacade {
         networkManager.fetch(request: request, completion: completion)
     }
 
-    func payContractSum(clientIntegrationId: String, contractId: String, sum: Decimal, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void) {
+    func payContractSum(clientIntegrationId: String, contractId: String, sum: Decimal, completion: @escaping (Result<ApiResult<PayContractSumResponse>, Error>) -> Void) {
         guard let request = requestManager.payContractSum(clientIntegrationId: clientIntegrationId, contractId: contractId, sum: sum) else { return }
         networkManager.fetch(request: request, completion: completion)
     }

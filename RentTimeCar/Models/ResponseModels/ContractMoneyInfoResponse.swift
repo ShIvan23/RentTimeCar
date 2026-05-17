@@ -328,6 +328,47 @@ struct ServiceBalance: Decodable {
     }
 }
 
+// MARK: - Enums
+
+enum OperationTypes: Int {
+    case none = 0
+    case openContract = 1
+    case extendContract = 2
+    case closeContract = 3
+    case saleProperty = 4
+    case purchaseProperty = 5
+    case komissionClose = 6
+    case komissionCanceled = 7
+    case periodPay = 8
+    case payment = 9
+    case moneyMove = 10
+    case clientAccount = 20
+    case cashPointCalculation = 21
+    case changeContract = 30
+    case contractPrepayment = 40
+    case contractTermination = 50
+    case moveToRealisation = 60
+    case defolt = 65
+    case serviceOperation = 70
+    case partnerCalculations = 80
+    case exchangeOperation = 90
+}
+
+enum MoneyDirection: Int {
+    case undefined = 0
+    case `in` = 1
+    case out = 2
+    case `internal` = 3
+}
+
+enum PaymentResultStates: Int {
+    case notPayd = 0
+    case partPayd = 1
+    case payd = 2
+    case over = 3
+    case notNeedPay = 4
+}
+
 // MARK: - Helpers
 
 private extension DateFormatter {

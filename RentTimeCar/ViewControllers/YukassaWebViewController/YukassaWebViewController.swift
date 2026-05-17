@@ -13,7 +13,9 @@ final class YukassaWebViewController: UIViewController {
     private let coordinator: ICoordinator
     private let amount: Int
     private let paymentDescription: String
+    private let contractId: Int?
     private let rentApiFacade: IRentApiFacade = RentApiFacade()
+    private let authService: AuthService = .shared
 
     private lazy var webView: WKWebView = {
         let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
@@ -29,10 +31,11 @@ final class YukassaWebViewController: UIViewController {
 
     // MARK: - Init
 
-    init(coordinator: ICoordinator, amount: Int, description: String) {
+    init(coordinator: ICoordinator, amount: Int, description: String, contractId: Int?) {
         self.coordinator = coordinator
         self.amount = amount
         self.paymentDescription = description
+        self.contractId = contractId
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -93,7 +96,26 @@ final class YukassaWebViewController: UIViewController {
     }
 
     private func handlePaymentSuccess() {
-        openSuccessBottomSheet()
+        guard
+            let integrationId = authService.client?.integrationId,
+            let contractId
+        else {
+            openSuccessBottomSheet()
+            return
+        }
+        rentApiFacade.payContractSum(
+            clientIntegrationId: integrationId,
+            contractId: String(contractId),
+            sum: Decimal(amount)
+        ) { [weak self] result in
+            switch result {
+            case .success(let success):
+                print("+++ success payContractSum = \(success)")
+            case .failure(let failure):
+                print("+++ failure payContractSum = \(failure)")
+            }
+            DispatchQueue.main.async { self?.openSuccessBottomSheet() }
+        }
     }
 
     private func openSuccessBottomSheet() {
@@ -146,6 +168,7 @@ extension YukassaWebViewController: WKNavigationDelegate {
         // ЮKassa перенаправляет на return_url после успешной оплаты.
         if urlString.hasPrefix(YukassaService.returnURL) {
             decisionHandler(.cancel)
+            print("+++ return url from Yukassa")
             handlePaymentSuccess()
             return
         }

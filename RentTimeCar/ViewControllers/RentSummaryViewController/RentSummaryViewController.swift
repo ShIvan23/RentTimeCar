@@ -162,7 +162,8 @@ final class RentSummaryViewController: UIViewController {
         }
         coordinator.openYukassaPayment(
             amount: YukassaService.prepayAmount,
-            description: description
+            description: description,
+            contractId: contractId
         )
     }
 

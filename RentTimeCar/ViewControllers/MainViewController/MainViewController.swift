@@ -431,7 +431,8 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         switch cells[indexPath.item] {
         case let .car(autoModel):
-            coordinator.openDetailAutoCar(model: autoModel)
+            let fullModel = filterService.allAutos.first { $0.itemID == autoModel.itemID } ?? autoModel
+            coordinator.openDetailAutoCar(model: fullModel)
         case let .button(buttonType):
             switch buttonType {
             case .authorization:

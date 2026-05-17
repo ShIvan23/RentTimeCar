@@ -17,13 +17,17 @@ extension Date {
         return formatter.string(from: self)
     }
 
-    func convertDateToString() -> String
-    {
+    func convertDateToString() -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
         dateFormatter.timeZone = .current
-        let dateString = dateFormatter.string(from: self)
-        return dateString
+        return dateFormatter.string(from: self)
+    }
+
+    // Returns midnight of the next day — used as rentToTime so the rental
+    // period is always at least 24 hours (handles single-day selection too).
+    func nextDayMidnight() -> Date {
+        Calendar.current.date(byAdding: .day, value: 1, to: self) ?? self
     }
 
     static func convertArrayDatesToString(_ dates: [Date]) -> String? {
