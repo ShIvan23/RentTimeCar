@@ -188,7 +188,7 @@ final class RentSummaryViewController: UIViewController {
             let phone = authService.phoneNumber,
             let auto = orderConfirmService.auto,
             let rentFrom = filterService.selectedDates.first?.convertDateToString(),
-            let rentTo = filterService.selectedDates.last?.convertDateToString()
+            let rentTo = filterService.selectedDates.last?.nextDayMidnight().convertDateToString()
         else { return nil }
 
         let services = orderConfirmService.selectedServices.map {
@@ -204,7 +204,7 @@ final class RentSummaryViewController: UIViewController {
             autoId: String(auto.itemID),
             deliveryAddress: orderConfirmService.deliveryAddress.isEmpty ? nil : orderConfirmService.deliveryAddress,
             returnAddress: orderConfirmService.returnAddress.isEmpty ? nil : orderConfirmService.returnAddress,
-            requestSource: nil,
+            requestSource: "Мобильное приложение",
             servicesList: services.isEmpty ? nil : services,
             clientComment: nil,
             promoCode: nil
@@ -215,7 +215,7 @@ final class RentSummaryViewController: UIViewController {
         guard
             let auto = orderConfirmService.auto,
             let rentFrom = filterService.selectedDates.first?.toContractDateString(),
-            let rentTo = filterService.selectedDates.last?.toContractDateString()
+            let rentTo = filterService.selectedDates.last?.nextDayMidnight().toContractDateString()
         else { return nil }
         return CreateContractInput(
             rentFromTime: rentFrom,
