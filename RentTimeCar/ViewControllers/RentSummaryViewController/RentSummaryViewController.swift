@@ -192,7 +192,7 @@ final class RentSummaryViewController: UIViewController {
         else { return nil }
 
         let services = orderConfirmService.selectedServices.map {
-            ServicePriceItem(code: $0.serviceTitle, basePrice: $0.effectivePrice, count: 1)
+            ServicePriceItem(code: $0.code, basePrice: $0.effectivePrice, count: 1)
         }
 
         return AddRequestInput(

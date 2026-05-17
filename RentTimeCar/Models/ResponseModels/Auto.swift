@@ -8,6 +8,7 @@
 import Foundation
 
 struct AdditionalService: Decodable {
+    let code: String
     let serviceTitle: String
     let basePrice: Int
     let currentBasePrice: Int
@@ -16,13 +17,15 @@ struct AdditionalService: Decodable {
         basePrice == 0 ? currentBasePrice : basePrice
     }
 
-    init(serviceTitle: String, basePrice: Int = 0, currentBasePrice: Int = 0) {
+    init(code: String, serviceTitle: String, basePrice: Int = 0, currentBasePrice: Int = 0) {
+        self.code = code
         self.serviceTitle = serviceTitle
         self.basePrice = basePrice
         self.currentBasePrice = currentBasePrice
     }
 
     enum CodingKeys: String, CodingKey {
+        case code = "Code"
         case serviceTitle = "ServiceTitle"
         case basePrice = "BasePrice"
         case currentBasePrice = "CurrentBasePrice"
