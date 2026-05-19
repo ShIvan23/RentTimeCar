@@ -22,6 +22,7 @@ final class OrderConfirmService {
     private(set) var deliveryAddress = ""
     private(set) var returnAddress = ""
     private(set) var selectedServices = [AdditionalService]()
+    private(set) var isChildSeatSelected = false
     private(set) var auto: Auto?
     private(set) var tarifId = ""
 
