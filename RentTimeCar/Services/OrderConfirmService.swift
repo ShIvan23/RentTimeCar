@@ -51,6 +51,10 @@ final class OrderConfirmService {
         self.selectedServices = services
     }
 
+    func setChildSeatSelected(_ selected: Bool) {
+        self.isChildSeatSelected = selected
+    }
+
     func setTarifId(_ tarifId: String) {
         self.tarifId = tarifId
     }

@@ -154,7 +154,12 @@ extension DetailOrderOptionsViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell: DetailOrderOptionCell = collectionView.dequeueCell(for: indexPath)
         let item = model[indexPath.row]
-        let isSelected = selectedServices.contains(where: { $0.serviceTitle == item.title })
+        let isSelected: Bool
+        if item.type == .child {
+            isSelected = OrderConfirmService.shared.isChildSeatSelected
+        } else {
+            isSelected = selectedServices.contains(where: { $0.serviceTitle == item.title })
+        }
         cell.configure(
             with: item,
             isSelected: isSelected,
@@ -192,6 +197,10 @@ extension DetailOrderOptionsViewController: TitleSubtitleViewDelegate {
 
 extension DetailOrderOptionsViewController: DetailOrderOptionCellDelegate {
     func switcherValueDidChange(_ value: Bool, text: String) {
+        if text == "Детское кресло" {
+            OrderConfirmService.shared.setChildSeatSelected(value)
+            return
+        }
         guard let service = OrderConfirmService.shared.auto?.additionalServices.first(where: { $0.serviceTitle == text }) else { return }
         if value {
             selectedServices.append(service)

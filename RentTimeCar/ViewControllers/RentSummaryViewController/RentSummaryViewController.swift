@@ -195,6 +195,7 @@ final class RentSummaryViewController: UIViewController {
             ServicePriceItem(code: $0.code, basePrice: $0.effectivePrice, count: 1)
         }
 
+        let childSeatComment: String? = orderConfirmService.isChildSeatSelected ? "Детское кресло" : nil
         return AddRequestInput(
             clientIntegrationId: integrationId,
             clientPhone: phone,
@@ -206,7 +207,7 @@ final class RentSummaryViewController: UIViewController {
             returnAddress: orderConfirmService.returnAddress.isEmpty ? nil : orderConfirmService.returnAddress,
             requestSource: "Мобильное приложение",
             servicesList: services.isEmpty ? nil : services,
-            clientComment: nil,
+            clientComment: childSeatComment,
             promoCode: nil
         )
     }
@@ -217,6 +218,10 @@ final class RentSummaryViewController: UIViewController {
             let rentFrom = filterService.selectedDates.first?.toContractDateString(),
             let rentTo = filterService.selectedDates.last?.nextDayMidnight().toContractDateString()
         else { return nil }
+        var commentParts = orderConfirmService.selectedServices.map(\.serviceTitle)
+        if orderConfirmService.isChildSeatSelected {
+            commentParts.insert("Детское кресло", at: 0)
+        }
         return CreateContractInput(
             rentFromTime: rentFrom,
             rentToTime: rentTo,
@@ -224,7 +229,7 @@ final class RentSummaryViewController: UIViewController {
             autoId: String(auto.itemID),
             clientIntegrationId: authService.client?.integrationId,
             clientPhone: authService.phoneNumber,
-            clientComment: orderConfirmService.selectedServices.isEmpty ? nil : orderConfirmService.selectedServices.map(\.serviceTitle).joined(separator: ", ")
+            clientComment: commentParts.isEmpty ? nil : commentParts.joined(separator: ", ")
         )
     }
 
@@ -286,9 +291,13 @@ final class RentSummaryViewController: UIViewController {
         result.append(.separator)
 
         let selectedServices = orderConfirmService.selectedServices
+        let isChildSeatSelected = orderConfirmService.isChildSeatSelected
         var extrasTotal = 0
-        if !selectedServices.isEmpty {
+        if !selectedServices.isEmpty || isChildSeatSelected {
             result.append(.item(RentItem(title: "Дополнительные опции:", amount: 0, icon: .file)))
+            if isChildSeatSelected {
+                result.append(.item(RentItem(title: " •  Детское кресло", amount: 0, icon: nil, amountText: "Бесплатно")))
+            }
             for extra in selectedServices {
                 let price = extra.effectivePrice
                 extrasTotal += price

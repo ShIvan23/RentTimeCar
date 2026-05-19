@@ -35,6 +35,11 @@ enum AutoAvailabilityStatus {
         }
     }
 
+    /// Возвращает true если ни один интервал не пересекается с [from, to).
+    static func isAvailable(intervals: [UsedInterval], from: Date, to: Date) -> Bool {
+        !intervals.contains { $0.timeBegin < to && $0.timeEnd > from }
+    }
+
     /// Вычисляет статус на основе занятых интервалов.
     /// - Parameters:
     ///   - intervals: список занятых периодов

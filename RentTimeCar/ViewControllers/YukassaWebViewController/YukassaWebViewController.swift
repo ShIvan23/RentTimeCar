@@ -17,6 +17,12 @@ final class YukassaWebViewController: UIViewController {
     private let rentApiFacade: IRentApiFacade = RentApiFacade()
     private let authService: AuthService = .shared
 
+    private var paymentId: String?
+    private var pollingTimer: Timer?
+    private var pollingElapsed: TimeInterval = 0
+    private static let pollingInterval: TimeInterval = 3
+    private static let pollingTimeout: TimeInterval = 600
+
     private lazy var webView: WKWebView = {
         let webView = WKWebView(frame: .zero, configuration: WKWebViewConfiguration())
         webView.navigationDelegate = self
@@ -81,13 +87,16 @@ final class YukassaWebViewController: UIViewController {
             DispatchQueue.main.async {
                 switch result {
                 case let .success(response):
+                    print("+++ createYukassaPayment response = \(response)")
                     guard let url = URL(string: response.confirmationUrl) else {
                         self.activityIndicator.stopAnimating()
                         self.handlePaymentFail()
                         return
                     }
+                    self.paymentId = response.paymentId
+                    self.startPolling()
                     self.webView.load(URLRequest(url: url))
-                case let .failure(error):
+                case .failure:
                     self.activityIndicator.stopAnimating()
                     self.handlePaymentFail()
                 }
@@ -95,7 +104,49 @@ final class YukassaWebViewController: UIViewController {
         }
     }
 
+    // MARK: - Polling
+
+    private func startPolling() {
+        pollingElapsed = 0
+        pollingTimer = Timer.scheduledTimer(withTimeInterval: Self.pollingInterval, repeats: true) { [weak self] _ in
+            self?.pollPaymentStatus()
+        }
+    }
+
+    private func stopPolling() {
+        print("+++ stopPolling")
+        pollingTimer?.invalidate()
+        pollingTimer = nil
+    }
+
+    private func pollPaymentStatus() {
+        guard let paymentId else { return }
+        pollingElapsed += Self.pollingInterval
+        if pollingElapsed >= Self.pollingTimeout {
+            stopPolling()
+            return
+        }
+        rentApiFacade.getPaymentStatus(paymentId: paymentId) { [weak self] result in
+            guard let self else { return }
+            guard case let .success(response) = result else { return }
+            print("+++ getPaymentStatus response = \(response)")
+            DispatchQueue.main.async {
+                switch response.status {
+                case .succeeded:
+                    self.stopPolling()
+                    self.handlePaymentSuccess()
+                case .canceled:
+                    self.stopPolling()
+                    self.handlePaymentFail()
+                case .pending:
+                    break
+                }
+            }
+        }
+    }
+
     private func handlePaymentSuccess() {
+        stopPolling()
         guard
             let integrationId = authService.client?.integrationId,
             let contractId
@@ -103,6 +154,10 @@ final class YukassaWebViewController: UIViewController {
             openSuccessBottomSheet()
             return
         }
+        print("+++ payContractSum")
+        print("+++ integrationId = \(integrationId)")
+        print("+++ contractId = \(contractId)")
+        print("+++ amount = \(amount)")
         rentApiFacade.payContractSum(
             clientIntegrationId: integrationId,
             contractId: String(contractId),
@@ -125,12 +180,14 @@ final class YukassaWebViewController: UIViewController {
     }
 
     private func handlePaymentFail() {
+        stopPolling()
         coordinator.openPaymentFailBottomSheet { [weak self] in
             self?.coordinator.popViewController()
         }
     }
 
     @objc private func handleClose() {
+        stopPolling()
         coordinator.openPaymentCancelConfirmationBottomSheet { [weak self] in
             self?.coordinator.popViewController()
         }
@@ -163,7 +220,7 @@ extension YukassaWebViewController: WKNavigationDelegate {
             return
         }
 
-        print("+++ WebView navigating to: \(urlString)")
+//        print("+++ WebView navigating to: \(urlString)")
 
         // ЮKassa перенаправляет на return_url после успешной оплаты.
         if urlString.hasPrefix(YukassaService.returnURL) {

@@ -41,6 +41,19 @@ final class YukassaService {
         request.httpBody = body
         return request
     }
+
+    func makePaymentStatusRequest(paymentId: String) -> URLRequest? {
+        guard let url = URL(string: baseURL + "/api/payments/status") else {
+            assertionFailure("Invalid URL: \(baseURL)/api/payments/status")
+            return nil
+        }
+        guard let body = try? JSONEncoder().encode(["paymentId": paymentId]) else { return nil }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = body
+        return request
+    }
 }
 
 // MARK: - Request body
@@ -51,10 +64,21 @@ struct YookassaPaymentInput: Encodable {
     let phone: String
 }
 
-// MARK: - Response model
+// MARK: - Response models
 
 struct YookassaPaymentResponse: Decodable {
     let confirmationUrl: String
+    let paymentId: String
+}
+
+struct PaymentStatusResponse: Decodable {
+    let status: PaymentStatus
+}
+
+enum PaymentStatus: String, Decodable {
+    case pending
+    case succeeded
+    case canceled
 }
 
 // MARK: - Errors

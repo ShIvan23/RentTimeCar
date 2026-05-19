@@ -43,6 +43,7 @@ final class MainViewController: UIViewController {
     
     private var cells: [CellType] = []
     private var autoStatuses: [Int: AutoAvailabilityStatus] = [:]
+    private var autoIntervals: [Int: [UsedInterval]] = [:]
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
     private let filterService = FilterService.shared
@@ -155,13 +156,22 @@ final class MainViewController: UIViewController {
     private func filteredAutosUpdated() {
         DispatchQueue.main.async {
             let model = self.filterService.filteredAutos
-            if model.isEmpty {
-                let sorted = self.filterService.allAutos.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
-                self.cells = self.mapAutos(with: sorted)
-            } else {
-                self.cells = self.mapAutos(with: model)
-            }
+            let autos = model.isEmpty
+                ? self.filterService.allAutos.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
+                : model
+            self.cells = self.mapAutos(with: self.filterAvailableAutos(autos))
             self.collectionView.reloadData()
+        }
+    }
+
+    private func filterAvailableAutos(_ autos: [Auto]) -> [Auto] {
+        guard
+            let from = filterService.selectedDates.first,
+            let to = filterService.selectedDates.last?.nextDayMidnight()
+        else { return autos }
+        return autos.filter { auto in
+            guard let intervals = autoIntervals[auto.itemID] else { return true }
+            return AutoAvailabilityStatus.isAvailable(intervals: intervals, from: from, to: to)
         }
     }
 
@@ -199,6 +209,7 @@ extension MainViewController {
     private func applyAutos(_ autos: [Auto]) {
         let sorted = autos.sorted { $0.defaultPriceWithDiscountSt > $1.defaultPriceWithDiscountSt }
         autoStatuses = [:]
+        autoIntervals = [:]
         cells = mapAutos(with: sorted)
         collectionView.reloadData()
         filterService.setModel(autos)
@@ -226,6 +237,7 @@ extension MainViewController {
             let intervals = apiResult.result ?? []
             let status = AutoAvailabilityStatus.compute(from: intervals, now: now, monthLater: monthLater)
             DispatchQueue.main.async {
+                self.autoIntervals[auto.itemID] = intervals
                 self.autoStatuses[auto.itemID] = status
                 guard let index = self.cells.firstIndex(where: {
                     if case .car(let a) = $0 { return a.itemID == auto.itemID }
