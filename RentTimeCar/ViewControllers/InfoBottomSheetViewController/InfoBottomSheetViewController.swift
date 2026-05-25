@@ -91,7 +91,7 @@ extension InfoBottomSheetModel {
         InfoBottomSheetModel(
             text: "Не удалось отправить фото на проверку.\n\nСвязитесь со службой поддержки.",
             image: .redCross,
-            buttonTitle: "Хорошо}",
+            buttonTitle: "Хорошо",
             onConfirm: {}
         )
     }

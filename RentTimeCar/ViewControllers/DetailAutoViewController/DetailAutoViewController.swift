@@ -154,7 +154,7 @@ final class DetailAutoViewController: UIViewController {
         let textButton: String = if authService.authState != .fullAccess {
             "Зарегистрируйтесь, чтобы продолжить"
         } else {
-            "Выбирите даты"
+            "Выберите даты"
         }
         continueButton.disable()
         continueButton.setTitle(textButton, for: .disabled)
