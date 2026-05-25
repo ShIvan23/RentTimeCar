@@ -188,7 +188,7 @@ final class RentSummaryViewController: UIViewController {
             let phone = authService.phoneNumber,
             let auto = orderConfirmService.auto,
             let rentFrom = filterService.selectedDates.first?.convertDateToString(),
-            let rentTo = filterService.selectedDates.last?.nextDayMidnight().convertDateToString()
+            let rentTo = filterService.selectedDates.last?.convertDateToString()
         else { return nil }
 
         let services = orderConfirmService.selectedServices.map {
@@ -216,7 +216,7 @@ final class RentSummaryViewController: UIViewController {
         guard
             let auto = orderConfirmService.auto,
             let rentFrom = filterService.selectedDates.first?.toContractDateString(),
-            let rentTo = filterService.selectedDates.last?.nextDayMidnight().toContractDateString()
+            let rentTo = filterService.selectedDates.last?.toContractDateString()
         else { return nil }
         var commentParts = orderConfirmService.selectedServices.map(\.serviceTitle)
         if orderConfirmService.isChildSeatSelected {
@@ -272,9 +272,17 @@ final class RentSummaryViewController: UIViewController {
         hideTooltip()
     }
 
+    private func daysWord(_ n: Int) -> String {
+        let mod10 = n % 10
+        let mod100 = n % 100
+        if mod10 == 1 && mod100 != 11 { return "день" }
+        if mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20) { return "дня" }
+        return "дней"
+    }
+
     private func discountPercent(for daysCount: Int) -> Int {
         guard daysCount > 1 else { return 0 }
-        return min(daysCount - 1, 30)
+        return min(daysCount, 30)
     }
 
     private func loadData() {
@@ -287,7 +295,8 @@ final class RentSummaryViewController: UIViewController {
         let baseRent = auto.defaultPriceWithDiscountSt * daysCount
         let discountedRent = Int(Double(baseRent) * (1.0 - Double(discount) / 100.0))
         let discountText: String? = discount > 0 ? "Скидка \(discount)%" : nil
-        result.append(.item(RentItem(title: "Аренда", amount: discountedRent, icon: .calendar, discountText: discountText)))
+        let rentTitle = "Аренда · \(daysCount) \(daysWord(daysCount))"
+        result.append(.item(RentItem(title: rentTitle, amount: discountedRent, icon: .calendar, discountText: discountText)))
         result.append(.separator)
 
         let selectedServices = orderConfirmService.selectedServices
@@ -307,8 +316,8 @@ final class RentSummaryViewController: UIViewController {
         }
 
         result.append(.separator)
-        result.append(.item(RentItem(title: "Итого", amount: discountedRent + extrasTotal, icon: .rublesign)))
         result.append(.item(RentItem(title: "Депозит", amount: auto.deposit, icon: .rublesignBank)))
+        result.append(.item(RentItem(title: "Итого", amount: discountedRent + extrasTotal + auto.deposit, icon: .rublesign)))
 
         cells = result
         collectionView.reloadData()

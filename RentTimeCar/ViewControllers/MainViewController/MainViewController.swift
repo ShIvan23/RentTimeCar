@@ -167,7 +167,7 @@ final class MainViewController: UIViewController {
     private func filterAvailableAutos(_ autos: [Auto]) -> [Auto] {
         guard
             let from = filterService.selectedDates.first,
-            let to = filterService.selectedDates.last?.nextDayMidnight()
+            let to = filterService.selectedDates.last
         else { return autos }
         return autos.filter { auto in
             guard let intervals = autoIntervals[auto.itemID] else { return true }

@@ -32,7 +32,7 @@ final class OrderConfirmService {
 
     func setSelectedDates(_ selectedDates: [Date]) {
         self.selectedDates = Date.convertArrayDatesToString(selectedDates) ?? ""
-        self.datesCount = selectedDates.count
+        self.datesCount = max(1, selectedDates.count - 1)
     }
 
     func setImageUrl(_ imageUrl: String) {

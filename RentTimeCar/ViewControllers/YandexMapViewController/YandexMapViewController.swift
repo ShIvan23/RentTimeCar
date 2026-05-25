@@ -239,6 +239,7 @@ final class YandexMapViewController: UIViewController {
         }
         title = step.rawValue
         editAddressView.isHidden = true
+        buttonContainerView.isHidden = true
     }
     
     private func fetchOfficeAddress() {
@@ -254,6 +255,7 @@ final class YandexMapViewController: UIViewController {
                     self.placeMark?.geometry = self.officeCameraPosition
                     self.addressOfficeView.configure(with: officeAddress)
                     self.showOffice()
+                    self.buttonContainerView.isHidden = false
                 case .failure:
                     let model = InfoBottomSheetModel.makeOfficeAddressLoadFailModel {
                         self.fetchOfficeAddress()

@@ -59,7 +59,12 @@ final class FilterService {
     }
     
     func setSelectedDates(_ selectedDates: [Date]) {
-        self.selectedDates = selectedDates
+        if selectedDates.count == 1, let only = selectedDates.first,
+           let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: only) {
+            self.selectedDates = [only, nextDay]
+        } else {
+            self.selectedDates = selectedDates
+        }
         NotificationCenter.default.post(name: .selectedDatesUpdated, object: nil)
     }
     

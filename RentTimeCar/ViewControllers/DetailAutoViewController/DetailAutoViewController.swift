@@ -103,6 +103,7 @@ final class DetailAutoViewController: UIViewController {
     
     private func setupView() {
         view.backgroundColor = .mainBackground
+        title = autoModel.title
         view.addSubviews([imagesCollectionView, stackView, discountView, insuranceView, selectedDateView, buttonContainerView])
         buttonContainerView.addSubview(continueButton)
         buttonContainerView.backgroundColor = .secondaryBackground
