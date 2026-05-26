@@ -19,25 +19,7 @@ final class NetworkManager {
         return config
     }()
 
-    /// Конфигурация без системного прокси — для работы с VPN в дебаге без Proxyman
-    private let sessionConfigurationNoProxy: URLSessionConfiguration = {
-        let config = URLSessionConfiguration.default
-        config.waitsForConnectivity = true
-        config.httpShouldUsePipelining = false
-        config.timeoutIntervalForRequest = 30
-        config.timeoutIntervalForResource = 60
-        config.connectionProxyDictionary = [:]  // отключает Proxyman/Charles
-        return config
-    }()
-
-    private lazy var session: URLSession = {
-        #if DEBUG
-        // Переключи на sessionConfigurationNoProxy если используешь VPN без Proxyman
-        return URLSession(configuration: sessionConfiguration, delegate: TLSBypassDelegate(), delegateQueue: nil)
-        #else
-        return URLSession(configuration: sessionConfiguration)
-        #endif
-    }()
+    private lazy var session = URLSession(configuration: sessionConfiguration)
 
     private static let retryableErrorCodes: Set<Int> = [
         NSURLErrorNetworkConnectionLost,   // -1005
@@ -169,28 +151,6 @@ final class NetworkManager {
     }
 }
 
-// MARK: - TLSBypassDelegate (DEBUG only)
-
-#if DEBUG
-/// Принимает любой TLS-сертификат. Нужен для работы с Proxyman/Charles.
-/// НЕ использовать в продакшене.
-private final class TLSBypassDelegate: NSObject, URLSessionDelegate {
-    func urlSession(
-        _ session: URLSession,
-        didReceive challenge: URLAuthenticationChallenge,
-        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
-    ) {
-        print("🔐 TLSBypassDelegate called, method: \(challenge.protectionSpace.authenticationMethod)")
-        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-           let trust = challenge.protectionSpace.serverTrust {
-            completionHandler(.useCredential, URLCredential(trust: trust))
-        } else {
-            completionHandler(.performDefaultHandling, nil)
-        }
-    }
-}
-#endif
-
 // MARK: - UploadDelegate
 
 /// Делегат одноразовой upload-сессии.
@@ -233,22 +193,6 @@ extension UploadDelegate: URLSessionTaskDelegate {
         session.finishTasksAndInvalidate()
     }
 }
-
-#if DEBUG
-extension UploadDelegate: URLSessionDelegate {
-    func urlSession(
-        _ session: URLSession,
-        didReceive challenge: URLAuthenticationChallenge,
-        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
-    ) {
-        guard let trust = challenge.protectionSpace.serverTrust else {
-            completionHandler(.cancelAuthenticationChallenge, nil)
-            return
-        }
-        completionHandler(.useCredential, URLCredential(trust: trust))
-    }
-}
-#endif
 
 extension UploadDelegate: URLSessionDataDelegate {
 
