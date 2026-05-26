@@ -34,9 +34,26 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
     private let phoneTextFieldBorderView = UIView()
     
     // MARK: - Private Properties
-    
+
     private let coordinator: ICoordinator
     private let rentApiFacade: IRentApiFacade
+    private var isLoadingDocument = false
+
+    private lazy var loadingOverlay: UIView = {
+        let overlay = UIView()
+        overlay.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        overlay.alpha = 0
+        let indicator = UIActivityIndicatorView(style: .large)
+        indicator.color = .white
+        indicator.startAnimating()
+        overlay.addSubview(indicator)
+        indicator.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            indicator.centerXAnchor.constraint(equalTo: overlay.centerXAnchor),
+            indicator.centerYAnchor.constraint(equalTo: overlay.centerYAnchor)
+        ])
+        return overlay
+    }()
 
     // MARK: - Init
     
@@ -268,10 +285,58 @@ extension AuthorizationViewController {
 
 extension AuthorizationViewController: TaggedLabelDelegate {
     func personalDataDidTapped() {
-        coordinator.openPDFViewController(pdfFile: .personalData)
+        openDocument { [weak self] completion in
+            self?.rentApiFacade.getPersonalDataUrl(completion: completion)
+        }
     }
-    
+
     func privacyPolicyDidTapper() {
-        coordinator.openPDFViewController(pdfFile:.privacyPolicy)
+        openDocument { [weak self] completion in
+            self?.rentApiFacade.getPrivacyPolicyUrl(completion: completion)
+        }
+    }
+
+    private func showLoadingOverlay() {
+        loadingOverlay.frame = view.bounds
+        view.addSubview(loadingOverlay)
+        UIView.animate(withDuration: 0.2) {
+            self.loadingOverlay.alpha = 1
+        }
+    }
+
+    private func hideLoadingOverlay() {
+        UIView.animate(withDuration: 0.2) {
+            self.loadingOverlay.alpha = 0
+        } completion: { _ in
+            self.loadingOverlay.removeFromSuperview()
+        }
+    }
+
+    private func openDocument(fetch: @escaping (@escaping (Result<DocumentUrlResponse, Error>) -> Void) -> Void) {
+        guard !isLoadingDocument else { return }
+        isLoadingDocument = true
+        showLoadingOverlay()
+        fetch { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.isLoadingDocument = false
+                self.hideLoadingOverlay()
+                switch result {
+                case let .success(response):
+                    guard let url = URL(string: response.url) else { return }
+                    self.coordinator.openPDFViewController(pdfFile: .url(url))
+                case .failure:
+                    let model = InfoBottomSheetModel(
+                        text: "Не удалось загрузить документ.\n\nПроверьте подключение к интернету и попробуйте ещё раз.",
+                        image: .redCross,
+                        buttonTitle: "Повторить",
+                        onConfirm: { [weak self] in
+                            self?.openDocument(fetch: fetch)
+                        }
+                    )
+                    self.coordinator.openInfoBottomSheetViewController(model: model)
+                }
+            }
+        }
     }
 }

@@ -237,6 +237,18 @@ final class RequestManagerV2 {
         )
     }
 
+    // MARK: - GET /api/documents/personal-data
+
+    func getPersonalDataRequest() -> URLRequest? {
+        makeRequest(path: "/api/documents/personal-data", method: .get)
+    }
+
+    // MARK: - GET /api/documents/privacy-policy
+
+    func getPrivacyPolicyRequest() -> URLRequest? {
+        makeRequest(path: "/api/documents/privacy-policy", method: .get)
+    }
+
     // MARK: - POST /api/sms
 
     func getSmsRequest(for number: String, code: String) -> URLRequest? {

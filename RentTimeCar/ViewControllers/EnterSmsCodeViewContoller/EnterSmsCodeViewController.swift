@@ -168,9 +168,11 @@ final class EnterSmsCodeViewController: UIViewController, ToastViewShowable {
 
 extension EnterSmsCodeViewController: EnterCodeViewDelegate {
     func validateCode(_ code: String) {
-        guard checkCode == code else { return showToast(with: "Код из смс введен не верно")}
+        guard checkCode == code else { return showToast(with: "Код из смс введен не верно") }
         authService.savePhoneNumber(clearPhoneNumber.cancelPhoneNumberMask())
-        coordinator.popToRootViewController()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+            self?.coordinator.popToRootViewController()
+        }
     }
 }
 

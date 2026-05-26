@@ -36,6 +36,8 @@ protocol IRentApiFacade {
     func getActInfo(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, contractNumber: String, contractDate: String, renterName: String, renterPassport: String, renterPhone: String, carInfo: String, completion: @escaping (Result<Data, Error>) -> Void)
     func createYukassaPayment(amount: Int, description: String, phone: String, completion: @escaping (Result<YookassaPaymentResponse, Error>) -> Void)
     func getPaymentStatus(paymentId: String, completion: @escaping (Result<PaymentStatusResponse, Error>) -> Void)
+    func getPersonalDataUrl(completion: @escaping (Result<DocumentUrlResponse, Error>) -> Void)
+    func getPrivacyPolicyUrl(completion: @escaping (Result<DocumentUrlResponse, Error>) -> Void)
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -172,6 +174,16 @@ final class RentApiFacade: IRentApiFacade {
 
     func getPaymentStatus(paymentId: String, completion: @escaping (Result<PaymentStatusResponse, Error>) -> Void) {
         guard let request = YukassaService.shared.makePaymentStatusRequest(paymentId: paymentId) else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+
+    func getPersonalDataUrl(completion: @escaping (Result<DocumentUrlResponse, Error>) -> Void) {
+        guard let request = requestManager.getPersonalDataRequest() else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+
+    func getPrivacyPolicyUrl(completion: @escaping (Result<DocumentUrlResponse, Error>) -> Void) {
+        guard let request = requestManager.getPrivacyPolicyRequest() else { return }
         networkManager.fetch(request: request, completion: completion)
     }
 }
