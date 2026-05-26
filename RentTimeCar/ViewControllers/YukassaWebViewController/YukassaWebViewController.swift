@@ -87,7 +87,6 @@ final class YukassaWebViewController: UIViewController {
             DispatchQueue.main.async {
                 switch result {
                 case let .success(response):
-                    print("+++ createYukassaPayment response = \(response)")
                     guard let url = URL(string: response.confirmationUrl) else {
                         self.activityIndicator.stopAnimating()
                         self.handlePaymentFail()
@@ -114,7 +113,6 @@ final class YukassaWebViewController: UIViewController {
     }
 
     private func stopPolling() {
-        print("+++ stopPolling")
         pollingTimer?.invalidate()
         pollingTimer = nil
     }
@@ -129,7 +127,6 @@ final class YukassaWebViewController: UIViewController {
         rentApiFacade.getPaymentStatus(paymentId: paymentId) { [weak self] result in
             guard let self else { return }
             guard case let .success(response) = result else { return }
-            print("+++ getPaymentStatus response = \(response)")
             DispatchQueue.main.async {
                 switch response.status {
                 case .succeeded:
@@ -154,20 +151,16 @@ final class YukassaWebViewController: UIViewController {
             openSuccessBottomSheet()
             return
         }
-        print("+++ payContractSum")
-        print("+++ integrationId = \(integrationId)")
-        print("+++ contractId = \(contractId)")
-        print("+++ amount = \(amount)")
         rentApiFacade.payContractSum(
             clientIntegrationId: integrationId,
             contractId: String(contractId),
             sum: Decimal(amount)
         ) { [weak self] result in
             switch result {
-            case .success(let success):
-                print("+++ success payContractSum = \(success)")
-            case .failure(let failure):
-                print("+++ failure payContractSum = \(failure)")
+            case .success:
+                break
+            case .failure:
+                break
             }
             DispatchQueue.main.async { self?.openSuccessBottomSheet() }
         }
@@ -220,12 +213,9 @@ extension YukassaWebViewController: WKNavigationDelegate {
             return
         }
 
-//        print("+++ WebView navigating to: \(urlString)")
-
         // ЮKassa перенаправляет на return_url после успешной оплаты.
         if urlString.hasPrefix(YukassaService.returnURL) {
             decisionHandler(.cancel)
-            print("+++ return url from Yukassa")
             handlePaymentSuccess()
             return
         }

@@ -136,17 +136,7 @@ final class NetworkManager {
             return object
         }
         
-        catch DecodingError.dataCorrupted(let context) {
-            debugPrint(DecodingError.dataCorrupted(context))
-        } catch DecodingError.keyNotFound(let key, let context) {
-            debugPrint(DecodingError.keyNotFound(key,context))
-        } catch DecodingError.typeMismatch(let type, let context) {
-            debugPrint(DecodingError.typeMismatch(type,context))
-        } catch DecodingError.valueNotFound(let value, let context) {
-            debugPrint(DecodingError.valueNotFound(value,context))
-        } catch let error{
-            debugPrint(error)
-        }
+        catch {}
         return nil
     }
 }

@@ -162,7 +162,11 @@ final class RegistrationViewController: UIViewController {
                 if isGranted {
                     self?.coordinator.openCameraViewController(photoStep: step)
                 } else {
-                    self?.coordinator.openInfoBottomSheetViewController()
+                    let model = InfoBottomSheetModel.makeDeniedCameraPermissionModel {
+                        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                        UIApplication.shared.open(url)
+                    }
+                    self?.coordinator.openInfoBottomSheetViewController(model: model)
                 }
             }
         }

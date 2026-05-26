@@ -452,7 +452,6 @@ extension MainViewController: UICollectionViewDelegateFlowLayout {
             case .registration:
                 coordinator.openRegistrationViewController()
             case .onCheck:
-                print("+++ show onCheck screen")
                 break
             }
         case .empty, .shimmer:

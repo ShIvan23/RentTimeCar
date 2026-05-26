@@ -239,7 +239,6 @@ extension FilterView: UICollectionViewDelegateFlowLayout {
         case .sort:
             coordinator.openBottomSheet(type: .sorting)
         case .delete:
-            print("+++ delete")
             ()
         }
     }

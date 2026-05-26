@@ -83,7 +83,6 @@ final class SearchAddressViewController: UIViewController {
                 guard let self else { return }
                 
                 if let error {
-                    print("+++ надо показать ошибку саджестов")
                     return
                 }
                 

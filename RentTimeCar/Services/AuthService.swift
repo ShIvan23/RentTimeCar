@@ -46,10 +46,8 @@ final class AuthService {
     private init() {
         phoneNumber = userDefaults.string(forKey: .phoneNumberKey)
         if let authState = AuthState(rawValue: userDefaults.string(forKey: .authStateKey) ?? "") {
-            print("+++ authState id UD = \(authState)")
             self.authState = authState
         } else {
-            print("+++ NOOOO authState id UD. needAuthorize")
             authState = .needAuthorize
         }
         guard authState != .needAuthorize else { return }

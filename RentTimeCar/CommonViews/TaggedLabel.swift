@@ -71,15 +71,11 @@ final class TaggedLabel: UILabel {
         let sixthRange = nsString.range(of: .sixth)
         let tapLocation = gestureRecognizer.location(in: self)
         let index = indexOfAttributedTextCharacterAtPoint(point: tapLocation)
-        if checkRange(secondRange, contain: index) {
-            print("+++", String.second)
-        }
+        if checkRange(secondRange, contain: index) { }
         if checkRange(fourthRange, contain: index) {
-            print("+++", String.fourth)
             delegate?.privacyPolicyDidTapper()
         }
         if checkRange(sixthRange, contain: index) {
-            print("+++", String.sixth)
             delegate?.personalDataDidTapped()
         }
     }

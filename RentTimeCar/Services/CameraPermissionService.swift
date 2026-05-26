@@ -20,22 +20,16 @@ final class CameraPermissionService: ICameraPermissionService {
         switch status {
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { isGranted in
-                print("isGranted = \(isGranted)")
                 if !isGranted {
                     // надо показывать что-то? что теперь только через настройки
                 }
                 completion(isGranted)
             }
-        case .restricted:
-            assertionFailure("restricted permission")
-            completion(false)
-        case .denied:
-            // нужно показать экран с переправкой в настройки
+        case .restricted, .denied:
             completion(false)
         case .authorized:
             completion(true)
         @unknown default:
-            assertionFailure("restricted permission")
             completion(false)
         }
     }

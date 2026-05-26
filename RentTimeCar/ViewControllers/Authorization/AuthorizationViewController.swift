@@ -93,7 +93,6 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
                 return
             }
             let code = makeRandomCode()
-            print("+++ Code to send = \(code)")
             rentApiFacade.getSmsCode(
                 with: phoneNumber,
                 code: "Ваш код подтверждения: \(code)"

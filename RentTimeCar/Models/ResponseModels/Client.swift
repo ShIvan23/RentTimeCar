@@ -45,7 +45,6 @@ extension Client {
         let lastName: String
         
         // non decodable property
-        // TODO: - Уточнить у Стаса могут ли быть пустые эти поля у клиента, который прошел авторизацию с документами.
         var isEmptyFirstAndLastNames: Bool {
             firstName.isEmpty && lastName.isEmpty
         }
