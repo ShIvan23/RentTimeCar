@@ -96,7 +96,7 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
             print("+++ Code to send = \(code)")
             rentApiFacade.getSmsCode(
                 with: phoneNumber,
-                code: code
+                code: "Ваш код подтверждения: \(code)"
             ) { [weak self] result in
                 DispatchQueue.main.async {
                     guard let self else { return }

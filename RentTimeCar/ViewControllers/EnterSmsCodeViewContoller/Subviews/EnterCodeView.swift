@@ -66,6 +66,10 @@ final class EnterCodeView: UIView {
         stackView.pin.all()
     }
 
+    func focusFirstField() {
+        codeTextFieldsPool.first?.becomeFirstResponder()
+    }
+
     private func validateCode() {
         var code = ""
         codeTextFieldsPool.forEach {

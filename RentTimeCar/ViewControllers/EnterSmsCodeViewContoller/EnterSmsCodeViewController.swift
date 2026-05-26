@@ -65,6 +65,11 @@ final class EnterSmsCodeViewController: UIViewController, ToastViewShowable {
         addKeyboardObservers()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        enterCodeView.focusFirstField()
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         performLayout()
