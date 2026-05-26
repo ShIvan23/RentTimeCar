@@ -14,7 +14,7 @@ final class YukassaService {
     // ЮKassa перенаправляет на return_url после завершения оплаты.
     static let returnURL = "https://renttimecar.ru/payment/success"
     static let failURL   = "https://renttimecar.ru/payment/fail"
-    static let prepayAmount = 1
+    static let prepayAmount = 5000
 
     // MARK: - Private Configuration
 
