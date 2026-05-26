@@ -39,6 +39,9 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
     private let rentApiFacade: IRentApiFacade
     private var isLoadingDocument = false
 
+    private static let reviewPhoneNumber = "9111111111"
+    private static let reviewCode = "00000"
+
     private lazy var loadingOverlay: UIView = {
         let overlay = UIView()
         overlay.backgroundColor = UIColor.black.withAlphaComponent(0.5)
@@ -107,6 +110,14 @@ final class AuthorizationViewController: UIViewController, ToastViewShowable {
                   let phoneNumber = phoneTextField.text,
                   phoneTextField.validatePhone() else {
                 self?.showToast(with: "Номер телефона введен не верно")
+                return
+            }
+            let cleanedPhone = phoneNumber.replacingOccurrences(of: "\\D", with: "", options: .regularExpression)
+            if cleanedPhone == Self.reviewPhoneNumber {
+                self.coordinator.openEnterSmsCodeViewController(
+                    phoneNumber: phoneNumber,
+                    checkCode: Self.reviewCode
+                )
                 return
             }
             let code = makeRandomCode()
