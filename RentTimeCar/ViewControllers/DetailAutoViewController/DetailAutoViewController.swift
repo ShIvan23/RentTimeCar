@@ -193,7 +193,7 @@ final class DetailAutoViewController: UIViewController {
 
         guard let urlString = autoModel.files[safe: currentIndex]?.url,
               let url = URL(string: urlString) else {
-            present(UIActivityViewController(activityItems: [text], applicationActivities: nil), animated: true)
+            presentShareSheet(items: [text])
             return
         }
 
@@ -205,9 +205,16 @@ final class DetailAutoViewController: UIViewController {
             } else {
                 items = [text]
             }
-            let vc = UIActivityViewController(activityItems: items, applicationActivities: nil)
-            self.present(vc, animated: true)
+            self.presentShareSheet(items: items)
         }
+    }
+
+    private func presentShareSheet(items: [Any]) {
+        let vc = UIActivityViewController(activityItems: items, applicationActivities: nil)
+        if let popover = vc.popoverPresentationController {
+            popover.barButtonItem = navigationItem.rightBarButtonItem
+        }
+        present(vc, animated: true)
     }
 
     @objc
