@@ -20,10 +20,9 @@ final class CameraPermissionService: ICameraPermissionService {
         switch status {
         case .notDetermined:
             AVCaptureDevice.requestAccess(for: .video) { isGranted in
-                if !isGranted {
-                    // надо показывать что-то? что теперь только через настройки
+                DispatchQueue.main.async {
+                    completion(isGranted)
                 }
-                completion(isGranted)
             }
         case .restricted, .denied:
             completion(false)

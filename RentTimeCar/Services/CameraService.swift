@@ -72,7 +72,9 @@ class CameraService: NSObject {
         }
 
         let settings = AVCapturePhotoSettings()
-        settings.flashMode = .auto
+        if photoOutput.supportedFlashModes.contains(.auto) {
+            settings.flashMode = .auto
+        }
 
         photoOutput.capturePhoto(with: settings, delegate: self)
     }
@@ -126,19 +128,24 @@ class CameraService: NSObject {
 extension CameraService: AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if let error = error {
-            delegate?.cameraService(self, didFailWith: error)
+            DispatchQueue.main.async {
+                self.delegate?.cameraService(self, didFailWith: error)
+            }
             return
         }
 
         guard let imageData = photo.fileDataRepresentation(),
               let image = UIImage(data: imageData) else {
-            delegate?.cameraService(self, didFailWith: CameraError.cannotCaptureImage)
+            DispatchQueue.main.async {
+                self.delegate?.cameraService(self, didFailWith: CameraError.cannotCaptureImage)
+            }
             return
         }
 
-        // Корректируем ориентацию изображения
         let orientedImage = fixImageOrientation(image)
-        delegate?.cameraService(self, didCapture: orientedImage)
+        DispatchQueue.main.async {
+            self.delegate?.cameraService(self, didCapture: orientedImage)
+        }
     }
 
     private func fixImageOrientation(_ image: UIImage) -> UIImage {
@@ -146,12 +153,10 @@ extension CameraService: AVCapturePhotoCaptureDelegate {
             return image
         }
 
-        UIGraphicsBeginImageContextWithOptions(image.size, false, image.scale)
-        image.draw(in: CGRect(origin: .zero, size: image.size))
-        let normalizedImage = UIGraphicsGetImageFromCurrentImageContext()
-        UIGraphicsEndImageContext()
-
-        return normalizedImage ?? image
+        let renderer = UIGraphicsImageRenderer(size: image.size)
+        return renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: image.size))
+        }
     }
 }
 
