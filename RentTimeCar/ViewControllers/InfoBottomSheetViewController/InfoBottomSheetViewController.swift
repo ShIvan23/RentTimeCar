@@ -11,7 +11,25 @@ struct InfoBottomSheetModel {
     let text: String
     let image: UIImage
     let buttonTitle: String
+    let cancelButtonTitle: String?
     let onConfirm: () -> Void
+    let onCancel: (() -> Void)?
+
+    init(
+        text: String,
+        image: UIImage,
+        buttonTitle: String,
+        cancelButtonTitle: String? = nil,
+        onConfirm: @escaping () -> Void,
+        onCancel: (() -> Void)? = nil
+    ) {
+        self.text = text
+        self.image = image
+        self.buttonTitle = buttonTitle
+        self.cancelButtonTitle = cancelButtonTitle
+        self.onConfirm = onConfirm
+        self.onCancel = onCancel
+    }
 }
 
 extension InfoBottomSheetModel {
@@ -95,6 +113,26 @@ extension InfoBottomSheetModel {
             onConfirm: {}
         )
     }
+
+    static func makeDeleteAccountModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Для удаления аккаунта и всех персональных данных обратитесь в службу поддержки.\n\nМы обработаем запрос в течение 30 дней.",
+            image: .redCross,
+            buttonTitle: "Написать в поддержку",
+            cancelButtonTitle: "Отмена",
+            onConfirm: onConfirm
+        )
+    }
+
+    static func makeLogoutModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Вы уверены, что хотите выйти из аккаунта?",
+            image: .info,
+            buttonTitle: "Выйти",
+            cancelButtonTitle: "Отмена",
+            onConfirm: onConfirm
+        )
+    }
 }
 
 final class InfoBottomSheetViewController: UIViewController {
@@ -103,6 +141,7 @@ final class InfoBottomSheetViewController: UIViewController {
     private let label = Label()
     private let imageView = UIImageView()
     private let confirmButton = MainButton(title: "")
+    private let cancelButton = SecondaryButton(title: "")
 
     // MARK: - Private Properties
 
@@ -135,7 +174,7 @@ final class InfoBottomSheetViewController: UIViewController {
     // MARK: - Private Methods
 
     private func setupView() {
-        view.addSubviews([label, imageView, confirmButton])
+        view.addSubviews([label, imageView, confirmButton, cancelButton])
         view.backgroundColor = .mainBackground
 
         label.text = model.text
@@ -148,25 +187,52 @@ final class InfoBottomSheetViewController: UIViewController {
                 self?.model.onConfirm()
             }
         }
+
+        if let cancelTitle = model.cancelButtonTitle {
+            cancelButton.setTitle(cancelTitle, for: .normal)
+            cancelButton.isHidden = false
+            cancelButton.action = { [weak self] in
+                self?.dismiss(animated: true) {
+                    self?.model.onCancel?()
+                }
+            }
+        } else {
+            cancelButton.isHidden = true
+        }
     }
 
     private func performLayout() {
+        let hasCancelButton = !cancelButton.isHidden
+
+        if hasCancelButton {
+            cancelButton.pin
+                .bottom()
+                .marginBottom(20)
+                .horizontally(20)
+                .height(50)
+
+            confirmButton.pin
+                .above(of: cancelButton)
+                .marginBottom(12)
+                .horizontally(20)
+                .height(50)
+        } else {
+            confirmButton.pin
+                .bottom()
+                .marginBottom(20)
+                .horizontally(20)
+                .height(50)
+        }
+
         label.pin
-            .vCenter()
-            .horizontally()
-            .marginHorizontal(16)
+            .above(of: confirmButton)
+            .marginBottom(30)
+            .horizontally(16)
             .sizeToFit(.width)
 
         imageView.pin
             .above(of: label, aligned: .center)
-            .marginBottom(30)
+            .marginBottom(16)
             .size(CGSize(square: 32))
-
-        confirmButton.pin
-            .bottom()
-            .marginBottom(20)
-            .horizontally()
-            .marginHorizontal(20)
-            .height(50)
     }
 }

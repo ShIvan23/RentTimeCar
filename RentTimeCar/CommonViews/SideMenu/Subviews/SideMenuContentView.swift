@@ -120,7 +120,7 @@ extension SideMenuContentView: UITableViewDelegate {
         case .myFines:
             coordinator.openClientFinesViewController()
         case .mySettings:
-            break
+            coordinator.openSettingsViewController()
         case .catalog:
             delegate?.hideSideMenuView()
         case .support:

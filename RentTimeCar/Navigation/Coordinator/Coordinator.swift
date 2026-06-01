@@ -48,6 +48,9 @@ protocol ICoordinator {
     func openRentDetailViewController(contract: ContractDto)
     func openFineDetailViewController(fine: FineDto)
     func openFinePhotosViewController(images: [String])
+    func openSettingsViewController()
+    func openDeleteAccountBottomSheet(onConfirm: @escaping () -> Void)
+    func openLogoutBottomSheet(onConfirm: @escaping () -> Void)
 }
 
 extension ICoordinator {
@@ -255,6 +258,23 @@ final class Coordinator: NSObject, ICoordinator {
         let vc = Builder.makeFinePhotosViewController(images: images)
         navigationController?.pushViewController(vc, animated: true)
         navigationController?.isNavigationBarHidden = false
+    }
+
+    func openSettingsViewController() {
+        let vc = Builder.makeSettingsViewController()
+        vc.title = "Мои настройки"
+        navigationController?.pushViewController(vc, animated: true)
+        navigationController?.isNavigationBarHidden = false
+    }
+
+    func openDeleteAccountBottomSheet(onConfirm: @escaping () -> Void) {
+        let vc = Builder.makeDeleteAccountBottomSheet(onConfirm: onConfirm)
+        navigationController?.topViewController?.present(vc, animated: true)
+    }
+
+    func openLogoutBottomSheet(onConfirm: @escaping () -> Void) {
+        let vc = Builder.makeLogoutBottomSheet(onConfirm: onConfirm)
+        navigationController?.topViewController?.present(vc, animated: true)
     }
 }
 

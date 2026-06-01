@@ -242,4 +242,18 @@ final class Builder {
         let rentApiFacade = RentApiFacade()
         return ClientItemsViewController(mode: mode, coordinator: coordinator, rentApiFacade: rentApiFacade)
     }
+
+    static func makeSettingsViewController() -> UIViewController {
+        SettingsViewController(coordinator: Coordinator.shared)
+    }
+
+    static func makeDeleteAccountBottomSheet(onConfirm: @escaping () -> Void) -> UIViewController {
+        let model = InfoBottomSheetModel.makeDeleteAccountModel(onConfirm: onConfirm)
+        return makeInfoBottomSheetViewController(model: model)
+    }
+
+    static func makeLogoutBottomSheet(onConfirm: @escaping () -> Void) -> UIViewController {
+        let model = InfoBottomSheetModel.makeLogoutModel(onConfirm: onConfirm)
+        return makeInfoBottomSheetViewController(model: model)
+    }
 }
