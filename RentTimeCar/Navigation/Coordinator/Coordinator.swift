@@ -50,6 +50,7 @@ protocol ICoordinator {
     func openFinePhotosViewController(images: [String])
     func openSettingsViewController()
     func openDeleteAccountBottomSheet(onConfirm: @escaping () -> Void)
+    func openDeleteAccountSuccessBottomSheet(onConfirm: @escaping () -> Void)
     func openLogoutBottomSheet(onConfirm: @escaping () -> Void)
 }
 
@@ -269,6 +270,11 @@ final class Coordinator: NSObject, ICoordinator {
 
     func openDeleteAccountBottomSheet(onConfirm: @escaping () -> Void) {
         let vc = Builder.makeDeleteAccountBottomSheet(onConfirm: onConfirm)
+        navigationController?.topViewController?.present(vc, animated: true)
+    }
+
+    func openDeleteAccountSuccessBottomSheet(onConfirm: @escaping () -> Void) {
+        let vc = Builder.makeDeleteAccountSuccessBottomSheet(onConfirm: onConfirm)
         navigationController?.topViewController?.present(vc, animated: true)
     }
 

@@ -116,10 +116,19 @@ extension InfoBottomSheetModel {
 
     static func makeDeleteAccountModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
         InfoBottomSheetModel(
-            text: "Для удаления аккаунта и всех персональных данных обратитесь в службу поддержки.\n\nМы обработаем запрос в течение 30 дней.",
+            text: "Вы уверены, что хотите удалить аккаунт?\n\nВсе ваши данные будут удалены в течение 30 дней.",
             image: .redCross,
-            buttonTitle: "Написать в поддержку",
+            buttonTitle: "Удалить аккаунт",
             cancelButtonTitle: "Отмена",
+            onConfirm: onConfirm
+        )
+    }
+
+    static func makeDeleteAccountSuccessModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Запрос на удаление аккаунта принят.\n\nВсе ваши данные будут удалены в течение 30 дней.",
+            image: .info,
+            buttonTitle: "Понятно",
             onConfirm: onConfirm
         )
     }

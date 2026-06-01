@@ -42,11 +42,13 @@ final class SettingsViewController: UIViewController {
     // MARK: - Private Properties
 
     private let coordinator: ICoordinator
+    private let rentApiFacade: IRentApiFacade
 
     // MARK: - Init
 
-    init(coordinator: ICoordinator) {
+    init(coordinator: ICoordinator, rentApiFacade: IRentApiFacade) {
         self.coordinator = coordinator
+        self.rentApiFacade = rentApiFacade
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -91,7 +93,28 @@ final class SettingsViewController: UIViewController {
     @objc
     private func deleteAccountTapped() {
         coordinator.openDeleteAccountBottomSheet { [weak self] in
-            self?.coordinator.openContactsViewController()
+            self?.sendDeleteAccountRequest()
+        }
+    }
+
+    private func sendDeleteAccountRequest() {
+        deleteAccountButton.isEnabled = false
+        logoutButton.isEnabled = false
+
+        let phone = "+\(AuthService.shared.phoneNumber ?? "")"
+        rentApiFacade.deleteAccount(phone: phone) { [weak self] _ in
+            DispatchQueue.main.async {
+                self?.deleteAccountButton.isEnabled = true
+                self?.logoutButton.isEnabled = true
+                self?.showDeleteAccountSuccess()
+            }
+        }
+    }
+
+    private func showDeleteAccountSuccess() {
+        coordinator.openDeleteAccountSuccessBottomSheet { [weak self] in
+            AuthService.shared.logout()
+            self?.coordinator.popToRootViewController()
         }
     }
 

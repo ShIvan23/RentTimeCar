@@ -38,6 +38,7 @@ protocol IRentApiFacade {
     func getPaymentStatus(paymentId: String, completion: @escaping (Result<PaymentStatusResponse, Error>) -> Void)
     func getPersonalDataUrl(completion: @escaping (Result<DocumentUrlResponse, Error>) -> Void)
     func getPrivacyPolicyUrl(completion: @escaping (Result<DocumentUrlResponse, Error>) -> Void)
+    func deleteAccount(phone: String, completion: @escaping (Result<EmptyResponse, Error>) -> Void)
 }
 
 final class RentApiFacade: IRentApiFacade {
@@ -184,6 +185,11 @@ final class RentApiFacade: IRentApiFacade {
 
     func getPrivacyPolicyUrl(completion: @escaping (Result<DocumentUrlResponse, Error>) -> Void) {
         guard let request = requestManager.getPrivacyPolicyRequest() else { return }
+        networkManager.fetch(request: request, completion: completion)
+    }
+
+    func deleteAccount(phone: String, completion: @escaping (Result<EmptyResponse, Error>) -> Void) {
+        guard let request = requestManager.deleteAccountRequest(phone: phone) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
 }

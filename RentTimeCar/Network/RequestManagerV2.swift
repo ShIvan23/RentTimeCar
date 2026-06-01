@@ -249,6 +249,16 @@ final class RequestManagerV2 {
         makeRequest(path: "/api/documents/privacy-policy", method: .get)
     }
 
+    // MARK: - POST /api/account/delete-request
+
+    func deleteAccountRequest(phone: String) -> URLRequest? {
+        makeRequest(
+            path: "/api/account/delete-request",
+            method: .post,
+            body: DeleteAccountBody(phone: phone)
+        )
+    }
+
     // MARK: - POST /api/sms
 
     func getSmsRequest(for number: String, code: String) -> URLRequest? {
@@ -338,6 +348,10 @@ private struct PayContractSumBody: Encodable {
     let clientIntegrationId: String
     let contractId: String
     let sum: Decimal
+}
+
+private struct DeleteAccountBody: Encodable {
+    let phone: String
 }
 
 /// Vapor-сервер ожидает camelCase ключи, в отличие от SearchAutoInput,

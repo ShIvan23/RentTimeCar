@@ -244,11 +244,16 @@ final class Builder {
     }
 
     static func makeSettingsViewController() -> UIViewController {
-        SettingsViewController(coordinator: Coordinator.shared)
+        SettingsViewController(coordinator: Coordinator.shared, rentApiFacade: RentApiFacade())
     }
 
     static func makeDeleteAccountBottomSheet(onConfirm: @escaping () -> Void) -> UIViewController {
         let model = InfoBottomSheetModel.makeDeleteAccountModel(onConfirm: onConfirm)
+        return makeInfoBottomSheetViewController(model: model)
+    }
+
+    static func makeDeleteAccountSuccessBottomSheet(onConfirm: @escaping () -> Void) -> UIViewController {
+        let model = InfoBottomSheetModel.makeDeleteAccountSuccessModel(onConfirm: onConfirm)
         return makeInfoBottomSheetViewController(model: model)
     }
 
