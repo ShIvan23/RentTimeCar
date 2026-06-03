@@ -114,6 +114,10 @@ final class RentSummaryViewController: UIViewController {
 
     // MARK: - Private methods (Payment)
     private func proceedToPayment() {
+        if FeatureFlagService.shared.hidePayments {
+            sendReviewModeBooking()
+            return
+        }
         if let contractId {
             openPayment(contractId: contractId)
             return
@@ -143,6 +147,25 @@ final class RentSummaryViewController: UIViewController {
                     let model = InfoBottomSheetModel.makeCreateContractFailModel(onConfirm: {})
                     self.coordinator.openInfoBottomSheetViewController(model: model)
                 }
+            }
+        }
+    }
+
+    private func sendReviewModeBooking() {
+        continueButton.isEnabled = false
+        loadingOverlayView.isHidden = false
+        overlaySpinner.startAnimating()
+        let phone = "+\(authService.phoneNumber ?? "")"
+        rentApiFacade.addReviewBooking(phone: phone) { [weak self] _ in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.continueButton.isEnabled = true
+                self.loadingOverlayView.isHidden = true
+                self.overlaySpinner.stopAnimating()
+                let model = InfoBottomSheetModel.makeBookingRequestSentModel { [weak self] in
+                    self?.coordinator.popToRootViewController()
+                }
+                self.coordinator.openInfoBottomSheetViewController(model: model)
             }
         }
     }
@@ -253,6 +276,12 @@ final class RentSummaryViewController: UIViewController {
         infoTooltipView.addSubview(infoTooltipLabel)
         loadingOverlayView.addSubview(overlaySpinner)
         view.addSubviews([collectionView, prepayTitleLabel, infoButton, prepayValueLabel, continueButton, dimmingView, infoTooltipView, loadingOverlayView])
+        if FeatureFlagService.shared.hidePayments {
+            prepayTitleLabel.isHidden = true
+            infoButton.isHidden = true
+            prepayValueLabel.isHidden = true
+            continueButton.setTitle("Забронировать", for: .normal)
+        }
     }
 
     private func setupActions() {
@@ -335,28 +364,36 @@ final class RentSummaryViewController: UIViewController {
             .bottom(view.pin.safeArea.bottom)
             .height(continueButtonHeight)
 
-        prepayTitleLabel.pin
-            .bottom(to: continueButton.edge.top)
-            .marginBottom(prepayBottomMargin)
-            .left(horizontalInset)
-            .height(prepayHeight)
-            .sizeToFit()
+        if FeatureFlagService.shared.hidePayments {
+            collectionView.pin
+                .top(view.pin.safeArea.top)
+                .horizontally()
+                .above(of: continueButton)
+                .marginBottom(prepayBottomMargin)
+        } else {
+            prepayTitleLabel.pin
+                .bottom(to: continueButton.edge.top)
+                .marginBottom(prepayBottomMargin)
+                .left(horizontalInset)
+                .height(prepayHeight)
+                .sizeToFit()
 
-        infoButton.pin
-            .vCenter(to: prepayTitleLabel.edge.vCenter)
-            .after(of: prepayTitleLabel)
-            .marginLeft(prepaySpacing)
-            .size(CGSize(square: 20))
+            infoButton.pin
+                .vCenter(to: prepayTitleLabel.edge.vCenter)
+                .after(of: prepayTitleLabel)
+                .marginLeft(prepaySpacing)
+                .size(CGSize(square: 20))
 
-        prepayValueLabel.pin
-            .vCenter(to: prepayTitleLabel.edge.vCenter)
-            .right(horizontalInset)
-            .sizeToFit()
+            prepayValueLabel.pin
+                .vCenter(to: prepayTitleLabel.edge.vCenter)
+                .right(horizontalInset)
+                .sizeToFit()
 
-        collectionView.pin
-            .top(view.pin.safeArea.top)
-            .horizontally()
-            .above(of: prepayTitleLabel)
+            collectionView.pin
+                .top(view.pin.safeArea.top)
+                .horizontally()
+                .above(of: prepayTitleLabel)
+        }
 
         dimmingView.pin.all()
         loadingOverlayView.pin.all()

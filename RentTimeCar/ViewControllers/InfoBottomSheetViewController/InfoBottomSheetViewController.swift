@@ -114,6 +114,15 @@ extension InfoBottomSheetModel {
         )
     }
 
+    static func makeBookingRequestSentModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Заявка на бронирование отправлена!\n\nМы свяжемся с вами для подтверждения.",
+            image: .info,
+            buttonTitle: "Отлично",
+            onConfirm: onConfirm
+        )
+    }
+
     static func makeDeleteAccountModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
         InfoBottomSheetModel(
             text: "Вы уверены, что хотите удалить аккаунт?\n\nВсе ваши данные будут удалены в течение 30 дней.",

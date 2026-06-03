@@ -259,6 +259,16 @@ final class RequestManagerV2 {
         )
     }
 
+    // MARK: - POST /api/requests/add-review
+
+    func addReviewRequest(phone: String) -> URLRequest? {
+        makeRequest(
+            path: "/api/requests/add-review",
+            method: .post,
+            body: AddReviewRequestBody(phone: phone)
+        )
+    }
+
     // MARK: - POST /api/sms
 
     func getSmsRequest(for number: String, code: String) -> URLRequest? {
@@ -351,6 +361,10 @@ private struct PayContractSumBody: Encodable {
 }
 
 private struct DeleteAccountBody: Encodable {
+    let phone: String
+}
+
+private struct AddReviewRequestBody: Encodable {
     let phone: String
 }
 

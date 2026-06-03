@@ -10,7 +10,12 @@ import Foundation
 struct ApiResult<T: Decodable>: Decodable {
     let result: T?
     let errors: [ApiError]?
-    
+
+    init(result: T?, errors: [ApiError]? = nil) {
+        self.result = result
+        self.errors = errors
+    }
+
     enum CodingKeys: String, CodingKey {
         case result = "Result"
         case errors = "Errors"

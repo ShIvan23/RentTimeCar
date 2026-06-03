@@ -38,6 +38,7 @@ protocol IRentApiFacade {
     func getPaymentStatus(paymentId: String, completion: @escaping (Result<PaymentStatusResponse, Error>) -> Void)
     func getPersonalDataUrl(completion: @escaping (Result<DocumentUrlResponse, Error>) -> Void)
     func getPrivacyPolicyUrl(completion: @escaping (Result<DocumentUrlResponse, Error>) -> Void)
+    func addReviewBooking(phone: String, completion: @escaping (Result<Void, Error>) -> Void)
     func deleteAccount(phone: String, completion: @escaping (Result<EmptyResponse, Error>) -> Void)
 }
 
@@ -103,6 +104,14 @@ final class RentApiFacade: IRentApiFacade {
     }
 
     func addRequest(with input: AddRequestInput, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void) {
+        if FeatureFlagService.shared.hidePayments {
+            let phone = "+\(AuthService.shared.phoneNumber ?? "")"
+            guard let request = requestManager.addReviewRequest(phone: phone) else { return }
+            networkManager.fetch(request: request) { (result: Result<EmptyResponse, Error>) in
+                completion(result.map { ApiResult(result: $0) })
+            }
+            return
+        }
         guard let request = requestManager.addRequest(with: input) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
@@ -186,6 +195,13 @@ final class RentApiFacade: IRentApiFacade {
     func getPrivacyPolicyUrl(completion: @escaping (Result<DocumentUrlResponse, Error>) -> Void) {
         guard let request = requestManager.getPrivacyPolicyRequest() else { return }
         networkManager.fetch(request: request, completion: completion)
+    }
+
+    func addReviewBooking(phone: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        guard let request = requestManager.addReviewRequest(phone: phone) else { return }
+        networkManager.fetch(request: request) { (result: Result<EmptyResponse, Error>) in
+            completion(result.map { _ in })
+        }
     }
 
     func deleteAccount(phone: String, completion: @escaping (Result<EmptyResponse, Error>) -> Void) {

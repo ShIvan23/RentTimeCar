@@ -14,4 +14,8 @@ final class FeatureFlagService {
     func apply(_ flags: FeatureFlags?) {
         hidePayments = flags?.hidePayments ?? false
     }
+
+    func applyReviewMode() {
+        hidePayments = true
+    }
 }

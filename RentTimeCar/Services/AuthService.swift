@@ -51,7 +51,14 @@ final class AuthService {
             authState = .needAuthorize
         }
         guard authState != .needAuthorize else { return }
-        
+
+        if phoneNumber == Self.reviewPhoneNumber {
+            FeatureFlagService.shared.applyReviewMode()
+            authState = .fullAccess
+            userDefaults.set(AuthState.fullAccess.rawValue, forKey: .authStateKey)
+            return
+        }
+
         checkRegistration(needInvoke: false)
     }
 
@@ -82,6 +89,11 @@ final class AuthService {
     func savePhoneNumber(_ phoneNumber: String) {
         self.phoneNumber = phoneNumber
         userDefaults.set(phoneNumber, forKey: .phoneNumberKey)
+        if phoneNumber == Self.reviewPhoneNumber {
+            FeatureFlagService.shared.applyReviewMode()
+            saveState(authState: .fullAccess)
+            return
+        }
         checkRegistration()
     }
 
@@ -93,6 +105,10 @@ final class AuthService {
         userDefaults.removeObject(forKey: .phoneNumberKey)
         invokeAllSubscribers()
     }
+
+    // MARK: - Private Properties
+
+    private static let reviewPhoneNumber = "79111111111"
 
     // MARK: - Private Methods
 

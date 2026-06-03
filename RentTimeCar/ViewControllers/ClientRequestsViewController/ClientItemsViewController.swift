@@ -116,6 +116,11 @@ final class ClientItemsViewController: UIViewController {
     }
 
     private func fetchItems() {
+        if AuthService.shared.phoneNumber == Self.reviewPhoneNumber,
+           AuthService.shared.client == nil {
+            applyDemoData()
+            return
+        }
         guard let integrationId = AuthService.shared.client?.integrationId else {
             emptyLabel.isHidden = false
             return
@@ -128,6 +133,21 @@ final class ClientItemsViewController: UIViewController {
         case .fines:
             fetchFines(integrationId: integrationId)
         }
+    }
+
+    private func applyDemoData() {
+        switch mode {
+        case .rents:
+            let contracts = Self.demoContracts
+            sections = makeSections(from: contracts)
+            emptyLabel.isHidden = !contracts.isEmpty
+        case .fines:
+            let fines = Self.demoFines
+            fineGroups = makeFineGroups(from: fines)
+            expandedGroupIndices = []
+            emptyLabel.isHidden = !fines.isEmpty
+        }
+        collectionView.reloadData()
     }
 
     private func fetchRequests(integrationId: String) {
@@ -271,6 +291,79 @@ extension ClientItemsViewController: UICollectionViewDataSource {
         header?.configure(with: sections[indexPath.section].title)
         return header ?? UICollectionReusableView()
     }
+}
+
+// MARK: - Demo Data
+
+private extension ClientItemsViewController {
+
+    static let reviewPhoneNumber = "79111111111"
+
+    static let demoContracts: [ContractDto] = {
+        let json = """
+        [
+            {
+                "ID": 1001,
+                "DateFrom": "01.05.2026 10:00:00",
+                "DateTo": "10.05.2026 10:00:00",
+                "Vehicle": "Mercedes-Benz E-Class, 2022, Белый",
+                "VehicleId": 0,
+                "ContractNumber": "ТД-2026-001",
+                "ContractState": 8,
+                "CustomContractState": 0,
+                "ContractType": 1,
+                "TotalBalanceSum": 45000,
+                "FinesGBDDBalance": 0,
+                "DepositBalance": 10000,
+                "RentBalance": 35000,
+                "AddServicesBalance": 0,
+                "OtherBalance": 0
+            },
+            {
+                "ID": 1002,
+                "DateFrom": "15.01.2026 12:00:00",
+                "DateTo": "20.01.2026 12:00:00",
+                "Vehicle": "BMW 5 Series, 2021, Чёрный",
+                "VehicleId": 0,
+                "ContractNumber": "ТД-2026-002",
+                "ContractState": 9,
+                "CustomContractState": 0,
+                "ContractType": 1,
+                "TotalBalanceSum": 30000,
+                "FinesGBDDBalance": 0,
+                "DepositBalance": 10000,
+                "RentBalance": 20000,
+                "AddServicesBalance": 0,
+                "OtherBalance": 0
+            }
+        ]
+        """
+        return (try? JSONDecoder().decode([ContractDto].self, from: Data(json.utf8))) ?? []
+    }()
+
+    static let demoFines: [FineDto] = {
+        let json = """
+        [
+            {
+                "Id": 2001,
+                "DocumentType": 0,
+                "GibddStatus": 0,
+                "CalculationStatus": 0,
+                "DiscountEffectCountDays": 20,
+                "PayToDueDate": "01.07.2026 00:00:00",
+                "VehicleGibddNumber": "А123БВ777",
+                "Vehicle": "Mercedes-Benz E-Class, 2022, Белый",
+                "ContractNumber": "ТД-2026-001",
+                "Sum": 500,
+                "ToPaymentSum": 250,
+                "ViolationDate": "05.05.2026 14:30:00",
+                "KoapEntityDescription": "Превышение скорости от 20 до 40 км/ч",
+                "DiscountEffectTitle": "Скидка 50% при оплате в течение 20 дней"
+            }
+        ]
+        """
+        return (try? JSONDecoder().decode([FineDto].self, from: Data(json.utf8))) ?? []
+    }()
 }
 
 // MARK: - UICollectionViewDelegateFlowLayout
