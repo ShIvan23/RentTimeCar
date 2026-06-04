@@ -59,4 +59,16 @@ final class OrderConfirmService {
     func setTarifId(_ tarifId: String) {
         self.tarifId = tarifId
     }
+
+    func reset() {
+        imageUrl = ""
+        selectedDates = ""
+        datesCount = 0
+        deliveryAddress = ""
+        returnAddress = ""
+        selectedServices = []
+        isChildSeatSelected = false
+        auto = nil
+        tarifId = ""
+    }
 }

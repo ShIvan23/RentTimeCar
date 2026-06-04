@@ -154,6 +154,8 @@ final class Coordinator: NSObject, ICoordinator {
     }
 
     func popToRootViewController() {
+        FilterService.shared.resetAllFilters()
+        OrderConfirmService.shared.reset()
         navigationController?.popToRootViewController(animated: true)
     }
 

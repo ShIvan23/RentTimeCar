@@ -77,7 +77,7 @@ final class YandexMapViewController: UIViewController {
         mapView.pin
             .top(view.safeAreaInsets.top)
             .horizontally()
-            .height(view.bounds.width)
+            .height(min(view.bounds.width, view.bounds.height * 0.55))
         
         let placeMarkSize: CGFloat = 50
         
