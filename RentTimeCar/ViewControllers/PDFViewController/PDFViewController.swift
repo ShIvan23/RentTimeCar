@@ -37,6 +37,7 @@ final class PDFViewController: UIViewController {
     // MARK: - Private Properties
 
     private let pdfFile: PDFFile
+    private var hasLockedMinScale = false
 
     // MARK: - Init
 
@@ -63,6 +64,12 @@ final class PDFViewController: UIViewController {
         super.viewDidLayoutSubviews()
         pdfView.frame = view.bounds
         activityIndicator.center = view.center
+
+        if !hasLockedMinScale, pdfView.document != nil, pdfView.scaleFactor > 0 {
+            hasLockedMinScale = true
+            pdfView.minScaleFactor = pdfView.scaleFactor
+            pdfView.maxScaleFactor = max(pdfView.scaleFactor * 5, 5.0)
+        }
 
         retryButton.pin
             .bottom()
@@ -119,6 +126,7 @@ final class PDFViewController: UIViewController {
                 let statusCode = (response as? HTTPURLResponse)?.statusCode ?? -1
                 if statusCode == 200, let data, let document = PDFDocument(data: data) {
                     self.pdfView.document = document
+                    self.view.setNeedsLayout()
                 } else {
                     self.showError(retryUrl: url)
                 }
