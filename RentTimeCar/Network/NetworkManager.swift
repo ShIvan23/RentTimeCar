@@ -32,9 +32,13 @@ final class NetworkManager {
     }
 
     func fetchData(request: URLRequest, completion: @escaping (Result<Data, Error>) -> Void) {
-        let dataTask = JSONTask(request: request) { data, _, error in
+        let dataTask = JSONTask(request: request) { data, response, error in
             if let error {
                 completion(.failure(error))
+                return
+            }
+            if let response, !(200...299).contains(response.statusCode) {
+                completion(.failure(NSError(domain: "NetworkManager", code: response.statusCode)))
                 return
             }
             guard let data else {

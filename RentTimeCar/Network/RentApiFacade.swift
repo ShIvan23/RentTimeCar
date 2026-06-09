@@ -32,7 +32,7 @@ protocol IRentApiFacade {
     func getAutoCalendar(with input: GetAutoCalendarInput, completion: @escaping (Result<[AutoCalendar], Error>) -> Void)
     func getAutoUsedIntervals(with input: GetAutoUsedIntervalsInput, completion: @escaping (Result<ApiResult<[UsedInterval]>, Error>) -> Void)
     func getActSignState(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, completion: @escaping (Result<ActSignStateResponse, Error>) -> Void)
-    func acceptAct(clientIntegrationId: String, objectId: Int, signDate: Date?, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
+    func acceptAct(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, signDate: Date?, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void)
     func getActInfo(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, contractNumber: String, contractDate: String, renterName: String, renterPassport: String, renterPhone: String, carInfo: String, completion: @escaping (Result<Data, Error>) -> Void)
     func createYukassaPayment(amount: Int, description: String, phone: String, completion: @escaping (Result<YookassaPaymentResponse, Error>) -> Void)
     func getPaymentStatus(paymentId: String, completion: @escaping (Result<PaymentStatusResponse, Error>) -> Void)
@@ -156,8 +156,8 @@ final class RentApiFacade: IRentApiFacade {
         networkManager.fetch(request: request, completion: completion)
     }
 
-    func acceptAct(clientIntegrationId: String, objectId: Int, signDate: Date?, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void) {
-        guard let request = requestManager.acceptAct(clientIntegrationId: clientIntegrationId, objectId: objectId, signDate: signDate) else { return }
+    func acceptAct(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, signDate: Date?, completion: @escaping (Result<ApiResult<EmptyResponse>, Error>) -> Void) {
+        guard let request = requestManager.acceptAct(clientIntegrationId: clientIntegrationId, objectId: objectId, objectDescriptorLong: objectDescriptorLong, signDate: signDate) else { return }
         networkManager.fetch(request: request, completion: completion)
     }
 

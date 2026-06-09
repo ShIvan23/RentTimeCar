@@ -186,7 +186,7 @@ final class RequestManagerV2 {
 
     // MARK: - POST /api/acts/accept
 
-    func acceptAct(clientIntegrationId: String, objectId: Int, signDate: Date?) -> URLRequest? {
+    func acceptAct(clientIntegrationId: String, objectId: Int, objectDescriptorLong: Int, signDate: Date?) -> URLRequest? {
         let signDateString: String?
         if let signDate {
             let fmt = DateFormatter()
@@ -202,6 +202,7 @@ final class RequestManagerV2 {
             body: AcceptActBody(
                 clientIntegrationId: clientIntegrationId,
                 objectId: objectId,
+                objectDescriptorLong: objectDescriptorLong,
                 signDate: signDateString
             )
         )
@@ -328,6 +329,7 @@ private struct ClientIntegrationBody: Encodable {
 private struct AcceptActBody: Encodable {
     let clientIntegrationId: String
     let objectId: Int
+    let objectDescriptorLong: Int
     let signDate: String?
 }
 

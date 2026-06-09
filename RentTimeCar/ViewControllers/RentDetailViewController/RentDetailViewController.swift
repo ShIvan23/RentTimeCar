@@ -128,18 +128,19 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
     private let territoryTileView = RentInfoTileView()
     private let mileageTileView = RentInfoTileView()
 
-    private let actReturnButton: UIButton = {
+    private static func makeActLinkButton(title: String) -> UIButton {
         let b = UIButton(type: .system)
-        b.setTitle("Акт возврата", for: .normal)
-        b.setTitleColor(.whiteTextColor, for: .normal)
-        b.titleLabel?.font = .systemFont(ofSize: 15)
         let attributes: [NSAttributedString.Key: Any] = [
             .underlineStyle: NSUnderlineStyle.single.rawValue,
-            .foregroundColor: UIColor.whiteTextColor
+            .foregroundColor: UIColor.whiteTextColor,
+            .font: UIFont.systemFont(ofSize: 15)
         ]
-        b.setAttributedTitle(NSAttributedString(string: "Акт возврата", attributes: attributes), for: .normal)
+        b.setAttributedTitle(NSAttributedString(string: title, attributes: attributes), for: .normal)
         return b
-    }()
+    }
+
+    private lazy var actAcceptanceButton = Self.makeActLinkButton(title: "Акт приёмки")
+    private lazy var actReturnButton = Self.makeActLinkButton(title: "Акт возврата")
 
     // MARK: - UI — Payment content
 
@@ -182,16 +183,49 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
         return ai
     }()
 
-    // MARK: - UI — Bottom button
+    // MARK: - UI — Sign buttons
 
-    private let bottomContainerView: UIView = {
-        let v = UIView()
-        v.backgroundColor = .secondaryBackground
-        v.isHidden = true
+    private let signAcceptanceButton = MainButton(title: "Подписать")
+    private let signReturnButton = MainButton(title: "Подписать")
+
+    // MARK: - Act state
+
+    private enum SignState { case hidden, needsSign, signed, notSigned }
+    private var acceptanceSignState: SignState = .hidden
+    private var returnSignState: SignState = .hidden
+    private var acceptanceActData: Data?
+    private var returnActData: Data?
+    private var acceptancePDFFetched = false
+    private var returnPDFFetched = false
+    private var actPDFsLoaded: Bool { acceptancePDFFetched && returnPDFFetched }
+
+    private let actAcceptanceShimmerView: ShimmerView = {
+        let v = ShimmerView()
+        v.layer.cornerRadius = 4
+        v.layer.masksToBounds = true
         return v
     }()
 
-    private let signButton = MainButton(title: "ПОДПИСАТЬ")
+    private let actReturnShimmerView: ShimmerView = {
+        let v = ShimmerView()
+        v.layer.cornerRadius = 4
+        v.layer.masksToBounds = true
+        return v
+    }()
+
+    private let actAcceptanceSignShimmerView: ShimmerView = {
+        let v = ShimmerView()
+        v.layer.cornerRadius = 8
+        v.layer.masksToBounds = true
+        return v
+    }()
+
+    private let actReturnSignShimmerView: ShimmerView = {
+        let v = ShimmerView()
+        v.layer.cornerRadius = 8
+        v.layer.masksToBounds = true
+        return v
+    }()
 
     // MARK: - Init
 
@@ -226,8 +260,7 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
         view.backgroundColor = .mainBackground
         navigationController?.isNavigationBarHidden = false
 
-        view.addSubviews([scrollView, bottomContainerView, loadingOverlayView])
-        bottomContainerView.addSubview(signButton)
+        view.addSubviews([scrollView, loadingOverlayView])
         loadingOverlayView.addSubview(overlaySpinner)
         scrollView.addSubview(contentView)
 
@@ -241,11 +274,22 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
             separatorView,
             territoryTileView,
             mileageTileView,
+            actAcceptanceShimmerView,
+            actReturnShimmerView,
+            actAcceptanceSignShimmerView,
+            actReturnSignShimmerView,
+            actAcceptanceButton,
             actReturnButton,
+            signAcceptanceButton,
+            signReturnButton,
             paymentLoadingIndicator,
             paymentErrorLabel,
             paymentContainerView
         ])
+        actAcceptanceShimmerView.startAnimating()
+        actReturnShimmerView.startAnimating()
+        actAcceptanceSignShimmerView.startAnimating()
+        actReturnSignShimmerView.startAnimating()
         headerCardView.addSubviews([carImageView, carNameLabel, dateFromLabel, dateToLabel])
 
         tabContainerView.addSubviews([infoTabButton, paymentTabButton])
@@ -253,8 +297,10 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
         infoTabButton.addTarget(self, action: #selector(infoTabTapped), for: .touchUpInside)
         paymentTabButton.addTarget(self, action: #selector(paymentTabTapped), for: .touchUpInside)
         paymentTabButton.isHidden = FeatureFlagService.shared.hidePayments
+        actAcceptanceButton.addTarget(self, action: #selector(actAcceptanceTapped), for: .touchUpInside)
         actReturnButton.addTarget(self, action: #selector(actReturnTapped), for: .touchUpInside)
-        signButton.action = { [weak self] in self?.signButtonTapped() }
+        signAcceptanceButton.action = { [weak self] in self?.signButtonTapped(objectDescriptorLong: 1) }
+        signReturnButton.action = { [weak self] in self?.signButtonTapped(objectDescriptorLong: 2) }
 
         updateTabSelection()
     }
@@ -271,6 +317,7 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
         configureInfoContent()
         loadCarImage(vehicleId: Int(contract.vehicleId))
         fetchActSignState()
+        fetchActPDFs()
     }
 
     private func configureStatus() {
@@ -332,7 +379,21 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
         separatorView.isHidden = !isInfoTabSelected
         territoryTileView.isHidden = !isInfoTabSelected
         mileageTileView.isHidden = !isInfoTabSelected
-        actReturnButton.isHidden = !isInfoTabSelected
+        let actLoading = !actPDFsLoaded
+        actAcceptanceShimmerView.isHidden = !isInfoTabSelected || !actLoading
+        actReturnShimmerView.isHidden = !isInfoTabSelected || !actLoading
+        actAcceptanceSignShimmerView.isHidden = !isInfoTabSelected || !actLoading
+        actReturnSignShimmerView.isHidden = !isInfoTabSelected || !actLoading
+        if actPDFsLoaded {
+            actAcceptanceShimmerView.stopAnimating()
+            actReturnShimmerView.stopAnimating()
+            actAcceptanceSignShimmerView.stopAnimating()
+            actReturnSignShimmerView.stopAnimating()
+        }
+        actAcceptanceButton.isHidden = !isInfoTabSelected || actLoading || acceptanceActData == nil
+        actReturnButton.isHidden = !isInfoTabSelected || actLoading || returnActData == nil
+        signAcceptanceButton.isHidden = !isInfoTabSelected || actLoading || acceptanceSignState == .hidden
+        signReturnButton.isHidden = !isInfoTabSelected || actLoading || returnSignState == .hidden
         let showPaymentContent = !isInfoTabSelected
         paymentLoadingIndicator.isHidden = !showPaymentContent || !paymentLoadingIndicator.isAnimating
         paymentErrorLabel.isHidden = !showPaymentContent || paymentErrorLabel.text == nil
@@ -359,15 +420,77 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
 
     private func fetchActSignState() {
         guard let integrationId = AuthService.shared.client?.integrationId else { return }
+        fetchActSignState(objectDescriptorLong: 1, integrationId: integrationId)
+        fetchActSignState(objectDescriptorLong: 2, integrationId: integrationId)
+    }
+
+    private func fetchActSignState(objectDescriptorLong: Int, integrationId: String) {
         rentApiFacade.getActSignState(
             clientIntegrationId: integrationId,
             objectId: contract.id,
-            objectDescriptorLong: 2
+            objectDescriptorLong: objectDescriptorLong
         ) { [weak self] result in
             DispatchQueue.main.async {
                 guard let self else { return }
-                if case let .success(response) = result, response.needsSignature {
-                    self.bottomContainerView.isHidden = false
+                guard case let .success(response) = result else { return }
+                let signState: SignState
+                switch response.actState {
+                case .draft:    signState = .needsSign
+                case .finished: signState = .signed
+                default:        signState = .notSigned
+                }
+                switch objectDescriptorLong {
+                case 1: self.acceptanceSignState = signState
+                case 2: self.returnSignState = signState
+                default: break
+                }
+                self.updateTabSelection()
+                self.view.setNeedsLayout()
+            }
+        }
+    }
+
+    private func fetchActPDFs() {
+        guard let client = AuthService.shared.client else {
+            acceptancePDFFetched = true
+            returnPDFFetched = true
+            updateTabSelection()
+            return
+        }
+        acceptancePDFFetched = false
+        returnPDFFetched = false
+        let auth = AuthService.shared
+        let dateFmt = DateFormatter()
+        dateFmt.dateFormat = "dd.MM.yyyy"
+        let renterName = "\(client.name.lastName) \(client.name.firstName)"
+            .trimmingCharacters(in: .whitespaces)
+        let renterPassport = "\(client.passport.series) \(client.passport.number)"
+            .trimmingCharacters(in: .whitespaces)
+
+        for descriptorLong in [1, 2] {
+            rentApiFacade.getActInfo(
+                clientIntegrationId: client.integrationId,
+                objectId: contract.id,
+                objectDescriptorLong: descriptorLong,
+                contractNumber: contract.contractNumber ?? "",
+                contractDate: dateFmt.string(from: contract.dateFrom),
+                renterName: renterName,
+                renterPassport: renterPassport,
+                renterPhone: auth.phoneNumber ?? "",
+                carInfo: contract.vehicle ?? ""
+            ) { [weak self] result in
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    if case let .success(data) = result {
+                        if descriptorLong == 1 {
+                            self.acceptanceActData = data
+                        } else {
+                            self.returnActData = data
+                        }
+                    }
+                    if descriptorLong == 1 { self.acceptancePDFFetched = true }
+                    else { self.returnPDFFetched = true }
+                    self.updateTabSelection()
                     self.view.setNeedsLayout()
                 }
             }
@@ -449,56 +572,27 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
         }
     }
 
-    @objc private func actReturnTapped() {
-        let auth = AuthService.shared
-        guard let client = auth.client else { return }
-
-        let dateFmt = DateFormatter()
-        dateFmt.dateFormat = "dd.MM.yyyy"
-
-        let renterName = "\(client.name.lastName) \(client.name.firstName)"
-            .trimmingCharacters(in: .whitespaces)
-        let renterPassport = "\(client.passport.series) \(client.passport.number)"
-            .trimmingCharacters(in: .whitespaces)
-
-        showLoadingOverlay()
-
-        rentApiFacade.getActInfo(
-            clientIntegrationId: client.integrationId,
-            objectId: contract.id,
-            objectDescriptorLong: 2,
-            contractNumber: contract.contractNumber ?? "",
-            contractDate: dateFmt.string(from: contract.dateFrom),
-            renterName: renterName,
-            renterPassport: renterPassport,
-            renterPhone: auth.phoneNumber ?? "",
-            carInfo: contract.vehicle ?? ""
-        ) { [weak self] result in
-            DispatchQueue.main.async {
-                guard let self else { return }
-                self.hideLoadingOverlay()
-                switch result {
-                case let .success(data):
-                    self.coordinator.openPDFViewController(pdfFile: .data(data))
-                case .failure:
-                    let model = InfoBottomSheetModel(
-                        text: "Не удалось загрузить акт возврата.\n\nПроверьте подключение к интернету и попробуйте ещё раз.",
-                        image: .redCross,
-                        buttonTitle: "Понятно",
-                        onConfirm: {}
-                    )
-                    self.coordinator.openInfoBottomSheetViewController(model: model)
-                }
-            }
-        }
+    @objc private func actAcceptanceTapped() {
+        openActPDF(objectDescriptorLong: 1)
     }
 
-    private func signButtonTapped() {
+    @objc private func actReturnTapped() {
+        openActPDF(objectDescriptorLong: 2)
+    }
+
+    private func openActPDF(objectDescriptorLong: Int) {
+        let data = objectDescriptorLong == 1 ? acceptanceActData : returnActData
+        guard let data else { return }
+        coordinator.openPDFViewController(pdfFile: .data(data))
+    }
+
+    private func signButtonTapped(objectDescriptorLong: Int) {
         guard let integrationId = AuthService.shared.client?.integrationId else { return }
         showLoadingOverlay()
         rentApiFacade.acceptAct(
             clientIntegrationId: integrationId,
             objectId: contract.id,
+            objectDescriptorLong: objectDescriptorLong,
             signDate: Date()
         ) { [weak self] result in
             DispatchQueue.main.async {
@@ -506,9 +600,14 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
                 self.hideLoadingOverlay()
                 switch result {
                 case .success:
-                    self.bottomContainerView.isHidden = true
+                    switch objectDescriptorLong {
+                    case 1: self.acceptanceSignState = .signed
+                    case 2: self.returnSignState = .signed
+                    default: break
+                    }
                     self.view.setNeedsLayout()
-                    self.showToast(with: "Акт успешно подписан")
+                    let toastText = objectDescriptorLong == 1 ? "Акт приёмки подписан" : "Акт возврата подписан"
+                    self.showToast(with: toastText)
                 case .failure:
                     let model = InfoBottomSheetModel(
                         text: "Не удалось подписать акт.\n\nПроверьте подключение к интернету и попробуйте ещё раз.",
@@ -527,21 +626,7 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
     private func performLayout() {
         let hInset: CGFloat = 16
 
-        bottomContainerView.pin
-            .bottom()
-            .horizontally()
-            .height(view.safeAreaInsets.bottom + 50 + 16)
-
-        signButton.pin
-            .top(8)
-            .horizontally(hInset)
-            .height(50)
-
-        if bottomContainerView.isHidden {
-            scrollView.pin.top(view.pin.safeArea).horizontally().bottom()
-        } else {
-            scrollView.pin.top(view.pin.safeArea).horizontally().above(of: bottomContainerView)
-        }
+        scrollView.pin.top(view.pin.safeArea).horizontally().bottom()
 
         contentView.pin.top().horizontally()
 
@@ -656,11 +741,119 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
                 .width(tileWidth)
                 .height(tileHeight)
 
-            actReturnButton.pin
-                .below(of: territoryTileView)
-                .marginTop(16)
-                .left(hInset)
-                .sizeToFit()
+            let actLoading = !actPDFsLoaded
+            let signH: CGFloat = 40
+            let linkShimH: CGFloat = 20
+            let rowSpacing: CGFloat = 20
+            let actSignGap: CGFloat = 12
+            if actLoading {
+                let shimTop0 = territoryTileView.frame.maxY + rowSpacing
+                let linkShimW0: CGFloat = 120
+                let linkShimW1: CGFloat = 110
+                actAcceptanceShimmerView.pin
+                    .top(shimTop0 + (signH - linkShimH) / 2)
+                    .left(hInset)
+                    .width(linkShimW0)
+                    .height(linkShimH)
+                actAcceptanceSignShimmerView.pin
+                    .top(shimTop0)
+                    .left(hInset + linkShimW0 + actSignGap)
+                    .right(hInset)
+                    .height(signH)
+                let shimTop1 = shimTop0 + signH + rowSpacing
+                actReturnShimmerView.pin
+                    .top(shimTop1 + (signH - linkShimH) / 2)
+                    .left(hInset)
+                    .width(linkShimW1)
+                    .height(linkShimH)
+                actReturnSignShimmerView.pin
+                    .top(shimTop1)
+                    .left(hInset + linkShimW1 + actSignGap)
+                    .right(hInset)
+                    .height(signH)
+                actAcceptanceButton.pin.top(0).left(0).width(0).height(0)
+                actReturnButton.pin.top(0).left(0).width(0).height(0)
+                signAcceptanceButton.pin.top(0).left(0).width(0).height(0)
+                signReturnButton.pin.top(0).left(0).width(0).height(0)
+            } else {
+                actAcceptanceShimmerView.pin.top(0).left(0).width(0).height(0)
+                actReturnShimmerView.pin.top(0).left(0).width(0).height(0)
+                actAcceptanceSignShimmerView.pin.top(0).left(0).width(0).height(0)
+                actReturnSignShimmerView.pin.top(0).left(0).width(0).height(0)
+
+                var rowTop = territoryTileView.frame.maxY + rowSpacing
+
+                // Row 1: acceptance act
+                let row1HasLink = acceptanceActData != nil
+                let row1HasSign = acceptanceSignState != .hidden
+                if row1HasLink || row1HasSign {
+                    if row1HasLink {
+                        actAcceptanceButton.pin.top(rowTop).left(hInset).sizeToFit()
+                    } else {
+                        actAcceptanceButton.pin.top(0).left(0).width(0).height(0)
+                    }
+                    if row1HasSign {
+                        switch acceptanceSignState {
+                        case .needsSign:
+                            signAcceptanceButton.setTitle("Подписать", for: .normal)
+                            signAcceptanceButton.enable()
+                        case .signed:
+                            signAcceptanceButton.setTitle("Подписан", for: .normal)
+                            signAcceptanceButton.disable()
+                        default:
+                            signAcceptanceButton.setTitle("Не подписан", for: .normal)
+                            signAcceptanceButton.disable()
+                        }
+                        let signLeft = row1HasLink ? actAcceptanceButton.frame.maxX + actSignGap : hInset
+                        signAcceptanceButton.pin.top(rowTop).left(signLeft).right(hInset).height(signH)
+                    } else {
+                        signAcceptanceButton.pin.top(0).left(0).width(0).height(0)
+                    }
+                    if row1HasLink && row1HasSign {
+                        actAcceptanceButton.pin.vCenter(to: signAcceptanceButton.edge.vCenter).left(hInset).sizeToFit()
+                    }
+                    let row1H = max(row1HasLink ? actAcceptanceButton.frame.height : 0,
+                                   row1HasSign ? signH : 0)
+                    rowTop += row1H + rowSpacing
+                } else {
+                    actAcceptanceButton.pin.top(0).left(0).width(0).height(0)
+                    signAcceptanceButton.pin.top(0).left(0).width(0).height(0)
+                }
+
+                // Row 2: return act
+                let row2HasLink = returnActData != nil
+                let row2HasSign = returnSignState != .hidden
+                if row2HasLink || row2HasSign {
+                    if row2HasLink {
+                        actReturnButton.pin.top(rowTop).left(hInset).sizeToFit()
+                    } else {
+                        actReturnButton.pin.top(0).left(0).width(0).height(0)
+                    }
+                    if row2HasSign {
+                        switch returnSignState {
+                        case .needsSign:
+                            signReturnButton.setTitle("Подписать", for: .normal)
+                            signReturnButton.enable()
+                        case .signed:
+                            signReturnButton.setTitle("Подписан", for: .normal)
+                            signReturnButton.disable()
+                        default:
+                            signReturnButton.setTitle("Не подписан", for: .normal)
+                            signReturnButton.disable()
+                        }
+                        let signLeft = row2HasLink ? actReturnButton.frame.maxX + actSignGap : hInset
+                        signReturnButton.pin.top(rowTop).left(signLeft).right(hInset).height(signH)
+                    } else {
+                        signReturnButton.pin.top(0).left(0).width(0).height(0)
+                    }
+                    if row2HasLink && row2HasSign {
+                        actReturnButton.pin.vCenter(to: signReturnButton.edge.vCenter).left(hInset).sizeToFit()
+                    }
+                } else {
+                    actReturnButton.pin.top(0).left(0).width(0).height(0)
+                    signReturnButton.pin.top(0).left(0).width(0).height(0)
+                }
+            }
 
             contentView.pin.wrapContent(.vertically, padding: PEdgeInsets(top: 0, left: 0, bottom: 24, right: 0))
         } else {
@@ -710,12 +903,14 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
     private func showLoadingOverlay() {
         loadingOverlayView.isHidden = false
         overlaySpinner.startAnimating()
+        actAcceptanceButton.isEnabled = false
         actReturnButton.isEnabled = false
     }
 
     private func hideLoadingOverlay() {
         loadingOverlayView.isHidden = true
         overlaySpinner.stopAnimating()
+        actAcceptanceButton.isEnabled = true
         actReturnButton.isEnabled = true
     }
 }
