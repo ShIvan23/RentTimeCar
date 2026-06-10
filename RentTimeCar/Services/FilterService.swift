@@ -21,6 +21,8 @@ final class FilterService {
 
     private(set) var modInfoEngines: [FilterInfoAuto] = []
     private(set) var selectedDates = [Date]()
+    private(set) var selectedStartMinutes: Int = 0
+    private(set) var selectedEndMinutes: Int = 0
     private(set) var selectedPrice: (min: Int, max: Int) = (.zero, .zero)
     private(set) var selectedMotorPower: (min: Int, max: Int) = (.zero, .zero)
     private(set) var filteredAutos: [Auto] = []
@@ -58,6 +60,11 @@ final class FilterService {
         makeModInfoEngines(with: model)
     }
     
+    func setSelectedTime(startMinutes: Int, endMinutes: Int) {
+        selectedStartMinutes = startMinutes
+        selectedEndMinutes = endMinutes
+    }
+
     func setSelectedDates(_ selectedDates: [Date]) {
         if selectedDates.count == 1, let only = selectedDates.first,
            let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: only) {
@@ -146,6 +153,8 @@ final class FilterService {
 
     func resetAllFilters() {
         selectedDates = []
+        selectedStartMinutes = 0
+        selectedEndMinutes = 0
         selectedPrice.min = price.min
         selectedPrice.max = price.max
         selectedMotorPower.min = motorPower.min

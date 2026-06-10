@@ -16,7 +16,7 @@ protocol ICoordinator {
     func openAuthorization()
     func openPDFViewController(pdfFile: PDFViewController.PDFFile)
     func openFilterViewController()
-    func openCalendarViewController(autoId: String?)
+    func openCalendarViewController(autoId: String?, showTimeSliders: Bool, calendarTitle: String?, dailyPrice: Int?)
     func openDetailAutoCar(model: Auto)
     func openFullImageViewController(images: [String], initialIndex: Int)
     func openYandexMapController()
@@ -56,7 +56,10 @@ protocol ICoordinator {
 
 extension ICoordinator {
     func openCalendarViewController() {
-        openCalendarViewController(autoId: nil)
+        openCalendarViewController(autoId: nil, showTimeSliders: false, calendarTitle: nil, dailyPrice: nil)
+    }
+    func openCalendarViewController(autoId: String?) {
+        openCalendarViewController(autoId: autoId, showTimeSliders: false, calendarTitle: nil, dailyPrice: nil)
     }
 }
 
@@ -83,8 +86,13 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.isNavigationBarHidden = false
     }
     
-    func openCalendarViewController(autoId: String? = nil) {
-        let calendarViewController = Builder.makeCalendarViewController(autoId: autoId)
+    func openCalendarViewController(autoId: String? = nil, showTimeSliders: Bool = false, calendarTitle: String? = nil, dailyPrice: Int? = nil) {
+        let calendarViewController = Builder.makeCalendarViewController(
+            autoId: autoId,
+            showTimeSliders: showTimeSliders,
+            calendarTitle: calendarTitle,
+            dailyPrice: dailyPrice
+        )
         navigationController?.pushViewController(calendarViewController, animated: true)
         navigationController?.isNavigationBarHidden = false
     }

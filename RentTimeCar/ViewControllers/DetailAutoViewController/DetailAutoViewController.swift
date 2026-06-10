@@ -117,7 +117,12 @@ final class DetailAutoViewController: UIViewController {
         configureStackView()
         selectedDateView.addTapGestureClosure { [weak self] in
             guard let self else { return }
-            coordinator.openCalendarViewController(autoId: String(autoModel.itemID))
+            coordinator.openCalendarViewController(
+                autoId: String(autoModel.itemID),
+                showTimeSliders: true,
+                calendarTitle: autoModel.title,
+                dailyPrice: autoModel.defaultPriceWithDiscountSt
+            )
         }
         setupContinueButton()
         subscribeToNotifications()

@@ -309,23 +309,29 @@ final class RentSummaryViewController: UIViewController {
         return "дней"
     }
 
-    private func discountPercent(for daysCount: Int) -> Int {
-        guard daysCount > 1 else { return 0 }
-        return min(daysCount, 30)
-    }
-
     private func loadData() {
         guard let auto = orderConfirmService.auto else { return }
 
         var result: [RentSummaryCellModel] = []
 
-        let daysCount = orderConfirmService.datesCount
-        let discount = discountPercent(for: daysCount)
-        let baseRent = auto.defaultPriceWithDiscountSt * daysCount
-        let discountedRent = Int(Double(baseRent) * (1.0 - Double(discount) / 100.0))
-        let discountText: String? = discount > 0 ? "Скидка \(discount)%" : nil
-        let rentTitle = "Аренда · \(daysCount) \(daysWord(daysCount))"
-        result.append(.item(RentItem(title: rentTitle, amount: discountedRent, icon: .calendar, discountText: discountText)))
+        // Почасовая надбавка применяется только когда выбран диапазон дат (≥2 дат)
+        let rawDayCount = filterService.selectedDates.count - 1
+        let remainingMinutes = rawDayCount > 0
+            ? filterService.selectedEndMinutes - filterService.selectedStartMinutes
+            : 0
+
+        let calc = RentalPriceCalculator.calculate(
+            dailyPrice: auto.defaultPriceWithDiscountSt,
+            daysCount: orderConfirmService.datesCount,
+            remainingMinutes: remainingMinutes
+        )
+        let discountText: String? = calc.discountPercent > 0 ? "Скидка \(calc.discountPercent)%" : nil
+        let rentTitle = "Аренда · \(calc.daysCount) \(daysWord(calc.daysCount))"
+        result.append(.item(RentItem(title: rentTitle, amount: calc.daysRent, icon: .calendar, discountText: discountText)))
+        if calc.extraHours > 0 {
+            let hourTitle = " •  Доп. время · \(calc.extraHours) ч."
+            result.append(.item(RentItem(title: hourTitle, amount: calc.hourlyRate * calc.extraHours, icon: nil)))
+        }
         result.append(.separator)
 
         let selectedServices = orderConfirmService.selectedServices
@@ -346,7 +352,7 @@ final class RentSummaryViewController: UIViewController {
 
         result.append(.separator)
         result.append(.item(RentItem(title: "Депозит", amount: auto.deposit, icon: .rublesignBank)))
-        result.append(.item(RentItem(title: "Итого", amount: discountedRent + extrasTotal + auto.deposit, icon: .rublesign)))
+        result.append(.item(RentItem(title: "Итого", amount: calc.totalRent + extrasTotal + auto.deposit, icon: .rublesign)))
 
         cells = result
         collectionView.reloadData()

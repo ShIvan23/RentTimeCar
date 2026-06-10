@@ -43,8 +43,19 @@ final class Builder {
         return filterViewController
     }
     
-    static func makeCalendarViewController(autoId: String? = nil) -> UIViewController {
-        CalendarViewController(autoId: autoId, coordinator: Coordinator.shared)
+    static func makeCalendarViewController(
+        autoId: String? = nil,
+        showTimeSliders: Bool = false,
+        calendarTitle: String? = nil,
+        dailyPrice: Int? = nil
+    ) -> UIViewController {
+        CalendarViewController(
+            autoId: autoId,
+            coordinator: Coordinator.shared,
+            showTimeSliders: showTimeSliders,
+            calendarTitle: calendarTitle,
+            dailyPrice: dailyPrice
+        )
     }
     
     static func makeRentDetailViewController(contract: ContractDto) -> UIViewController {
