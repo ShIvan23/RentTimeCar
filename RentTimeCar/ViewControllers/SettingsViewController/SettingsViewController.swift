@@ -77,7 +77,9 @@ final class SettingsViewController: UIViewController {
         view.addSubviews([sectionLabel, phoneLabel, logoutButton, deleteAccountButton])
 
         if let phone = AuthService.shared.phoneNumber, !phone.isEmpty {
-            let formatted = phone.applyPhoneNumberMask()
+            let digits = phone.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+            let localNumber = (digits.hasPrefix("7") || digits.hasPrefix("8")) ? String(digits.dropFirst()) : digits
+            let formatted = localNumber.applyPhoneNumberMask()
             phoneLabel.text = "Номер: +7 \(formatted)"
         }
 
