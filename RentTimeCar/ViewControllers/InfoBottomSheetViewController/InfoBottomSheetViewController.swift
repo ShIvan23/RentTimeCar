@@ -142,6 +142,15 @@ extension InfoBottomSheetModel {
         )
     }
 
+    static func makeDeniedPhotoLibraryPermissionModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
+        InfoBottomSheetModel(
+            text: "Чтобы выбрать фото из галереи, вам нужно разрешить доступ к фотографиям в настройках.\n\n1. В настройках зайдите в раздел Приложения\n2. Далее найдите наше приложение\n3. Разрешите доступ к фотографиям",
+            image: .info,
+            buttonTitle: "Настройки",
+            onConfirm: onConfirm
+        )
+    }
+
     static func makeLogoutModel(onConfirm: @escaping () -> Void) -> InfoBottomSheetModel {
         InfoBottomSheetModel(
             text: "Вы уверены, что хотите выйти из аккаунта?",

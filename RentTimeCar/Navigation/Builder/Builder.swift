@@ -168,10 +168,12 @@ final class Builder {
     static func makeRegistrationViewController() -> UIViewController {
         let coordinator = Coordinator.shared
         let cameraPermissionService = CameraPermissionService()
+        let photoLibraryPermissionService = PhotoLibraryPermissionService()
         let rentApiFacade = RentApiFacade()
         let registrationViewController = RegistrationViewController(
             coordinator: coordinator,
             cameraPermissionService: cameraPermissionService,
+            photoLibraryPermissionService: photoLibraryPermissionService,
             rentApiFacade: rentApiFacade
         )
         return registrationViewController

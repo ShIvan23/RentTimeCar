@@ -7,6 +7,7 @@
 
 import UIKit
 import PinLayout
+import PhotosUI
 
 final class RegistrationViewController: UIViewController {
 
@@ -33,6 +34,7 @@ final class RegistrationViewController: UIViewController {
 
     private let nextStepButton = MainButton(title: "Регистрация")
     private let backButton = SecondaryButton(title: "Позже")
+    private let galleryButton = SecondaryButton(title: "Выбрать из галереи")
     private let bottomContainerView = UIView()
 
     // MARK: - Upload Overlay UI
@@ -68,6 +70,7 @@ final class RegistrationViewController: UIViewController {
 
     private let coordinator: ICoordinator
     private let cameraPermissionService: ICameraPermissionService
+    private let photoLibraryPermissionService: IPhotoLibraryPermissionService
     private let rentApiFacade: RentApiFacade
     private let registrationModelBox = RegistrationModelBox()
     private var registrationStep = RegistrationStep.initial
@@ -79,10 +82,12 @@ final class RegistrationViewController: UIViewController {
     init(
         coordinator: ICoordinator,
         cameraPermissionService: ICameraPermissionService,
+        photoLibraryPermissionService: IPhotoLibraryPermissionService,
         rentApiFacade: RentApiFacade
     ) {
         self.coordinator = coordinator
         self.cameraPermissionService = cameraPermissionService
+        self.photoLibraryPermissionService = photoLibraryPermissionService
         self.rentApiFacade = rentApiFacade
         super.init(nibName: nil, bundle: nil)
     }
@@ -112,10 +117,12 @@ final class RegistrationViewController: UIViewController {
 
     private func setupView() {
         view.addSubviews([collectionView, bottomContainerView, uploadOverlayView])
-        bottomContainerView.addSubviews([nextStepButton, backButton])
+        bottomContainerView.addSubviews([nextStepButton, backButton, galleryButton])
         uploadOverlayView.addSubviews([uploadActivityIndicator, uploadProgressLabel, uploadWarningLabel])
         view.backgroundColor = .mainBackground
         bottomContainerView.backgroundColor = .secondaryBackground
+
+        galleryButton.isHidden = true
 
         backButton.action = { [weak self] in
             self?.coordinator.popViewController()
@@ -123,6 +130,10 @@ final class RegistrationViewController: UIViewController {
 
         nextStepButton.action = { [weak self] in
             self?.handleNextStepAction()
+        }
+
+        galleryButton.action = { [weak self] in
+            self?.handleGalleryAction()
         }
 
         cameraCaptureService.setObserver(self)
@@ -141,19 +152,65 @@ final class RegistrationViewController: UIViewController {
     private func handleNextStepAction() {
         switch registrationStep {
         case .initial:
-            registrationModelBox.items.append(RegistrationModel.makeNeedPhotoStepModel())
+            registrationModelBox.items.append(RegistrationModel.makeDriverLicenseFrontInstructionModel())
             collectionView.reloadData()
             backButton.isHidden = true
+            galleryButton.isHidden = false
             nextStepButton.setTitle("Сфотографировать", for: .normal)
             view.setNeedsLayout()
             registrationStep = .takeDriverLicense
+            DispatchQueue.main.async { [weak self] in self?.scrollToBottom() }
         case .takeDriverLicense:
-            openCamera(for: .driverLicenseFront)
+            openCamera(for: currentPhotoStep)
         case .licenseDone:
-            openCamera(for: .passportMain)
+            openCamera(for: currentPhotoStep)
         case .readyToSubmit:
             uploadPhotos()
         }
+    }
+
+    /// Текущий шаг вычисляется по количеству уже добавленных фото.
+    /// Используется и для камеры, и для галереи — они работают с одним и тем же счётчиком.
+    private var currentPhotoStep: RegistrationPhotoStep {
+        let imageCount = registrationModelBox.items.filter {
+            if case .image = $0 { return true }
+            return false
+        }.count
+        switch imageCount {
+        case 0:  return .driverLicenseFront
+        case 1:  return .driverLicenseBack
+        case 2:  return .passportMain
+        default: return .passportRegistration
+        }
+    }
+
+    private func handleGalleryAction() {
+        requestGalleryPermissionAndOpen()
+    }
+
+    private func requestGalleryPermissionAndOpen() {
+        photoLibraryPermissionService.isPhotoLibraryGranted { [weak self] isGranted in
+            DispatchQueue.main.async {
+                if isGranted {
+                    self?.openGallery()
+                } else {
+                    let model = InfoBottomSheetModel.makeDeniedPhotoLibraryPermissionModel {
+                        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+                        UIApplication.shared.open(url)
+                    }
+                    self?.coordinator.openInfoBottomSheetViewController(model: model)
+                }
+            }
+        }
+    }
+
+    private func openGallery() {
+        var config = PHPickerConfiguration()
+        config.filter = .images
+        config.selectionLimit = 1
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = self
+        present(picker, animated: true)
     }
 
     private func openCamera(for step: RegistrationPhotoStep) {
@@ -226,8 +283,11 @@ final class RegistrationViewController: UIViewController {
     }
 
     private func performLayout() {
+        let hasSecondButton = !backButton.isHidden || !galleryButton.isHidden
         var bottomContainerViewHeight: CGFloat = view.safeAreaInsets.bottom
-        bottomContainerViewHeight += backButton.isHidden ? .buttonsInset + .buttonHeight : (.buttonsInset + .buttonHeight) * 2
+        bottomContainerViewHeight += hasSecondButton
+            ? (.buttonsInset + .buttonHeight) * 2
+            : .buttonsInset + .buttonHeight
 
         bottomContainerView.pin
             .bottom()
@@ -244,6 +304,20 @@ final class RegistrationViewController: UIViewController {
 
             nextStepButton.pin
                 .above(of: backButton)
+                .horizontally()
+                .height(.buttonHeight)
+                .marginHorizontal(.buttonHorizontalMargin)
+                .marginBottom(.buttonsInset)
+        } else if !galleryButton.isHidden {
+            galleryButton.pin
+                .bottom()
+                .horizontally()
+                .height(.buttonHeight)
+                .marginHorizontal(.buttonHorizontalMargin)
+                .marginBottom(view.safeAreaInsets.bottom)
+
+            nextStepButton.pin
+                .above(of: galleryButton)
                 .horizontally()
                 .height(.buttonHeight)
                 .marginHorizontal(.buttonHorizontalMargin)
@@ -345,7 +419,6 @@ extension RegistrationViewController: UICollectionViewDelegateFlowLayout {
 extension RegistrationViewController: CameraCaptureServiceObserver {
     func post(capturedImage: UIImage) {
         registrationModelBox.items.append(.image(capturedImage))
-        collectionView.reloadData()
 
         let imageCount = registrationModelBox.items.filter {
             if case .image = $0 { return true }
@@ -353,19 +426,42 @@ extension RegistrationViewController: CameraCaptureServiceObserver {
         }.count
 
         switch imageCount {
+        case 1:
+            registrationModelBox.items.append(RegistrationModel.makeDriverLicenseBackInstructionModel())
         case 2:
-            registrationModelBox.items.append(RegistrationModel.makePassportInstructionModel())
-            collectionView.reloadData()
+            registrationModelBox.items.append(RegistrationModel.makePassportMainInstructionModel())
             registrationStep = .licenseDone
             nextStepButton.setTitle("Сфотографировать", for: .normal)
+        case 3:
+            registrationModelBox.items.append(RegistrationModel.makePassportRegistrationInstructionModel())
         case 4:
             registrationStep = .readyToSubmit
+            galleryButton.isHidden = true
             nextStepButton.setTitle("Отправить фото", for: .normal)
         default:
             break
         }
 
+        collectionView.reloadData()
         view.setNeedsLayout()
+        DispatchQueue.main.async { [weak self] in
+            self?.scrollToBottom()
+        }
+    }
+}
+
+// MARK: - PHPickerViewControllerDelegate
+
+extension RegistrationViewController: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+        picker.dismiss(animated: true)
+        guard let result = results.first else { return }
+        result.itemProvider.loadObject(ofClass: UIImage.self) { [weak self] object, _ in
+            DispatchQueue.main.async {
+                guard let image = object as? UIImage else { return }
+                self?.post(capturedImage: image)
+            }
+        }
     }
 }
 
