@@ -49,7 +49,13 @@ enum AutoAvailabilityStatus {
         let sorted = intervals.sorted { $0.timeBegin < $1.timeBegin }
 
         // Машина сейчас занята?
-        let isBusy = sorted.contains { $0.timeBegin <= now && $0.timeEnd >= now }
+        // Сравниваем по дням: аренда считается активной весь день окончания,
+        // а не только до точного времени возврата по контракту.
+        let calendar = Calendar.current
+        let todayStart = calendar.startOfDay(for: now)
+        let isBusy = sorted.contains {
+            $0.timeBegin <= now && calendar.startOfDay(for: $0.timeEnd) >= todayStart
+        }
         guard isBusy else { return .free }
 
         // Идём по цепочке интервалов от now и находим конец непрерывной занятости

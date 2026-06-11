@@ -25,6 +25,7 @@ final class NetworkManager {
         NSURLErrorNetworkConnectionLost,   // -1005
         NSURLErrorNotConnectedToInternet,  // -1009
         NSURLErrorTimedOut,                // -1001
+        500, 502, 503, 504,               // HTTP server errors
     ]
 
     func fetch<T: Decodable>(request: URLRequest, completion: @escaping (Result<T, Error>) -> Void) {
@@ -62,15 +63,16 @@ final class NetworkManager {
             }
 
             guard let data = data else {
-                if let error = error {
-                    completion(.failure(error))
-                } else {
-                    completion(.failure(NSError(domain: "NetworkManager", code: -1)))
-                }
+                completion(.failure(error ?? NSError(domain: "NetworkManager", code: -1)))
                 return
             }
 
-            if let value = self?.decodeJSON(type: T.self, from: data) {
+            guard let self else {
+                completion(.failure(NSError(domain: "NetworkManager", code: -3)))
+                return
+            }
+
+            if let value = self.decodeJSON(type: T.self, from: data) {
                 completion(.success(value))
             } else {
                 completion(.failure(NSError(domain: "NetworkManager", code: -2)))
@@ -108,23 +110,15 @@ final class NetworkManager {
     // MARK: - Private
 
     private func JSONTask(request: URLRequest, completion: @escaping JSONCompletionHandler) -> URLSessionTask {
-        
+
         let dataTask = session.dataTask(with: request) { data, response, error in
-            
+
             guard let HTTPResponse = response as? HTTPURLResponse else {
-                let error = error
                 completion(nil, nil, error)
                 return
             }
-            
-            switch HTTPResponse.statusCode {
-            case 200:
-                completion(data, HTTPResponse, nil)
-            case 422:
-                completion(data, HTTPResponse, error)
-            default:
-                completion(data, HTTPResponse, error)
-            }
+
+            completion(data, HTTPResponse, error)
         }
         return dataTask
     }

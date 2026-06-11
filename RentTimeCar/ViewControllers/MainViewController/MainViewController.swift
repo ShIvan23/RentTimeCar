@@ -218,32 +218,49 @@ extension MainViewController {
         sorted.forEach { fetchUsedIntervals(for: $0) }
     }
 
-    private func fetchUsedIntervals(for auto: Auto) {
+    private func fetchUsedIntervals(for auto: Auto, attempt: Int = 1) {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd.MM.yyyy HH:mm:ss"
         formatter.locale = Locale(identifier: "ru_RU")
 
         let now = Date()
-        guard let monthLater = Calendar.current.date(byAdding: .month, value: 1, to: now) else { return }
+        guard
+            let monthLater = Calendar.current.date(byAdding: .month, value: 1, to: now),
+            let monthAgo = Calendar.current.date(byAdding: .day, value: -30, to: now)
+        else { return }
 
         let input = GetAutoUsedIntervalsInput(
             objectId: String(auto.itemID),
-            dateFrom: formatter.string(from: now),
+            dateFrom: formatter.string(from: monthAgo),
             dateTo: formatter.string(from: monthLater)
         )
 
         rentApiFacade.getAutoUsedIntervals(with: input) { [weak self] result in
-            guard let self, case .success(let apiResult) = result else { return }
-            let intervals = apiResult.result ?? []
-            let status = AutoAvailabilityStatus.compute(from: intervals, now: now, monthLater: monthLater)
-            DispatchQueue.main.async {
-                self.autoIntervals[auto.itemID] = intervals
-                self.autoStatuses[auto.itemID] = status
-                guard let index = self.cells.firstIndex(where: {
-                    if case .car(let a) = $0 { return a.itemID == auto.itemID }
-                    return false
-                }) else { return }
-                self.collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
+            guard let self else { return }
+            switch result {
+            case .success(let apiResult):
+                guard let intervals = apiResult.result else {
+                    guard attempt < 5 else { return }
+                    DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                        self?.fetchUsedIntervals(for: auto, attempt: attempt + 1)
+                    }
+                    return
+                }
+                let status = AutoAvailabilityStatus.compute(from: intervals, now: now, monthLater: monthLater)
+                DispatchQueue.main.async {
+                    self.autoIntervals[auto.itemID] = intervals
+                    self.autoStatuses[auto.itemID] = status
+                    guard let index = self.cells.firstIndex(where: {
+                        if case .car(let a) = $0 { return a.itemID == auto.itemID }
+                        return false
+                    }) else { return }
+                    self.collectionView.reloadItems(at: [IndexPath(item: index, section: 0)])
+                }
+            case .failure:
+                guard attempt < 5 else { return }
+                DispatchQueue.global().asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                    self?.fetchUsedIntervals(for: auto, attempt: attempt + 1)
+                }
             }
         }
     }
