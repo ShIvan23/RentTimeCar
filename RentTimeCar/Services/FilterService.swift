@@ -65,6 +65,18 @@ final class FilterService {
         selectedEndMinutes = endMinutes
     }
 
+    /// Дата начала аренды с учётом времени слайдера.
+    var rentFromDate: Date? {
+        guard let base = selectedDates.first else { return nil }
+        return Calendar.current.startOfDay(for: base).addingTimeInterval(TimeInterval(selectedStartMinutes * 60))
+    }
+
+    /// Дата окончания аренды с учётом времени слайдера (включая доп. часы).
+    var rentToDate: Date? {
+        guard let base = selectedDates.last else { return nil }
+        return Calendar.current.startOfDay(for: base).addingTimeInterval(TimeInterval(selectedEndMinutes * 60))
+    }
+
     func setSelectedDates(_ selectedDates: [Date]) {
         if selectedDates.count == 1, let only = selectedDates.first,
            let nextDay = Calendar.current.date(byAdding: .day, value: 1, to: only) {

@@ -210,8 +210,8 @@ final class RentSummaryViewController: UIViewController {
             let integrationId = authService.client?.integrationId,
             let phone = authService.phoneNumber,
             let auto = orderConfirmService.auto,
-            let rentFrom = filterService.selectedDates.first?.convertDateToString(),
-            let rentTo = filterService.selectedDates.last?.convertDateToString()
+            let rentFrom = filterService.rentFromDate?.convertDateToString(),
+            let rentTo = filterService.rentToDate?.convertDateToString()
         else { return nil }
 
         let services = orderConfirmService.selectedServices.map {
@@ -238,8 +238,8 @@ final class RentSummaryViewController: UIViewController {
     private func makeCreateContractInput() -> CreateContractInput? {
         guard
             let auto = orderConfirmService.auto,
-            let rentFrom = filterService.selectedDates.first?.toContractDateString(),
-            let rentTo = filterService.selectedDates.last?.toContractDateString()
+            let rentFrom = filterService.rentFromDate?.toContractDateString(),
+            let rentTo = filterService.rentToDate?.toContractDateString()
         else { return nil }
         var commentParts = orderConfirmService.selectedServices.map(\.serviceTitle)
         if orderConfirmService.isChildSeatSelected {
