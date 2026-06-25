@@ -26,11 +26,17 @@ final class OperationCardView: UIView {
         titleLabel.textColor = .whiteTextColor
         addSubview(titleLabel)
 
+        let isPaid = operation.paymentResultState == PaymentResultStates.payd.rawValue
+                  || operation.paymentResultState == PaymentResultStates.over.rawValue
+                  || operation.paymentResultState == PaymentResultStates.notNeedPay.rawValue
+
         if operation.sum != 0 {
-            switch operation.direction {
-            case 1: sumLabel.text = "-\(fmt(operation.sum))"; sumLabel.textColor = .systemRed
-            case 2: sumLabel.text = "+\(fmt(operation.sum))"; sumLabel.textColor = .systemGreen
-            default: sumLabel.text = fmt(operation.sum); sumLabel.textColor = .whiteTextColor
+            if isPaid {
+                sumLabel.text = "+\(fmt(operation.sum))"
+                sumLabel.textColor = .systemGreen
+            } else {
+                sumLabel.text = "-\(fmt(operation.sum))"
+                sumLabel.textColor = .systemRed
             }
         }
         sumLabel.font = .systemFont(ofSize: 14, weight: .semibold)
@@ -65,10 +71,12 @@ final class OperationCardView: UIView {
 
                 let itemSumLabel = UILabel()
                 if item.sum != 0 {
-                    switch item.direction {
-                    case 1: itemSumLabel.text = "-\(fmt(item.sum))"; itemSumLabel.textColor = .systemRed
-                    case 2: itemSumLabel.text = "+\(fmt(item.sum))"; itemSumLabel.textColor = .systemGreen
-                    default: itemSumLabel.text = fmt(item.sum); itemSumLabel.textColor = .secondaryTextColor
+                    if isPaid {
+                        itemSumLabel.text = "+\(fmt(item.sum))"
+                        itemSumLabel.textColor = .systemGreen
+                    } else {
+                        itemSumLabel.text = "-\(fmt(item.sum))"
+                        itemSumLabel.textColor = .systemRed
                     }
                 }
                 itemSumLabel.font = .systemFont(ofSize: 12)

@@ -146,7 +146,9 @@ struct ContractDto: Decodable {
 
     var statusTitle: String {
         switch contractState {
-        case .opened, .extended, .extendedOpened, .realisation:
+        case .opened:
+            return "Ожидает"
+        case .extended, .extendedOpened, .realisation:
             return "Активна"
         case .readyToSign:
             return "К подписи"

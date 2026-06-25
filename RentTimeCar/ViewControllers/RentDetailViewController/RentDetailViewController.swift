@@ -568,6 +568,16 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
             info.operations.forEach { paymentContentViews.append(OperationCardView(operation: $0)) }
         }
 
+        let unpaidCalculations = info.contractCalculations.filter { $0.toPaymentSum != 0 }
+        if !unpaidCalculations.isEmpty {
+            let unpaidLabel = UILabel()
+            unpaidLabel.text = "Неоплаченные начисления"
+            unpaidLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+            unpaidLabel.textColor = .whiteTextColor
+            paymentContentViews.append(unpaidLabel)
+            unpaidCalculations.forEach { paymentContentViews.append(UnpaidCalculationCardView(calculation: $0)) }
+        }
+
         paymentContentViews.forEach { paymentContainerView.addSubview($0) }
         paymentContainerView.isHidden = false
         view.setNeedsLayout()

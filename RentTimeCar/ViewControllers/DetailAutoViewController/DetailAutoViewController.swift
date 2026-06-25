@@ -129,15 +129,33 @@ final class DetailAutoViewController: UIViewController {
     }
 
     private func setupContinueButton() {
-        filterService.selectedDates.isEmpty || authService.authState != .fullAccess ? disableContinueButton() : enableContinueButton()
-        continueButton.action = { [weak self]  in
-            self?.coordinator.openYandexMapController()
-            self?.saveChangesInOrderConfirmService()
+        updateContinueButtonState()
+        continueButton.action = { [weak self] in
+            guard let self else { return }
+            if authService.authState != .fullAccess {
+                coordinator.openRegistrationViewController()
+            } else {
+                coordinator.openYandexMapController()
+                saveChangesInOrderConfirmService()
+            }
         }
     }
-    
+
+    private func updateContinueButtonState() {
+        if authService.authState != .fullAccess {
+            continueButton.enable()
+            continueButton.setTitle("Зарегистрируйтесь", for: .normal)
+        } else if filterService.selectedDates.isEmpty {
+            continueButton.disable()
+            continueButton.setTitle("Выберите даты", for: .disabled)
+        } else {
+            continueButton.enable()
+            continueButton.setTitle("Продолжить", for: .normal)
+        }
+    }
+
     private func checkFullAccessInApp() {
-        authService.authState != .fullAccess ? disableContinueButton() : enableContinueButton()
+        updateContinueButtonState()
     }
 
     private func saveChangesInOrderConfirmService() {
@@ -149,21 +167,6 @@ final class DetailAutoViewController: UIViewController {
         }
         guard let firstImageUrl = autoModel.files.first?.url else { return }
         orderConfirmService.setImageUrl(firstImageUrl)
-    }
-
-    private func enableContinueButton() {
-        continueButton.enable()
-        continueButton.setTitle("Продолжить", for: .normal)
-    }
-
-    private func disableContinueButton() {
-        let textButton: String = if authService.authState != .fullAccess {
-            "Зарегистрируйтесь, чтобы продолжить"
-        } else {
-            "Выберите даты"
-        }
-        continueButton.disable()
-        continueButton.setTitle(textButton, for: .disabled)
     }
 
     private func subscribeToNotifications() {
@@ -224,9 +227,8 @@ final class DetailAutoViewController: UIViewController {
 
     @objc
     private func selectedDatesUpdated() {
-        let selectedDates = filterService.selectedDates
-        selectedDates.isEmpty || authService.authState != .fullAccess ? disableContinueButton() : enableContinueButton()
-        selectedDateView.configure(selectedDates: selectedDates)
+        updateContinueButtonState()
+        selectedDateView.configure(selectedDates: filterService.selectedDates)
     }
 
     private func performLayout() {
