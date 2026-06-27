@@ -348,7 +348,8 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
 
         let vehicleId = Int(contract.vehicleId)
         let auto = FilterService.shared.allAutos.first { $0.itemID == vehicleId }
-        let mileageText = auto.map { "\($0.mileageLimit) км" } ?? "—"
+        let days = max(Calendar.current.dateComponents([.day], from: contract.dateFrom, to: contract.dateTo).day ?? 1, 1)
+        let mileageText = auto.map { "\($0.mileageLimit * days) км" } ?? "—"
 
         territoryTileView.configure(title: "Территория аренды", value: contract.allowedLocation ?? "—")
         mileageTileView.configure(title: "Лимит пробега", value: mileageText)
