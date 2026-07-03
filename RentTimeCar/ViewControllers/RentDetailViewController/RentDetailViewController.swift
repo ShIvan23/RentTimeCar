@@ -549,39 +549,189 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
         paymentContentViews = []
 
         let fmt = moneyFormatter()
+        let m = info.moneyInfo
+        let hasDebt = m.notPaydCalculationsSumCurrent > 0
 
-        let summaryRows: [PaymentSummaryCardView.Row] = [
-            .init(title: "Итого начислено", value: fmt(info.moneyInfo.servicesTotalSum), highlighted: false),
-            .init(title: "Оплачено", value: fmt(info.moneyInfo.servicesTotalPaydPaysSum), highlighted: false),
-            info.moneyInfo.finesBalance != 0
-                ? .init(title: "Баланс штрафов", value: fmt(info.moneyInfo.finesBalance), highlighted: true)
-                : nil,
-            .init(title: "Депозит", value: fmt(info.moneyInfo.depositBalance), highlighted: false)
-        ].compactMap { $0 }
-        paymentContentViews.append(PaymentSummaryCardView(rows: summaryRows))
+        // 1. Contract header card
+        let statusTitle: String
+        let statusColor: UIColor
+        if hasDebt {
+            statusTitle = "Требует оплаты"
+            statusColor = .systemRed
+        } else {
+            switch contract.contractState {
+            case .closed, .extendedClosed, .komissionClose, .terminated, .defolt, .komissionCanceled, .archivedDogovor, .sold:
+                statusTitle = "Завершена"
+                statusColor = .secondaryTextColor
+            case .realisation, .extended, .extendedOpened:
+                statusTitle = "Активна"
+                statusColor = .systemGreen
+            default:
+                statusTitle = contract.statusTitle
+                statusColor = .secondaryTextColor
+            }
+        }
+        let headerCard = ContractPaymentHeaderCardView(
+            contractNumber: contract.contractNumber ?? "",
+            carName: contract.carTitle ?? contract.vehicle ?? "Автомобиль",
+            dateFrom: contract.dateFrom,
+            dateTo: contract.dateTo,
+            statusTitle: statusTitle,
+            statusColor: statusColor
+        )
+        paymentContentViews.append(headerCard)
 
-        if !info.operations.isEmpty {
-            let opsLabel = UILabel()
-            opsLabel.text = "Операции"
-            opsLabel.font = .systemFont(ofSize: 16, weight: .semibold)
-            opsLabel.textColor = .whiteTextColor
-            paymentContentViews.append(opsLabel)
-            info.operations.forEach { paymentContentViews.append(OperationCardView(operation: $0)) }
+        // 2. Debt alert card
+        if hasDebt {
+            paymentContentViews.append(DebtAlertCardView(amount: fmt(m.notPaydCalculationsSumCurrent)))
         }
 
-        let unpaidCalculations = info.contractCalculations.filter { $0.toPaymentSum != 0 }
-        if !unpaidCalculations.isEmpty {
-            let unpaidLabel = UILabel()
-            unpaidLabel.text = "Неоплаченные начисления"
-            unpaidLabel.font = .systemFont(ofSize: 16, weight: .semibold)
-            unpaidLabel.textColor = .whiteTextColor
-            paymentContentViews.append(unpaidLabel)
-            unpaidCalculations.forEach { paymentContentViews.append(UnpaidCalculationCardView(calculation: $0)) }
+        // 3. Summary card
+        let balance = m.servicesTotalPaydPaysSum - m.servicesTotalSum
+        let overpaySubtitle: String? = balance > 0 ? "Переплата \(fmt(balance)) зачтена на следующую аренду" : nil
+        let summaryCard = PaymentSummaryCardView(
+            charged: fmt(m.servicesTotalSum),
+            paid: fmt(m.servicesTotalPaydPaysSum),
+            balance: balance,
+            subtitle: overpaySubtitle,
+            fmt: fmt
+        )
+        paymentContentViews.append(summaryCard)
+
+        // 4. Deposit card
+        if m.paydDepositSum > 0 || m.depositSum > 0 {
+            paymentContentViews.append(DepositCardView(
+                deposited: fmt(m.paydDepositSum),
+                spent: fmt(m.depositOverSum),
+                remaining: fmt(m.aviableDepositSum)
+            ))
         }
+
+        // 5. Calculations sections
+        let allCalcs = info.contractCalculations
+        let unpaid = allCalcs.filter { $0.paymentResultState == PaymentResultStates.notPayd.rawValue || $0.paymentResultState == PaymentResultStates.partPayd.rawValue }
+        let paid = allCalcs.filter { $0.paymentResultState != PaymentResultStates.notPayd.rawValue && $0.paymentResultState != PaymentResultStates.partPayd.rawValue }
+
+        if hasDebt {
+            if !unpaid.isEmpty {
+                let section = makeCalculationsSection(
+                    title: "Требует оплаты",
+                    total: fmt(m.notPaydCalculationsSumCurrent),
+                    totalColor: .systemRed,
+                    calculations: unpaid,
+                    amountColor: .systemRed,
+                    badge: .none,
+                    expanded: true,
+                    fmt: fmt
+                )
+                paymentContentViews.append(section)
+            }
+            if !paid.isEmpty {
+                let section = makeCalculationsSection(
+                    title: "Оплачено",
+                    total: fmt(m.servicesTotalPaydPaysSum),
+                    totalColor: .systemGreen,
+                    calculations: paid,
+                    amountColor: .whiteTextColor,
+                    badge: .paid,
+                    expanded: false,
+                    fmt: fmt
+                )
+                paymentContentViews.append(section)
+            }
+        } else {
+            if !allCalcs.isEmpty {
+                let section = makeCalculationsSection(
+                    title: "Все начисления",
+                    total: fmt(m.servicesTotalSum),
+                    totalColor: .systemGreen,
+                    calculations: allCalcs,
+                    amountColor: .whiteTextColor,
+                    badge: .paid,
+                    expanded: true,
+                    fmt: fmt
+                )
+                paymentContentViews.append(section)
+            }
+        }
+
+        // 6. Payment history section
+        let paymentOps = info.operations.filter { $0.operationType == OperationTypes.payment.rawValue }
+        if !paymentOps.isEmpty {
+            let historyItems = paymentOps.map { op -> UIView in
+                let dateFmt = DateFormatter()
+                dateFmt.dateFormat = "dd.MM.yyyy"
+                let subtitle = dateFmt.string(from: op.accountingDate)
+                return CalculationItemView(
+                    title: "Платёж",
+                    subtitle: subtitle,
+                    badge: .none,
+                    amount: fmt(op.sum),
+                    amountColor: .systemGreen
+                )
+            }
+            let totalPaid = paymentOps.reduce(Decimal(0)) { $0 + $1.sum }
+            let historySection = CollapsibleSectionView(
+                title: "История платежей",
+                total: fmt(totalPaid),
+                totalColor: .systemGreen,
+                items: historyItems,
+                expanded: false
+            )
+            historySection.onToggle = { [weak self] in self?.performLayout() }
+            paymentContentViews.append(historySection)
+        }
+
+        // 7. Footer
+        let footerLabel = Label(
+            text: "Вопросы по начислениям? Напишите в поддержку",
+            numberOfLines: 0,
+            fontSize: 13,
+            textColor: .secondaryTextColor,
+            textAlignment: .center
+        )
+        paymentContentViews.append(footerLabel)
 
         paymentContentViews.forEach { paymentContainerView.addSubview($0) }
         paymentContainerView.isHidden = false
         view.setNeedsLayout()
+    }
+
+    private func makeCalculationsSection(
+        title: String,
+        total: String,
+        totalColor: UIColor,
+        calculations: [MoneyCalculation],
+        amountColor: UIColor,
+        badge: CalculationItemView.Badge,
+        expanded: Bool,
+        fmt: (Decimal) -> String
+    ) -> CollapsibleSectionView {
+        let dateFmt = DateFormatter()
+        dateFmt.dateFormat = "dd.MM.yyyy"
+
+        let items: [UIView] = calculations.map { calc in
+            let name = calc.subCategory.isEmpty ? calc.categoryTitle : calc.subCategory
+            let rawSubtitle = calc.amountTitle.trimmingCharacters(in: .whitespaces)
+            let subtitle = (rawSubtitle.isEmpty || rawSubtitle == "0") ? nil : rawSubtitle
+            return CalculationItemView(
+                title: name,
+                subtitle: subtitle,
+                badge: badge,
+                amount: fmt(calc.sum),
+                amountColor: amountColor
+            )
+        }
+
+        let section = CollapsibleSectionView(
+            title: title,
+            total: total,
+            totalColor: totalColor,
+            items: items,
+            expanded: expanded
+        )
+        section.onToggle = { [weak self] in self?.performLayout() }
+        return section
     }
 
     private func moneyFormatter() -> (Decimal) -> String {

@@ -12,13 +12,15 @@ final class Label: UILabel {
         text: String = "",
         numberOfLines: Int = 0,
         fontSize: CGFloat = 16,
+        weight: UIFont.Weight = .regular,
         textColor: UIColor = .whiteTextColor,
-        textAlignment: NSTextAlignment = .center
+        textAlignment: NSTextAlignment = .natural
     ) {
         super.init(frame: .zero)
         setupLabel(with: text,
                    numberOfLines: numberOfLines,
                    fontSize: fontSize,
+                   weight: weight,
                    textColor: textColor,
                    textAlignment: textAlignment)
     }
@@ -43,11 +45,12 @@ final class Label: UILabel {
         with text: String,
         numberOfLines: Int,
         fontSize: CGFloat,
+        weight: UIFont.Weight,
         textColor: UIColor,
         textAlignment: NSTextAlignment
     ) {
         self.text = text
-        font = UIFont.openSans(fontSize: fontSize)
+        font = UIFont.openSans(fontSize: fontSize, weight: weight)
         self.textColor = textColor
         self.textAlignment = textAlignment
         self.numberOfLines = numberOfLines
