@@ -132,7 +132,9 @@ final class DetailAutoViewController: UIViewController {
         updateContinueButtonState()
         continueButton.action = { [weak self] in
             guard let self else { return }
-            if authService.authState != .fullAccess {
+            if authService.authState == .needAuthorize {
+                coordinator.openAuthorization()
+            } else if authService.authState == .needRegister {
                 coordinator.openRegistrationViewController()
             } else {
                 coordinator.openYandexMapController()
@@ -142,9 +144,12 @@ final class DetailAutoViewController: UIViewController {
     }
 
     private func updateContinueButtonState() {
-        if authService.authState != .fullAccess {
+        if authService.authState == .needAuthorize {
             continueButton.enable()
-            continueButton.setTitle("Зарегистрируйтесь", for: .normal)
+            continueButton.setTitle("Войти", for: .normal)
+        } else if authService.authState == .needRegister {
+            continueButton.enable()
+            continueButton.setTitle("Зарегистрироваться", for: .normal)
         } else if filterService.selectedDates.isEmpty {
             continueButton.disable()
             continueButton.setTitle("Выберите даты", for: .disabled)
