@@ -17,6 +17,13 @@ final class YukassaWebViewController: UIViewController {
     private let rentApiFacade: IRentApiFacade = RentApiFacade()
     private let authService: AuthService = .shared
 
+    /// Если задан — вызывается вместо стандартного payContractSum + successBottomSheet.
+    /// Параметр — Yukassa paymentId (transactionCode).
+    var onPaymentSucceeded: ((String?) -> Void)?
+
+    /// Если задан — вызывается вместо стандартного openPaymentFailBottomSheet.
+    var onPaymentFailed: (() -> Void)?
+
     private var paymentId: String?
     private var pollingTimer: Timer?
     private var pollingElapsed: TimeInterval = 0
@@ -144,6 +151,12 @@ final class YukassaWebViewController: UIViewController {
 
     private func handlePaymentSuccess() {
         stopPolling()
+
+        if let onPaymentSucceeded {
+            onPaymentSucceeded(paymentId)
+            return
+        }
+
         guard
             let integrationId = authService.client?.integrationId,
             let contractId
@@ -174,6 +187,10 @@ final class YukassaWebViewController: UIViewController {
 
     private func handlePaymentFail() {
         stopPolling()
+        if let onPaymentFailed {
+            onPaymentFailed()
+            return
+        }
         coordinator.openPaymentFailBottomSheet { [weak self] in
             self?.coordinator.popViewController()
         }

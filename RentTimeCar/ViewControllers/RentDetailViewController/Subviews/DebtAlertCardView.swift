@@ -21,6 +21,8 @@ final class DebtAlertCardView: UIView {
         return l
     }()
 
+    var onPayTapped: (() -> Void)?
+
     private let payButton: UIButton = {
         let b = UIButton(type: .system)
         b.backgroundColor = .systemRed
@@ -43,6 +45,16 @@ final class DebtAlertCardView: UIView {
         addSubview(titleLabel)
         addSubview(descriptionLabel)
         addSubview(payButton)
+
+        payButton.addTarget(self, action: #selector(payTapped), for: .touchUpInside)
+    }
+
+    func hidePayButton() {
+        payButton.isHidden = true
+    }
+
+    @objc private func payTapped() {
+        onPayTapped?()
     }
 
     @available(*, unavailable)
@@ -55,9 +67,14 @@ final class DebtAlertCardView: UIView {
 
         titleLabel.pin.top(vPad).horizontally(hPad).sizeToFit(.width)
         descriptionLabel.pin.below(of: titleLabel).marginTop(8).horizontally(hPad).sizeToFit(.width)
-        payButton.pin.below(of: descriptionLabel).marginTop(16).horizontally(hPad).height(50)
 
-        let totalH = payButton.frame.maxY + vPad
+        let totalH: CGFloat
+        if payButton.isHidden {
+            totalH = descriptionLabel.frame.maxY + vPad
+        } else {
+            payButton.pin.below(of: descriptionLabel).marginTop(16).horizontally(hPad).height(50)
+            totalH = payButton.frame.maxY + vPad
+        }
         if frame.height != totalH { frame.size.height = totalH }
     }
 

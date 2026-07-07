@@ -33,6 +33,7 @@ protocol ICoordinator {
     func openAnotherApplication(url: URL)
     func openRentSummaryViewController()
     func openYukassaPayment(amount: Int, description: String, contractId: Int?)
+    func openYukassaPayment(amount: Int, description: String, onSuccess: @escaping (String?) -> Void, onFail: @escaping () -> Void)
     func openPaymentSuccessBottomSheet(onDismiss: @escaping () -> Void)
     func openPaymentFailBottomSheet(onDismiss: @escaping () -> Void)
     func openPaymentCancelConfirmationBottomSheet(onConfirm: @escaping () -> Void)
@@ -184,6 +185,13 @@ final class Coordinator: NSObject, ICoordinator {
         navigationController?.pushViewController(paymentVC, animated: true)
     }
 
+    func openYukassaPayment(amount: Int, description: String, onSuccess: @escaping (String?) -> Void, onFail: @escaping () -> Void) {
+        let paymentVC = Builder.makeYukassaWebViewController(amount: amount, description: description, contractId: nil)
+        paymentVC.onPaymentSucceeded = onSuccess
+        paymentVC.onPaymentFailed = onFail
+        navigationController?.pushViewController(paymentVC, animated: true)
+    }
+
     func openPaymentSuccessBottomSheet(onDismiss: @escaping () -> Void) {
         let vc = Builder.makePaymentSuccessBottomSheet(onDismiss: onDismiss)
         navigationController?.present(vc, animated: true)
@@ -217,11 +225,13 @@ final class Coordinator: NSObject, ICoordinator {
     }
 
     func openInfoBottomSheetViewController() {
+        guard navigationController?.topViewController?.presentedViewController == nil else { return }
         let infoBottomSheetViewController = Builder.makeInfoBottomSheetViewController()
         navigationController?.present(infoBottomSheetViewController, animated: true)
     }
 
     func openInfoBottomSheetViewController(model: InfoBottomSheetModel) {
+        guard navigationController?.topViewController?.presentedViewController == nil else { return }
         let infoBottomSheetViewController = Builder.makeInfoBottomSheetViewController(model: model)
         navigationController?.present(infoBottomSheetViewController, animated: true)
     }

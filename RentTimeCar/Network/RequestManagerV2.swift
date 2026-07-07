@@ -140,6 +140,22 @@ final class RequestManagerV2 {
         )
     }
 
+    // MARK: - POST /api/contracts/pay-accruals
+
+    func payAccruals(clientIntegrationId: String, contractId: Int, sum: Decimal, externalSource: String? = nil, externalSourceTransactionCode: String? = nil) -> URLRequest? {
+        makeRequest(
+            path: "/api/contracts/pay-accruals",
+            method: .post,
+            body: PayAccrualsBody(
+                clientIntegrationId: clientIntegrationId,
+                contractId: contractId,
+                sum: sum,
+                externalSource: externalSource,
+                externalSourceTransactionCode: externalSourceTransactionCode
+            )
+        )
+    }
+
     // MARK: - POST /api/contracts/get
 
     func getClientContracts(clientIntegrationId: String) -> URLRequest? {
@@ -360,6 +376,14 @@ private struct PayContractSumBody: Encodable {
     let clientIntegrationId: String
     let contractId: String
     let sum: Decimal
+}
+
+private struct PayAccrualsBody: Encodable {
+    let clientIntegrationId: String
+    let contractId: Int
+    let sum: Decimal
+    let externalSource: String?
+    let externalSourceTransactionCode: String?
 }
 
 private struct DeleteAccountBody: Encodable {

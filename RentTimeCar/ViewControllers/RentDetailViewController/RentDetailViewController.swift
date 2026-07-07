@@ -583,7 +583,15 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
 
         // 2. Debt alert card
         if hasDebt {
-            paymentContentViews.append(DebtAlertCardView(amount: fmt(m.notPaydCalculationsSumCurrent)))
+            let debtCard = DebtAlertCardView(amount: fmt(m.notPaydCalculationsSumCurrent))
+            if !FeatureFlagService.shared.hidePayments {
+                debtCard.onPayTapped = { [weak self] in
+                    self?.payAccruals(sum: m.notPaydCalculationsSumCurrent)
+                }
+            } else {
+                debtCard.hidePayButton()
+            }
+            paymentContentViews.append(debtCard)
         }
 
         // 3. Summary card
@@ -732,6 +740,55 @@ final class RentDetailViewController: UIViewController, ToastViewShowable {
         )
         section.onToggle = { [weak self] in self?.performLayout() }
         return section
+    }
+
+    private func payAccruals(sum: Decimal) {
+        let amountInRubles = Int(truncating: sum as NSDecimalNumber)
+        let contractNumber = contract.contractNumber ?? String(contract.id)
+        let description = "Оплата начислений по договору №\(contractNumber)"
+
+        coordinator.openYukassaPayment(
+            amount: amountInRubles,
+            description: description,
+            onSuccess: { [weak self] transactionCode in
+                self?.callPayAccrualsAPI(sum: sum, transactionCode: transactionCode)
+            },
+            onFail: { [weak self] in
+                self?.coordinator.openPaymentFailBottomSheet {
+                    self?.coordinator.popViewController()
+                }
+            }
+        )
+    }
+
+    private func callPayAccrualsAPI(sum: Decimal, transactionCode: String?) {
+        guard let integrationId = AuthService.shared.client?.integrationId else { return }
+        coordinator.popViewController()
+        showLoadingOverlay()
+        rentApiFacade.payAccruals(
+            clientIntegrationId: integrationId,
+            contractId: contract.id,
+            sum: sum,
+            externalSource: "ЮKassa",
+            externalSourceTransactionCode: transactionCode
+        ) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.hideLoadingOverlay()
+                switch result {
+                case let .success(response):
+                    if let error = response.errors?.first?.message {
+                        self.showToast(with: error)
+                    } else {
+                        self.hasLoadedPayments = false
+                        self.fetchMoneyInfo()
+                        self.showToast(with: "Оплата прошла успешно")
+                    }
+                case .failure:
+                    self.showToast(with: "Ошибка оплаты. Попробуйте ещё раз")
+                }
+            }
+        }
     }
 
     private func moneyFormatter() -> (Decimal) -> String {
